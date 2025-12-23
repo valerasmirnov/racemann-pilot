@@ -3,48 +3,50 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0b0f16" />
-  <title>Racemann Pilot — Training</title>
+  <meta name="theme-color" content="#070a12" />
+  <title>Racemann Pilot — Live</title>
 
-  <!-- iOS "почти приложение" -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <style>
     :root{
-      --bg:#0b0f16;
+      --bg:#070a12;
       --panel:rgba(255,255,255,.06);
       --panel2:rgba(255,255,255,.08);
       --stroke:rgba(255,255,255,.10);
       --stroke2:rgba(255,255,255,.14);
-      --text:#e9eef7;
-      --muted:rgba(233,238,247,.72);
-      --muted2:rgba(233,238,247,.55);
+      --text:#eaf0ff;
+      --muted:rgba(234,240,255,.70);
+      --muted2:rgba(234,240,255,.52);
+
+      /* пурпур (как просил) */
+      --purple:#c084fc;
+      --purple2:rgba(192,132,252,.16);
+
       --green:#4ade80;
       --red:#fb7185;
-      --amber:#fbbf24;
 
       --r:18px;
-      --shadow: 0 10px 40px rgba(0,0,0,.45);
+      --shadow: 0 14px 50px rgba(0,0,0,.55);
     }
 
-    *{box-sizing:border-box}
-    html,body{height:100%}
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
       background:
-        radial-gradient(1200px 600px at 20% -10%, rgba(59,130,246,.18), transparent 60%),
-        radial-gradient(900px 500px at 110% 0%, rgba(74,222,128,.16), transparent 55%),
-        radial-gradient(700px 500px at 60% 120%, rgba(251,191,36,.10), transparent 55%),
+        radial-gradient(900px 500px at 10% -10%, rgba(59,130,246,.16), transparent 60%),
+        radial-gradient(800px 480px at 100% 0%, rgba(192,132,252,.18), transparent 55%),
+        radial-gradient(700px 520px at 60% 120%, rgba(74,222,128,.12), transparent 55%),
         var(--bg);
       color:var(--text);
-      overflow:hidden; /* чтобы не было лишней прокрутки из-за адресной строки */
+      overflow:hidden; /* важно: без лишней прокрутки */
     }
 
-    /* Контейнер под safe-area, плюс 100dvh, чтобы на iOS не прыгало */
     .app{
-      height: 100dvh;
+      height:100dvh;
       padding:
         calc(env(safe-area-inset-top) + 10px)
         calc(env(safe-area-inset-right) + 10px)
@@ -53,67 +55,67 @@
       display:flex;
       flex-direction:column;
       gap:10px;
+      min-height:0;
     }
 
-    /* Компактная шапка (чтобы влезало) */
-    .topbar{
+    /* компактная верхняя строка (чтобы влезало) */
+    .top{
       display:flex;
-      align-items:flex-start;
+      align-items:center;
       justify-content:space-between;
-      gap:12px;
+      gap:10px;
+      flex:0 0 auto;
     }
 
     .title{
-      min-width:260px;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:160px;
     }
     .title h1{
       margin:0;
-      font-size:22px;
+      font-size:18px;
+      line-height:1.1;
       letter-spacing:.2px;
-      line-height:1.15;
     }
     .title .sub{
-      margin-top:2px;
-      font-size:13px;
+      font-size:12px;
       color:var(--muted2);
     }
 
     .chips{
       display:flex;
-      align-items:center;
-      justify-content:flex-end;
       gap:8px;
       flex-wrap:wrap;
+      justify-content:flex-end;
+      align-items:center;
     }
-
     .chip{
-      padding:8px 12px;
+      padding:7px 10px;
       border-radius:999px;
       border:1px solid var(--stroke);
       background:rgba(255,255,255,.04);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      font-size:13px;
+      font-size:12.5px;
       color:var(--muted);
-      display:flex;
-      gap:8px;
-      align-items:center;
-      box-shadow: 0 6px 20px rgba(0,0,0,.25);
+      box-shadow: 0 8px 24px rgba(0,0,0,.28);
       white-space:nowrap;
     }
-    .chip b{color:var(--text); font-weight:650}
+    .chip b{ color:var(--text); font-weight:750; }
     .chip.status{
-      border-color: rgba(74,222,128,.35);
-      color: rgba(74,222,128,.9);
-      background: rgba(74,222,128,.08);
+      border-color: rgba(192,132,252,.35);
+      background: rgba(192,132,252,.10);
+      color: rgba(192,132,252,.95);
     }
 
-    /* Основная сетка */
-    .grid{
+    /* MAIN: слева 2/3, справа 1/3 */
+    .main{
       flex:1;
       min-height:0;
       display:grid;
-      grid-template-columns: 1.05fr 1.35fr;
+      grid-template-columns: 2fr 1fr;
       gap:10px;
     }
 
@@ -126,278 +128,320 @@
       -webkit-backdrop-filter: blur(14px);
       overflow:hidden;
       min-height:0;
+      display:flex;
+      flex-direction:column;
     }
-
-    .panel .head{
+    .panelHead{
       padding:10px 12px;
       border-bottom:1px solid var(--stroke);
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
+      flex:0 0 auto;
     }
-    .panel .head .h{
-      font-weight:650;
+    .panelHead .h{
+      font-weight:800;
       letter-spacing:.2px;
     }
-    .panel .head .hint{
+    .panelHead .hint{
       color:var(--muted2);
       font-size:12px;
       white-space:nowrap;
     }
-    .panel .body{
+
+    .panelBody{
       padding:12px;
       min-height:0;
-    }
-
-    /* Левая колонка: метрики */
-    .metrics{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
+      flex:1 1 auto;
+      display:flex;
+      flex-direction:column;
       gap:10px;
     }
 
-    .metric{
+    /* LEFT: сверху две карточки, ниже инфо о позиции */
+    .cards{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      flex:0 0 auto;
+    }
+
+    .card{
       background:var(--panel2);
       border:1px solid var(--stroke);
       border-radius:16px;
       padding:12px;
-      box-shadow: 0 8px 28px rgba(0,0,0,.25);
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-height:0;
     }
 
-    .metric .t{
+    .label{
       font-size:12px;
       letter-spacing:1.4px;
       color:var(--muted2);
     }
 
-    .metric .v{
-      margin-top:8px;
-      font-size:34px;
-      font-weight:800;
-      letter-spacing:.5px;
-      line-height:1.05;
-      color:var(--text);
-    }
-    .metric .v.green{ color: var(--green); }
-    .metric .v.red{ color: var(--red); }
-
-    .metric .s{
-      margin-top:8px;
-      font-size:13px;
-      color:var(--muted);
-      display:flex;
-      gap:8px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-
-    .metric.big{
-      grid-column:1 / -1;
-      padding:14px;
-    }
-    .metric.big .v{
-      font-size:52px;
-    }
-
-    .btnRow{
-      display:flex;
-      gap:10px;
-      margin-top:10px;
-      flex-wrap:wrap;
-    }
-
-    button{
-      border:none;
-      border-radius:14px;
-      padding:12px 14px;
-      font-weight:700;
-      font-size:14px;
-      color:var(--text);
-      background: rgba(255,255,255,.08);
-      border:1px solid var(--stroke2);
-      cursor:pointer;
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
-      transition: transform .12s ease, background .12s ease;
-    }
-    button:active{ transform: scale(.98); }
-    button.primary{
-      background: rgba(74,222,128,.14);
-      border-color: rgba(74,222,128,.35);
-    }
-    button.warn{
-      background: rgba(251,191,36,.12);
-      border-color: rgba(251,191,36,.32);
-    }
-
-    /* Правая колонка: таблица кругов */
-    .lapsWrap{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      height:100%;
-      min-height:0;
-    }
-
-    .table{
-      border:1px solid var(--stroke);
-      border-radius:16px;
-      overflow:hidden;
-      min-height:0;
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      background: rgba(0,0,0,.08);
-    }
-
-    .thead{
-      padding:10px 12px;
-      display:grid;
-      grid-template-columns: 56px 1fr 88px 120px;
-      gap:8px;
-      font-size:12px;
+    .time{
+      font-size:42px;
+      font-weight:900;
       letter-spacing:.6px;
-      color:var(--muted2);
-      background: rgba(255,255,255,.04);
-      border-bottom:1px solid var(--stroke);
-    }
-    .tbody{
-      overflow:auto;
-      -webkit-overflow-scrolling: touch;
+      line-height:1;
     }
 
-    .row{
-      padding:10px 12px;
-      display:grid;
-      grid-template-columns: 56px 1fr 88px 120px;
+    .time.purple{ color: var(--purple); }
+    .subrow{
+      color:var(--muted);
+      font-size:13px;
+      display:flex;
       gap:8px;
       align-items:center;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      font-size:14px;
+      flex-wrap:wrap;
     }
-    .row:last-child{ border-bottom:none; }
 
-    .row .muted{ color:var(--muted); }
-    .row .tag{
-      justify-self:start;
+    .pill{
       padding:6px 10px;
       border-radius:999px;
       border:1px solid var(--stroke);
       background: rgba(255,255,255,.05);
       font-size:12px;
       color:var(--muted);
-      display:inline-flex;
-      gap:8px;
-      align-items:center;
       white-space:nowrap;
     }
-    .row.best{
+    .pill.purple{
+      border-color: rgba(192,132,252,.35);
+      background: rgba(192,132,252,.12);
+      color: rgba(192,132,252,.95);
+      font-weight:800;
+    }
+    .pill.good{
+      border-color: rgba(74,222,128,.30);
       background: rgba(74,222,128,.10);
-    }
-    .row.best .tag{
-      border-color: rgba(74,222,128,.35);
-      background: rgba(74,222,128,.12);
       color: rgba(74,222,128,.95);
-      font-weight:700;
+      font-weight:800;
+    }
+    .pill.bad{
+      border-color: rgba(251,113,133,.30);
+      background: rgba(251,113,133,.10);
+      color: rgba(251,113,133,.95);
+      font-weight:800;
     }
 
-    .row .delta.good{ color: rgba(74,222,128,.95); font-weight:700; }
-    .row .delta.bad{ color: rgba(251,113,133,.95); font-weight:700; }
-
-    /* Адаптация под узкие экраны */
-    @media (max-width: 920px){
-      .grid{ grid-template-columns: 1fr; }
-      .title{ min-width:unset; }
+    .posGrid{
+      display:grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap:10px;
+      flex:1;
+      min-height:0;
     }
 
-    /* Чтобы в iPhone landscape влезало */
+    .posCard{
+      background: rgba(255,255,255,.04);
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:10cg.
+      min-height:0;
+    }
+
+    .posBig{
+      font-size:44px;
+      font-weight:950;
+      letter-spacing:.6px;
+      line-height:1;
+    }
+
+    .posSmall{
+      color:var(--muted);
+      font-size:13px;
+      margin-top:6px;
+      line-height:1.25;
+    }
+
+    .deltas{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:0;
+    }
+
+    .deltaRow{
+      background: rgba(255,255,255,.04);
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .deltaRow .val{
+      font-size:28px;
+      font-weight:900;
+      letter-spacing:.4px;
+      line-height:1.1;
+    }
+
+    /* RIGHT: список кругов */
+    .lapsList{
+      min-height:0;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      padding-right:2px;
+    }
+
+    .lapItem{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.10);
+    }
+
+    .lapLeft{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:0;
+    }
+    .lapLeft .n{
+      font-size:12px;
+      color:var(--muted2);
+    }
+    .lapLeft .t{
+      font-size:18px;
+      font-weight:850;
+      letter-spacing:.3px;
+      white-space:nowrap;
+    }
+
+    .lapRight{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      align-items:flex-end;
+      flex:0 0 auto;
+    }
+
+    /* адаптация под мобильный: в portrait делаем вертикально */
+    @media (max-width: 820px){
+      .main{ grid-template-columns: 1fr; }
+    }
+
+    /* Если высоты мало (ландшафт на iPhone) — ещё ужмём */
     @media (max-height: 520px){
-      .title h1{ font-size:18px; }
-      .metric .v{ font-size:30px; }
-      .metric.big .v{ font-size:44px; }
-      .chip{ padding:7px 10px; }
-      .panel .head{ padding:8px 10px; }
-      .panel .body{ padding:10px; }
+      .title h1{ font-size:16px; }
+      .time{ font-size:36px; }
+      .posBig{ font-size:38px; }
+      .deltaRow .val{ font-size:24px; }
+      .panelHead{ padding:8px 10px; }
+      .panelBody{ padding:10px; gap:8px; }
+      .card{ padding:10px; }
+      .posCard, .deltaRow{ padding:10px; }
     }
   </style>
 </head>
 
 <body>
   <div class="app">
-    <div class="topbar">
+    <div class="top">
       <div class="title">
         <h1>Тренировка</h1>
-        <div class="sub">UX • симуляция кругов кнопкой “+Круг”</div>
+        <div class="sub">Live • UX заезда</div>
       </div>
 
       <div class="chips">
         <div class="chip">Карт: <b id="kartNum">14</b></div>
         <div class="chip status">Статус: <b id="statusText">Едет</b></div>
-        <div class="chip">Сессия: <b id="sessionTime">01:01</b></div>
+        <div class="chip">Сессия: <b id="sessionTime">00:00</b></div>
         <div class="chip">Кругов: <b id="lapsCount">0</b></div>
       </div>
     </div>
 
-    <div class="grid">
-      <!-- LEFT -->
+    <div class="main">
+      <!-- LEFT 2/3 -->
       <div class="panel">
-        <div class="head">
+        <div class="panelHead">
           <div class="h">Сводка</div>
-          <div class="hint">Только тренировка</div>
+          <div class="hint">заезд</div>
         </div>
 
-        <div class="body">
-          <div class="metrics">
-            <div class="metric" id="lastCard">
-              <div class="t">LAST LAP</div>
-              <div class="v" id="lastLap">32.372</div>
-              <div class="s">Δ к best: <span id="deltaToBest" class="muted">+0.214</span></div>
+        <div class="panelBody">
+          <div class="cards">
+            <div class="card">
+              <div class="label">LAST LAP</div>
+              <div class="time" id="lastLap">—</div>
+              <div class="subrow">
+                <span class="pill" id="lastTag">—</span>
+                <span class="pill" id="deltaToBestPill">Δ к best: —</span>
+              </div>
             </div>
 
-            <div class="metric" id="bestCard">
-              <div class="t">BEST LAP</div>
-              <div class="v green" id="bestLap">32.158</div>
-              <div class="s">Лучший круг в сессии</div>
+            <div class="card">
+              <div class="label">BEST LAP</div>
+              <div class="time purple" id="bestLap">—</div>
+              <div class="subrow">
+                <span class="pill purple" id="bestTag">BEST</span>
+                <span class="pill" id="bestHint">Лучший круг в сессии</span>
+              </div>
             </div>
+          </div>
 
-            <div class="metric big">
-              <div class="t">CURRENT LAP</div>
-              <div class="v" id="currentLap">31.904</div>
-              <div class="s">
-                Прогресс: <span id="progressHint" class="muted">считаем тестом</span>
+          <div class="posGrid">
+            <div class="posCard">
+              <div>
+                <div class="label">ПОЗИЦИЯ</div>
+                <div class="posBig" id="posText">—</div>
+                <div class="posSmall" id="posSub">по времени лучшего круга (тест)</div>
               </div>
 
-              <div class="btnRow">
-                <button class="primary" id="addLapBtn">+ Круг</button>
-                <button class="warn" id="changeKartBtn">Сменить карт</button>
-                <button id="resetBtn">Обнулить</button>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button id="addLapBtn" style="flex:1; border-radius:14px; padding:12px 14px; font-weight:850; border:1px solid rgba(192,132,252,.35); background: rgba(192,132,252,.14); color:var(--text);">
+                  + Круг
+                </button>
+                <button id="resetBtn" style="border-radius:14px; padding:12px 14px; font-weight:850; border:1px solid var(--stroke2); background: rgba(255,255,255,.08); color:var(--text);">
+                  Сброс
+                </button>
+              </div>
+            </div>
+
+            <div class="deltas">
+              <div class="deltaRow">
+                <div class="label">Δ ДО ЛУЧШЕГО (ABS)</div>
+                <div class="val" id="deltaAbs">—</div>
+                <div class="posSmall" id="deltaAbsSub">сравнение с абсолютным best (тест)</div>
+              </div>
+
+              <div class="deltaRow">
+                <div class="label">Δ ДО МЕСТА ВПЕРЕДИ</div>
+                <div class="val" id="deltaAhead">—</div>
+                <div class="posSmall" id="deltaAheadSub">отставание до P-1 по best lap</div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- RIGHT -->
+      <!-- RIGHT 1/3 -->
       <div class="panel">
-        <div class="head">
-          <div class="h">Круги</div>
-          <div class="hint">Показываем последние 15</div>
+        <div class="panelHead">
+          <div class="h">Мои круги</div>
+          <div class="hint">последние сверху</div>
         </div>
-
-        <div class="body lapsWrap">
-          <div class="table">
-            <div class="thead">
-              <div>#</div>
-              <div>Время</div>
-              <div>Δ к best</div>
-              <div>Метка</div>
-            </div>
-            <div class="tbody" id="lapsTable"></div>
-          </div>
-
-          <div style="color:var(--muted2); font-size:12px;">
-            Когда подключим RaceMann: тут будет live-таблица по кругам и подсветка BEST.
-          </div>
+        <div class="panelBody" style="padding:10px;">
+          <div class="lapsList" id="lapsList"></div>
         </div>
       </div>
     </div>
@@ -408,170 +452,217 @@
     const $ = (id) => document.getElementById(id);
 
     function pad2(n){ return String(n).padStart(2,'0'); }
-
     function formatMMSS(totalSeconds){
       const m = Math.floor(totalSeconds / 60);
       const s = totalSeconds % 60;
       return `${pad2(m)}:${pad2(s)}`;
     }
-
     function toFixed3(x){
       return (Math.round(x * 1000) / 1000).toFixed(3);
     }
-
-    function parseLap(str){
-      // "32.372" => 32.372
-      const v = Number(String(str).replace(',', '.'));
-      return Number.isFinite(v) ? v : null;
-    }
-
     function deltaLabel(delta){
       const sign = delta > 0 ? "+" : (delta < 0 ? "−" : "");
       return sign + toFixed3(Math.abs(delta));
     }
-
     function randLap(){
-      // генерим что-то реалистичное: 31.800..33.200
+      // 31.800..33.200
       const v = 31.8 + Math.random() * 1.4;
       return Number(toFixed3(v));
     }
 
     // ===== state =====
-    let sessionSeconds = 61;       // 01:01 как в примере
-    let laps = [];                 // {n, time, delta, tag, isBest}
-    let best = 32.158;
-    let last = 32.372;
-    let current = 31.904;
+    let sessionSeconds = 0;
     let kart = 14;
+    let status = "Едет";
+
+    let laps = []; // {n, time}
+    let myBest = null;
+    let myLast = null;
+
+    // тестовые соперники (их best-lap обновляем редко, чтобы “жили”)
+    const rivals = [
+      { name:"P1", best: 32.210 },
+      { name:"P2", best: 32.330 },
+      { name:"P3", best: 32.480 },
+      { name:"P4", best: 32.620 },
+      { name:"P5", best: 32.860 },
+      { name:"P6", best: 33.050 },
+    ];
+
+    function maybeUpdateRivals(){
+      // слегка шевелим 1-2 соперника
+      if (Math.random() < 0.35){
+        const idx = Math.floor(Math.random()*rivals.length);
+        const tweak = (Math.random()-0.5)*0.10; // +/-0.05
+        rivals[idx].best = Number(toFixed3(Math.max(31.7, rivals[idx].best + tweak)));
+      }
+      if (Math.random() < 0.18){
+        const idx = Math.floor(Math.random()*rivals.length);
+        const improve = -Math.random()*0.08; // иногда улучшение
+        rivals[idx].best = Number(toFixed3(Math.max(31.7, rivals[idx].best + improve)));
+      }
+    }
+
+    function computeRanking(){
+      const me = myBest ?? 999;
+      const all = rivals.map(r => r.best).concat([me]).sort((a,b)=>a-b);
+      const pos = all.indexOf(me) + 1; // 1..N
+      const absBest = all[0];
+      const aheadBest = pos > 1 ? all[pos-2] : null;
+
+      return { pos, total: all.length, absBest, aheadBest };
+    }
 
     // ===== render =====
-    function renderHeader(){
+    function renderTop(){
       $("kartNum").textContent = kart;
+      $("statusText").textContent = status;
       $("sessionTime").textContent = formatMMSS(sessionSeconds);
       $("lapsCount").textContent = String(laps.length);
     }
 
-    function renderCards(){
-      $("bestLap").textContent = toFixed3(best);
-      $("lastLap").textContent = toFixed3(last);
-      $("currentLap").textContent = toFixed3(current);
-
-      const d = last - best;
-      const dEl = $("deltaToBest");
-      dEl.textContent = deltaLabel(d);
-      dEl.style.color = d <= 0 ? "rgba(74,222,128,.95)" : "rgba(251,113,133,.95)";
-      dEl.style.fontWeight = "800";
-
-      // статус: едет всегда в тренировке
-      $("statusText").textContent = "Едет";
+    function setPill(el, text, kind){
+      el.textContent = text;
+      el.classList.remove("purple","good","bad");
+      if (kind) el.classList.add(kind);
     }
 
-    function renderTable(){
-      const box = $("lapsTable");
+    function renderSummary(){
+      // last/best
+      $("lastLap").textContent = myLast == null ? "—" : toFixed3(myLast);
+      $("bestLap").textContent = myBest == null ? "—" : toFixed3(myBest);
+
+      // пурпур: если last == best (твой лучший) — last тоже пурпурный
+      $("lastLap").classList.remove("purple");
+      if (myLast != null && myBest != null && myLast === myBest){
+        $("lastLap").classList.add("purple");
+        $("bestLap").classList.add("purple");
+        setPill($("lastTag"), "BEST", "purple");
+      } else {
+        setPill($("lastTag"), myLast == null ? "—" : "OK", myLast == null ? "" : "");
+      }
+
+      // позиция / дельты
+      const { pos, total, absBest, aheadBest } = computeRanking();
+
+      $("posText").textContent = (myBest == null) ? "—" : `${pos}/${total}`;
+      $("posSub").textContent = (myBest == null)
+        ? "добавь круг кнопкой +Круг"
+        : "позиция по лучшему кругу (best lap)";
+
+      if (myBest == null){
+        $("deltaAbs").textContent = "—";
+        $("deltaAhead").textContent = "—";
+        $("deltaAbsSub").textContent = " ";
+        $("deltaAheadSub").textContent = " ";
+        setPill($("deltaToBestPill"), "Δ к best: —", "");
+        return;
+      }
+
+      const dAbs = myBest - absBest;
+      const dAhead = aheadBest == null ? 0 : (myBest - aheadBest);
+
+      $("deltaAbs").textContent = deltaLabel(dAbs);
+      $("deltaAhead").textContent = aheadBest == null ? "0.000" : deltaLabel(dAhead);
+
+      // цвет дельт
+      $("deltaAbs").style.color = dAbs <= 0 ? "rgba(74,222,128,.95)" : "rgba(251,113,133,.95)";
+      $("deltaAhead").style.color = (aheadBest == null || dAhead <= 0) ? "rgba(74,222,128,.95)" : "rgba(251,113,133,.95)";
+
+      $("deltaAbsSub").textContent = `ABS best: ${toFixed3(absBest)}`;
+      $("deltaAheadSub").textContent = aheadBest == null ? "ты лидер" : `впереди: ${toFixed3(aheadBest)}`;
+
+      // Δ к best (в карточке last)
+      const dToBest = myLast == null ? null : (myLast - myBest);
+      if (dToBest == null){
+        setPill($("deltaToBestPill"), "Δ к best: —", "");
+      } else {
+        const txt = `Δ к best: ${deltaLabel(dToBest)}`;
+        // если last == best => пурпур
+        if (myLast === myBest) setPill($("deltaToBestPill"), txt, "purple");
+        else setPill($("deltaToBestPill"), txt, dToBest <= 0 ? "good" : "bad");
+      }
+    }
+
+    function renderLaps(){
+      const box = $("lapsList");
       box.innerHTML = "";
 
-      // последние 15
-      const last15 = laps.slice(-15).reverse(); // сверху новый
+      const items = laps.slice().reverse(); // последние сверху
+      items.forEach(l => {
+        const isBest = (myBest != null && l.time === myBest);
 
-      last15.forEach(row => {
         const div = document.createElement("div");
-        div.className = "row" + (row.isBest ? " best" : "");
-
-        const deltaClass = row.delta <= 0 ? "good" : "bad";
+        div.className = "lapItem";
 
         div.innerHTML = `
-          <div class="muted">#${row.n}</div>
-          <div style="font-weight:800; letter-spacing:.3px;">${toFixed3(row.time)}</div>
-          <div class="delta ${deltaClass}">${deltaLabel(row.delta)}</div>
-          <div><span class="tag">${row.tag}</span></div>
+          <div class="lapLeft">
+            <div class="n">#${l.n}</div>
+            <div class="t ${isBest ? 'purple' : ''}" style="${isBest ? 'color: var(--purple); font-weight:900;' : ''}">
+              ${toFixed3(l.time)}
+            </div>
+          </div>
+          <div class="lapRight">
+            <span class="pill ${isBest ? 'purple' : ''}">${isBest ? 'BEST' : 'OK'}</span>
+          </div>
         `;
         box.appendChild(div);
       });
     }
 
-    function markBest(){
-      // пересчитать best по всем кругам
-      if (laps.length === 0) return;
-      best = Math.min(...laps.map(x => x.time));
-
-      laps.forEach(x => {
-        x.isBest = (x.time === best);
-        x.delta = x.time - best;
-        x.tag = x.isBest ? "BEST" : (x.delta <= 0 ? "PB" : "");
-        if (!x.tag) x.tag = "OK";
-      });
-
-      // last = последний круг
-      last = laps[laps.length - 1].time;
-    }
-
-    function tick(){
-      sessionSeconds += 1;
-      // текущий круг “шевелим” тестом
-      // чуть колеблется вокруг best-дельты
-      const drift = (Math.random() - 0.5) * 0.25; // +/-0.125
-      current = Math.max(30.5, best + 0.10 + drift);
-      renderHeader();
-      renderCards();
-    }
-
     // ===== actions =====
     function addLap(){
+      maybeUpdateRivals();
+
       const time = randLap();
       const n = laps.length + 1;
+      laps.push({ n, time });
 
-      laps.push({
-        n,
-        time,
-        delta: time - best,
-        tag: "OK",
-        isBest: false
-      });
+      myLast = time;
+      if (myBest == null) myBest = time;
+      myBest = Math.min(myBest, time);
 
-      markBest();
-      renderHeader();
-      renderCards();
-      renderTable();
-    }
-
-    function changeKart(){
-      const input = prompt("Номер карта:", String(kart));
-      if (input === null) return;
-      const n = parseInt(input, 10);
-      if (!Number.isFinite(n) || n <= 0) return;
-      kart = n;
-      renderHeader();
+      renderTop();
+      renderSummary();
+      renderLaps();
     }
 
     function resetAll(){
-      // оставляем тестовые базовые значения
       sessionSeconds = 0;
       laps = [];
-      best = 32.158;
-      last = 32.372;
-      current = 31.904;
+      myBest = null;
+      myLast = null;
 
-      renderHeader();
-      renderCards();
-      renderTable();
+      // чуть “сбросим” соперников к исходным
+      rivals[0].best = 32.210;
+      rivals[1].best = 32.330;
+      rivals[2].best = 32.480;
+      rivals[3].best = 32.620;
+      rivals[4].best = 32.860;
+      rivals[5].best = 33.050;
+
+      renderTop();
+      renderSummary();
+      renderLaps();
     }
 
     // ===== init =====
     $("addLapBtn").addEventListener("click", addLap);
-    $("changeKartBtn").addEventListener("click", changeKart);
     $("resetBtn").addEventListener("click", resetAll);
 
-    // стартовое наполнение таблицы (чтобы было "как будто уже ехал")
-    (function seed(){
-      for (let i=0;i<3;i++) addLap();
-      // выставим sessionSeconds как в скрине
-      sessionSeconds = 61;
-      renderHeader();
-      renderCards();
-    })();
+    // старт
+    renderTop();
+    renderSummary();
+    renderLaps();
 
     // таймер сессии
-    setInterval(tick, 1000);
+    setInterval(() => {
+      sessionSeconds += 1;
+      renderTop();
+    }, 1000);
+
+    // небольшой сид, чтобы сразу что-то было (можешь убрать, если не надо)
+    // addLap(); addLap();
   </script>
 </body>
 </html>

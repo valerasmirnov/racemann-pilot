@@ -1,201 +1,188 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Racemann Pilot — Training</title>
-
   <style>
-    :root {
-      --bg: #0b0f14;
-      --card: #151b23;
-      --text: #e6e8eb;
-      --muted: #8a9199;
-      --accent: #b46cff; /* пурпур */
+    :root{
+      --bg0:#06080d;
+      --bg1:#0b1220;
+      --card:#0f1624cc;
+      --stroke:#ffffff14;
+      --text:#e9edf5;
+      --muted:#9aa4b2;
+      --purple:#b46cff;
+      --red:#ff6b6b;
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(1200px 600px at 20% -10%, #1a2a55 0%, transparent 55%),
+        radial-gradient(900px 500px at 90% 15%, #2a1a55 0%, transparent 55%),
+        radial-gradient(900px 700px at 50% 120%, #071a2b 0%, transparent 55%),
+        linear-gradient(180deg, var(--bg1), var(--bg0));
     }
-
-    body {
-      background: radial-gradient(1200px 600px at 30% -10%, #1b2340, #0b0f14);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
-      min-height: 100vh;
-      padding: 16px;
+    .wrap{
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 14px 14px 20px;
+      padding-bottom: calc(20px + env(safe-area-inset-bottom));
     }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 16px;
+    .grid{display:grid; gap:12px}
+    .card{
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, #121a2aee, #0c121fee);
+      border-radius: 22px;
+      padding: 18px 18px 16px;
+      box-shadow:
+        0 10px 30px #00000055,
+        inset 0 1px 0 #ffffff10;
+      backdrop-filter: blur(10px);
     }
-
-    .left {
-      display: grid;
-      grid-template-rows: auto auto;
-      gap: 16px;
-    }
-
-    .top {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
-    .card {
-      background: linear-gradient(180deg, #1a202a, #131922);
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
-    }
-
-    .label {
+    .label{
       font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
       color: var(--muted);
-      letter-spacing: 0.08em;
-      margin-bottom: 8px;
+      opacity: .85;
     }
-
-    .value {
-      font-size: 56px;
-      font-weight: 700;
-      line-height: 1;
-    }
-
-    .value.accent {
-      color: var(--accent);
-    }
-
-    .delta {
+    .value{
       margin-top: 8px;
-      font-size: 18px;
-      color: var(--muted);
-    }
-
-    .current {
-      font-size: 72px;
+      font-size: 78px;
+      line-height: 1;
       font-weight: 800;
+      letter-spacing: -0.04em;
     }
-
-    .list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .lap {
-      display: flex;
-      justify-content: space-between;
+    .value.purple{color: var(--purple)}
+    .delta{
+      margin-top: 10px;
       font-size: 20px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      color: var(--muted);
+      display:flex;
+      gap:10px;
+      align-items:center;
     }
-
-    /* debug */
-    pre {
-      position: fixed;
-      left: 12px;
-      right: 12px;
-      bottom: 12px;
-      max-height: 30vh;
-      overflow: auto;
-      padding: 12px;
-      border-radius: 12px;
-      background: rgba(0,0,0,0.65);
-      color: #fff;
+    .delta .bad{ color: var(--red); font-weight: 700; }
+    .delta .good{ color: #3ddc97; font-weight: 700; }
+    .small{
+      margin-top: 10px;
       font-size: 12px;
-      z-index: 999;
-      white-space: pre-wrap;
+      color: #a7b0bf;
+      opacity: .75;
+      word-break: break-all;
     }
-
-    @media (max-width: 900px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-      .top {
-        grid-template-columns: 1fr;
-      }
+    .jsonbox{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      white-space: pre-wrap;
+      line-height: 1.35;
+      font-size: 12px;
+      color: #c7d0df;
+    }
+    .footer{
+      margin-top: 10px;
+      font-size: 12px;
+      color: #a7b0bf;
+      opacity: .65;
+      display:flex;
+      justify-content: space-between;
+      gap:10px;
+      flex-wrap: wrap;
     }
   </style>
 </head>
 <body>
-
-  <div class="grid">
-    <!-- LEFT -->
-    <div class="left">
-      <div class="top">
-        <div class="card">
-          <div class="label">LAST LAP</div>
-          <div id="lastLap" class="value">—</div>
-          <div id="deltaBest" class="delta">Δ —</div>
+  <div class="wrap">
+    <div class="grid">
+      <div class="card" id="lastCard">
+        <div class="label">Last lap</div>
+        <div class="value" id="lastLap">—</div>
+        <div class="delta">
+          <span>Δ</span>
+          <span id="deltaBest" class="">—</span>
         </div>
+      </div>
 
-        <div class="card">
-          <div class="label">BEST LAP</div>
-          <div id="bestLap" class="value accent">—</div>
-        </div>
+      <div class="card" id="bestCard">
+        <div class="label">Best lap</div>
+        <div class="value purple" id="bestLap">—</div>
+      </div>
+
+      <div class="card" id="currentCard">
+        <div class="label">Current lap</div>
+        <div class="value" id="currentLap">—</div>
       </div>
 
       <div class="card">
-        <div class="label">CURRENT LAP</div>
-        <div id="currentLap" class="current">—</div>
-      </div>
-    </div>
-
-    <!-- RIGHT -->
-    <div class="card">
-      <div class="label">LAPS</div>
-      <div id="laps" class="list">
-        <!-- later -->
+        <div class="label">Debug</div>
+        <div class="jsonbox" id="rawJson">{}</div>
+        <div class="footer">
+          <span id="sourceLine">source: —</span>
+          <span id="tsLine">ts: —</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- DEBUG -->
-  <pre id="debug">loading…</pre>
-
   <script>
-    const API = "https://racemann-api.vsmirnoff.workers.dev/state";
+    const API_URL = "https://racemann-api.vsmirnoff.workers.dev/state";
 
     const elLast = document.getElementById("lastLap");
     const elBest = document.getElementById("bestLap");
-    const elCurrent = document.getElementById("currentLap");
+    const elCur  = document.getElementById("currentLap");
     const elDelta = document.getElementById("deltaBest");
-    const debug = document.getElementById("debug");
+    const elRaw = document.getElementById("rawJson");
+    const elTS = document.getElementById("tsLine");
+    const elSource = document.getElementById("sourceLine");
 
-    function fmt(v) {
-      return typeof v === "number" ? v.toFixed(3) : "—";
+    function fmt(x){
+      if (x === null || x === undefined || Number.isNaN(x)) return "—";
+      const n = Number(x);
+      return n.toFixed(3);
     }
 
-    async function tick() {
-      try {
-        const r = await fetch(API, { cache: "no-store" });
+    function updateUI(data){
+      const last = Number(data.lastLap);
+      const best = Number(data.bestLap);
+      const cur  = Number(data.currentLapTime);
+
+      elLast.textContent = fmt(last);
+      elBest.textContent = fmt(best);
+      elCur.textContent  = fmt(cur);
+
+      // Δ к best (только если оба есть)
+      if (Number.isFinite(last) && Number.isFinite(best)) {
+        const d = last - best;
+        const sign = d >= 0 ? "+" : "−";
+        const abs = Math.abs(d).toFixed(3);
+        elDelta.textContent = `${sign}${abs}`;
+        elDelta.className = d <= 0 ? "good" : "bad";
+      } else {
+        elDelta.textContent = "—";
+        elDelta.className = "";
+      }
+
+      elRaw.textContent = JSON.stringify(data, null, 2);
+      elTS.textContent = `ts: ${data.ts ?? "—"}`;
+      elSource.textContent = `source: api`;
+    }
+
+    async function tick(){
+      try{
+        const r = await fetch(API_URL, { cache: "no-store" });
         const data = await r.json();
-
-        elLast.textContent = fmt(data.lastLap);
-        elBest.textContent = fmt(data.bestLap);
-        elCurrent.textContent = fmt(data.currentLapTime);
-
-        if (typeof data.lastLap === "number" && typeof data.bestLap === "number") {
-          const d = data.lastLap - data.bestLap;
-          elDelta.textContent = "Δ " + (d > 0 ? "+" : "") + d.toFixed(3);
-        } else {
-          elDelta.textContent = "Δ —";
-        }
-
-        debug.textContent = JSON.stringify(data, null, 2);
-      } catch (e) {
-        debug.textContent = "ERROR: " + e.message;
+        updateUI(data);
+      } catch (e){
+        elSource.textContent = "source: error";
       }
     }
 
     tick();
     setInterval(tick, 1000);
   </script>
-
 </body>
 </html>

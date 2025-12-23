@@ -2,325 +2,61 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>RaceMann Pilot — Debug</title>
-  <style>
-    :root{
-      --bg:#070A10;
-      --panel:#0B1020;
-      --panel2:#0A0F1A;
-      --text:#E7EAF1;
-      --muted:#9AA3B2;
-      --accent:#A855F7;
-      --ok:#22C55E;
-      --bad:#EF4444;
-      --line:rgba(255,255,255,.08);
-      --shadow: 0 18px 40px rgba(0,0,0,.55);
-      --radius: 18px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
-    }
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family:var(--sans);
-      color:var(--text);
-      background: radial-gradient(1000px 700px at 30% 10%, rgba(168,85,247,.18), transparent 60%),
-                  radial-gradient(900px 700px at 70% 20%, rgba(59,130,246,.10), transparent 55%),
-                  var(--bg);
-    }
-    .wrap{
-      max-width: 880px;
-      margin: 0 auto;
-      padding: 18px 16px 28px;
-    }
-    .top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom: 14px;
-    }
-    .title{
-      font-size:18px;
-      letter-spacing:.2px;
-      opacity:.95;
-    }
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 12px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
-      border-radius: 999px;
-      box-shadow: var(--shadow);
-      font-size: 13px;
-      color: var(--muted);
-    }
-    .dot{
-      width:10px;height:10px;border-radius:50%;
-      background: var(--bad);
-      box-shadow: 0 0 0 4px rgba(239,68,68,.12);
-    }
-    .dot.ok{
-      background: var(--ok);
-      box-shadow: 0 0 0 4px rgba(34,197,94,.12);
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-    .card{
-      border:1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .card h2{
-      margin:0;
-      padding: 14px 16px 10px;
-      font-size: 13px;
-      letter-spacing:.18em;
-      color: rgba(231,234,241,.65);
-      text-transform: uppercase;
-    }
-    .card .body{
-      padding: 0 16px 16px;
-    }
-
-    label{
-      display:block;
-      font-size: 12px;
-      color: var(--muted);
-      margin: 10px 0 6px;
-    }
-    input,select,button,textarea{
-      font-family: var(--sans);
-      font-size: 16px;
-      color: var(--text);
-    }
-    input,textarea{
-      width:100%;
-      box-sizing:border-box;
-      padding: 12px 12px;
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      background: rgba(0,0,0,.25);
-      outline: none;
-    }
-    input:focus,textarea:focus{
-      border-color: rgba(168,85,247,.45);
-      box-shadow: 0 0 0 4px rgba(168,85,247,.12);
-    }
-    .row{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-    @media (min-width: 760px){
-      .row{ grid-template-columns: 2fr 1fr; }
-    }
-    .btns{
-      display:flex;
-      gap:10px;
-      margin-top: 12px;
-      flex-wrap: wrap;
-    }
-    button{
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.05);
-      padding: 11px 14px;
-      border-radius: 12px;
-      cursor:pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    button.primary{
-      background: rgba(168,85,247,.18);
-      border-color: rgba(168,85,247,.35);
-    }
-    button:active{ transform: translateY(1px); }
-
-    .kv{
-      display:grid;
-      grid-template-columns: 120px 1fr;
-      gap: 8px 12px;
-      margin-top: 10px;
-      font-size: 14px;
-    }
-    .k{ color: var(--muted); }
-    .v{ font-family: var(--mono); overflow-wrap:anywhere; }
-    .hint{
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.35;
-    }
-
-    pre{
-      margin: 0;
-      padding: 12px;
-      border-top: 1px solid var(--line);
-      background: rgba(0,0,0,.25);
-      font-family: var(--mono);
-      font-size: 12px;
-      line-height: 1.35;
-      overflow:auto;
-      max-height: 300px;
-      white-space: pre-wrap;
-      overflow-wrap:anywhere;
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
   <div class="wrap">
-    <div class="top">
+    <header class="top">
       <div class="title">RaceMann Pilot — Debug</div>
-      <div class="badge" id="statusBadge">
-        <span class="dot" id="statusDot"></span>
-        <span id="statusText">idle</span>
+      <div id="healthPill" class="pill pill-bad">/health …</div>
+    </header>
+
+    <section class="card">
+      <div class="h">НАСТРОЙКИ</div>
+
+      <label class="lbl">Worker API (не меняй, если всё ок)</label>
+      <input id="apiBase" class="inp" type="url" spellcheck="false" />
+
+      <label class="lbl">Ссылка на заезд (RaceMann)</label>
+      <input id="raceUrl" class="inp" type="url" spellcheck="false" placeholder="https://miks.racemann.com/Race/id/....#race" />
+
+      <label class="lbl">Номер карта (как в RaceMann: 05, 10, 19 и т.д.)</label>
+      <input id="kart" class="inp" type="text" inputmode="numeric" placeholder="05" />
+
+      <label class="lbl">Период опроса, мс</label>
+      <input id="pollMs" class="inp" type="number" min="250" step="50" value="1000" />
+
+      <div class="btnRow">
+        <button id="btnShowId" class="btn btn-primary">Показать Race ID</button>
+        <button id="btnStart" class="btn">Старт</button>
+        <button id="btnStop" class="btn btn-ghost">Стоп</button>
       </div>
-    </div>
 
-    <div class="grid">
-      <div class="card">
-        <h2>Настройки</h2>
-        <div class="body">
-          <label>Worker API (не меняй, если всё ок)</label>
-          <input id="apiBase" value="https://racemann-api.vsmirnoff.workers.dev" />
-
-          <label>Ссылка на заезд (RaceMann)</label>
-          <input
-            id="raceUrl"
-            placeholder="https://miks.racemann.com/Race/id/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx#race"
-            value="https://miks.racemann.com/Race/id/e924bca9-e81d-46a9-9322-a566ba1009d6#race"
-          />
-
-          <div class="row">
-            <div>
-              <label>Номер карта (как в RaceMann: 05, 10, 19 и т.д.)</label>
-              <input id="kart" value="10" />
-            </div>
-            <div>
-              <label>Период опроса, мс</label>
-              <input id="pollMs" type="number" value="1000" min="250" step="50" />
-            </div>
-          </div>
-
-          <div class="btns">
-            <button class="primary" id="btnParse">Показать Race ID</button>
-            <button id="btnHealth">Проверить /health</button>
-          </div>
-
-          <div class="kv">
-            <div class="k">Race ID</div>
-            <div class="v" id="raceIdOut">—</div>
-
-            <div class="k">Normalized</div>
-            <div class="v" id="normalizedOut">—</div>
-
-            <div class="k">Kart</div>
-            <div class="v" id="kartOut">—</div>
-          </div>
-
-          <div class="hint">
-            Сейчас мы проверяем только одно: правильно ли вытаскивается <b>Race ID</b> из ссылки.
-            Следующим шагом подключим реальный поток (SignalR) через воркер.
-          </div>
-        </div>
-        <pre id="log">{ "log": "ready" }</pre>
+      <div class="mini">
+        <div><span class="k">Race ID</span> <span id="raceId" class="v">—</span></div>
+        <div><span class="k">Normalized</span> <span id="normalized" class="v mono">—</span></div>
+        <div><span class="k">Kart</span> <span id="kartOut" class="v">—</span></div>
+        <div><span class="k">Status</span> <span id="conn" class="v">idle</span></div>
       </div>
-    </div>
+
+      <pre id="debug" class="debug">{}</pre>
+    </section>
+
+    <section class="dash">
+      <div class="tile">
+        <div class="label">LAST LAP</div>
+        <div id="lastLap" class="value">—</div>
+        <div id="delta" class="sub">Δ к best: —</div>
+      </div>
+      <div class="tile">
+        <div class="label">BEST LAP</div>
+        <div id="bestLap" class="value purple">—</div>
+      </div>
+    </section>
   </div>
 
-<script>
-  const $ = (id) => document.getElementById(id);
-
-  function setStatus(kind, text){
-    const dot = $("statusDot");
-    const label = $("statusText");
-    dot.classList.toggle("ok", kind === "ok");
-    label.textContent = text;
-  }
-
-  function log(obj){
-    const el = $("log");
-    const line = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
-    el.textContent = line;
-  }
-
-  // Вытаскиваем UUID из:
-  // - https://miks.racemann.com/Race/id/<uuid>#race
-  // - https://miks.racemann.com/Race/id/<uuid>
-  // - или даже если прилетит где-то в середине строки
-  function extractRaceId(input){
-    if (!input) return null;
-    const s = String(input).trim();
-
-    // основной вариант
-    const m1 = s.match(/\/Race\/id\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
-    if (m1) return m1[1];
-
-    // запасной — просто UUID где угодно
-    const m2 = s.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
-    if (m2) return m2[1];
-
-    return null;
-  }
-
-  function normalizeRaceUrl(input){
-    const id = extractRaceId(input);
-    if (!id) return null;
-    // фиксируем канонический формат, без #race
-    return `https://miks.racemann.com/Race/id/${id}`;
-  }
-
-  function showParsed(){
-    const raceUrl = $("raceUrl").value;
-    const kart = $("kart").value.trim();
-
-    const raceId = extractRaceId(raceUrl);
-    const normalized = normalizeRaceUrl(raceUrl);
-
-    $("raceIdOut").textContent = raceId || "—";
-    $("normalizedOut").textContent = normalized || "—";
-    $("kartOut").textContent = kart || "—";
-
-    if (!raceId){
-      setStatus("bad", "race id not found");
-      log({ ok:false, error:"Не смог найти Race ID в ссылке", input: raceUrl });
-      return null;
-    }
-
-    setStatus("ok", "race id parsed");
-    log({ ok:true, raceId, normalized, kart });
-    return { raceId, normalized, kart };
-  }
-
-  async function checkHealth(){
-    try{
-      setStatus("bad", "checking…");
-      const base = $("apiBase").value.replace(/\/+$/,'');
-      const r = await fetch(`${base}/health`, { cache: "no-store" });
-      const t = await r.text();
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      setStatus("ok", "/health ok");
-      try { log(JSON.parse(t)); } catch { log(t); }
-    }catch(e){
-      setStatus("bad", "health error");
-      log({ ok:false, error:String(e) });
-    }
-  }
-
-  $("btnParse").addEventListener("click", showParsed);
-  $("btnHealth").addEventListener("click", checkHealth);
-
-  // авто-парс при загрузке
-  showParsed();
-</script>
+  <script src="app.js"></script>
 </body>
 </html>

@@ -1,1 +1,233 @@
-тест
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Racemann Pilot</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --card:#141b23;
+      --text:#e8eef6;
+      --muted:#9fb0c3;
+      --accent:#4da3ff;
+      --danger:#ff4d4d;
+      --border:rgba(255,255,255,.12);
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box;}
+    html,body{height:100%; margin:0; background:var(--bg); color:var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;}
+    /* Горизонтально, без “прыжков” */
+    body{ overflow:hidden; }
+    .wrap{
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+    .panel{
+      width:min(920px, 100%);
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:22px;
+    }
+    .top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:14px;
+    }
+    h1{
+      font-size:20px;
+      margin:0;
+      letter-spacing:.2px;
+    }
+    .sub{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .mode{
+      font-size:12px;
+      color:var(--muted);
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:6px 10px;
+      height:fit-content;
+    }
+    .content{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:18px;
+      align-items:stretch;
+    }
+    @media (max-width: 720px){
+      .content{grid-template-columns: 1fr;}
+    }
+
+    .box{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:16px;
+      background:rgba(255,255,255,.03);
+    }
+
+    label{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+    input{
+      width:100%;
+      font-size:22px;
+      padding:14px 14px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:#0b1016;
+      color:var(--text);
+      outline:none;
+    }
+    input:focus{ border-color: rgba(77,163,255,.55); box-shadow: 0 0 0 4px rgba(77,163,255,.12); }
+
+    .row{
+      display:flex;
+      gap:10px;
+      margin-top:12px;
+      flex-wrap:wrap;
+    }
+    button{
+      border:1px solid var(--border);
+      background:#0b1016;
+      color:var(--text);
+      padding:12px 14px;
+      border-radius:12px;
+      font-size:15px;
+      cursor:pointer;
+      user-select:none;
+    }
+    button.primary{
+      background: rgba(77,163,255,.16);
+      border-color: rgba(77,163,255,.35);
+    }
+    button.danger{
+      background: rgba(255,77,77,.12);
+      border-color: rgba(255,77,77,.35);
+    }
+
+    .big{
+      font-size:44px;
+      font-weight:700;
+      letter-spacing:1px;
+      margin:4px 0 6px;
+    }
+    .hint{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+    .ok{ color:#7CFF9A; }
+    .warn{ color:#FFD37C; }
+
+    .divider{
+      height:1px; background:var(--border); margin:12px 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="panel">
+      <div class="top">
+        <div>
+          <h1>Интерфейс пилота</h1>
+          <div class="sub">Тренировка • горизонтальный экран • без свайпов</div>
+        </div>
+        <div class="mode">MODE: TRAINING</div>
+      </div>
+
+      <div class="content">
+        <!-- Левая часть: ввод -->
+        <div class="box" id="setupBox">
+          <label for="kartInput">Номер карта</label>
+          <input id="kartInput" inputmode="numeric" placeholder="Например: 12" maxlength="3" />
+
+          <div class="row">
+            <button class="primary" id="saveBtn">Сохранить</button>
+            <button class="danger" id="changeBtn" style="display:none;">Сменить карт</button>
+          </div>
+
+          <div class="divider"></div>
+          <div class="hint">
+            После сохранения номер запоминается на устройстве.<br/>
+            Потом сделаем автоподхват текущего заезда с miks.racemann.com и обновление данных.
+          </div>
+        </div>
+
+        <!-- Правая часть: статус -->
+        <div class="box">
+          <div class="hint">Текущий карт</div>
+          <div class="big" id="kartView">—</div>
+          <div class="hint" id="statusLine">
+            <span class="warn">Нет сохранённого номера.</span> Введите номер и нажмите «Сохранить».
+          </div>
+
+          <div class="divider"></div>
+          <div class="hint">
+            Следующее: кнопка «Старт тренировки» и экран с кругами/временем.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const LS_KEY = "racemann_kart_number";
+
+    const kartInput = document.getElementById("kartInput");
+    const kartView  = document.getElementById("kartView");
+    const statusLine= document.getElementById("statusLine");
+    const saveBtn   = document.getElementById("saveBtn");
+    const changeBtn = document.getElementById("changeBtn");
+
+    function render() {
+      const saved = localStorage.getItem(LS_KEY);
+      if (saved) {
+        kartView.textContent = saved;
+        statusLine.innerHTML = '<span class="ok">Сохранено.</span> Можно начинать тренировку.';
+        kartInput.value = saved;
+        kartInput.disabled = true;
+        saveBtn.style.display = "none";
+        changeBtn.style.display = "inline-block";
+      } else {
+        kartView.textContent = "—";
+        statusLine.innerHTML = '<span class="warn">Нет сохранённого номера.</span> Введите номер и нажмите «Сохранить».';
+        kartInput.disabled = false;
+        saveBtn.style.display = "inline-block";
+        changeBtn.style.display = "none";
+      }
+    }
+
+    saveBtn.addEventListener("click", () => {
+      const v = (kartInput.value || "").trim();
+      if (!v) return alert("Введите номер карта");
+      if (!/^\d{1,3}$/.test(v)) return alert("Номер должен быть 1–3 цифры");
+      localStorage.setItem(LS_KEY, v);
+      render();
+    });
+
+    changeBtn.addEventListener("click", () => {
+      localStorage.removeItem(LS_KEY);
+      kartInput.value = "";
+      render();
+      kartInput.focus();
+    });
+
+    render();
+  </script>
+</body>
+</html>

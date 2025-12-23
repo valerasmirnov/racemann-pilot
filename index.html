@@ -1,1 +1,51 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Racemann Pilot — Тренировка (UX)</title>
 
+  <meta name="theme-color" content="#0b0f14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <style>
+    :root { color-scheme: dark; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif; background:#0b0f14; color:#e8eef7; overflow:hidden; }
+    .app { height:100svh; width:100vw; display:flex; flex-direction:column; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-bottom:1px solid #1f2a3a; background:#0b0f14; }
+    .brand { display:flex; flex-direction:column; gap:2px; min-width:0; }
+    .brand b { font-size:14px; }
+    .muted { opacity:.75; font-size:12px; }
+    .btn { border:0; border-radius:12px; padding:10px 12px; font-size:14px; color:#e8eef7; background:#223047; cursor:pointer; white-space:nowrap; }
+    .btn.primary { background:#2a67ff; color:#fff; }
+    .main { flex:1 1 auto; display:grid; grid-template-columns: 1.25fr 1fr; gap:12px; padding:12px; }
+    .card { background:#121a24; border:1px solid #1f2a3a; border-radius:16px; padding:12px; display:flex; flex-direction:column; gap:10px; min-width:0; }
+    .bigRow { display:grid; grid-template-columns:1fr 1fr; gap:10px; flex:1 1 auto; }
+    .metric { background:#0b0f14; border:1px solid #1f2a3a; border-radius:14px; padding:10px 12px; display:flex; flex-direction:column; justify-content:center; min-height:110px; }
+    .metric .t { font-size:12px; opacity:.8; }
+    .metric .v { font-size:clamp(34px, 6vw, 64px); font-weight:800; margin-top:4px; letter-spacing:.5px; }
+    .rowPills { display:flex; flex-wrap:wrap; gap:8px; }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:#0b0f14; border:1px solid #1f2a3a; font-size:12px; opacity:.9; }
+    .ok { color:#7CFF8B; }
+    .warn { color:#ffd166; }
+    table { width:100%; border-collapse:collapse; }
+    th,td { text-align:left; padding:10px 8px; border-bottom:1px solid #1f2a3a; }
+    th { font-size:12px; opacity:.75; font-weight:600; }
+    .overlay { position:fixed; inset:0; background:rgba(0,0,0,.62); display:none; align-items:center; justify-content:center; padding:18px; }
+    .overlay.show { display:flex; }
+    .modal { width:min(520px, 100%); background:#121a24; border:1px solid #1f2a3a; border-radius:18px; padding:16px; }
+    .modal h1 { font-size:18px; margin:0 0 6px 0; }
+    .modal p { margin:0 0 12px 0; font-size:13px; opacity:.8; line-height:1.35; }
+    .fieldRow { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    input { flex:1 1 180px; background:#0b0f14; color:#e8eef7; border:1px solid #2a3a52; border-radius:12px; padding:12px 14px; font-size:18px; outline:none; }
+    .rotateHint { display:none; position:fixed; inset:0; background:#0b0f14; align-items:center; justify-content:center; text-align:center; padding:20px; }
+    .rotateHint .box { border:1px solid #1f2a3a; border-radius:18px; padding:18px; background:#121a24; max-width:520px; }
+    .rotateHint .box b { font-size:18px; }
+    .rotateHint .box div { margin-top:8px; opacity:.8; }
+    @media (orientation: portrait) {
+      .app { display:none; }
+      .rotateHint { display:flex; }
+    }
+  </style>
+</head

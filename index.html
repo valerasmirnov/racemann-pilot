@@ -3,186 +3,249 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Racemann Pilot — Training</title>
+  <title>Racemann Pilot — Live</title>
   <style>
     :root{
-      --bg0:#06080d;
-      --bg1:#0b1220;
+      --bg1:#05070b;
+      --bg2:#0a1020;
       --card:#0f1624cc;
       --stroke:#ffffff14;
-      --text:#e9edf5;
-      --muted:#9aa4b2;
+      --text:#e9eefc;
+      --muted:#aab3c6;
       --purple:#b46cff;
-      --red:#ff6b6b;
+      --green:#35d07f;
+      --red:#ff5a7a;
     }
     *{box-sizing:border-box}
-    html,body{height:100%}
     body{
       margin:0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
       color:var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
       background:
-        radial-gradient(1200px 600px at 20% -10%, #1a2a55 0%, transparent 55%),
-        radial-gradient(900px 500px at 90% 15%, #2a1a55 0%, transparent 55%),
-        radial-gradient(900px 700px at 50% 120%, #071a2b 0%, transparent 55%),
-        linear-gradient(180deg, var(--bg1), var(--bg0));
+        radial-gradient(1200px 900px at 20% -10%, #1a2b60 0%, transparent 55%),
+        radial-gradient(800px 700px at 90% 10%, #2a1450 0%, transparent 55%),
+        linear-gradient(180deg,var(--bg2),var(--bg1));
+      min-height:100vh;
     }
     .wrap{
-      max-width: 520px;
-      margin: 0 auto;
-      padding: 14px 14px 20px;
-      padding-bottom: calc(20px + env(safe-area-inset-bottom));
+      max-width:520px;
+      margin:0 auto;
+      padding:16px 14px 24px;
+      padding-top: max(16px, env(safe-area-inset-top));
+      padding-bottom: max(24px, env(safe-area-inset-bottom));
     }
-    .grid{display:grid; gap:12px}
     .card{
+      background: linear-gradient(180deg, #0f1727cc, #0b1220cc);
       border:1px solid var(--stroke);
-      background: linear-gradient(180deg, #121a2aee, #0c121fee);
-      border-radius: 22px;
-      padding: 18px 18px 16px;
-      box-shadow:
-        0 10px 30px #00000055,
-        inset 0 1px 0 #ffffff10;
+      border-radius:22px;
+      padding:18px 18px 16px;
+      box-shadow: 0 12px 50px #00000066;
       backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      margin-bottom:14px;
     }
     .label{
-      font-size: 12px;
-      letter-spacing: .14em;
+      font-size:12px;
+      letter-spacing: .22em;
       text-transform: uppercase;
-      color: var(--muted);
-      opacity: .85;
+      color:var(--muted);
+      opacity:.9;
     }
     .value{
-      margin-top: 8px;
-      font-size: 78px;
-      line-height: 1;
-      font-weight: 800;
-      letter-spacing: -0.04em;
+      margin-top:8px;
+      font-weight:800;
+      font-size: clamp(44px, 9vw, 84px);
+      line-height:1;
     }
-    .value.purple{color: var(--purple)}
-    .delta{
-      margin-top: 10px;
-      font-size: 20px;
-      color: var(--muted);
-      display:flex;
-      gap:10px;
-      align-items:center;
+    .value.purple{ color: var(--purple); }
+    .sub{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:16px;
     }
-    .delta .bad{ color: var(--red); font-weight: 700; }
-    .delta .good{ color: #3ddc97; font-weight: 700; }
-    .small{
-      margin-top: 10px;
-      font-size: 12px;
-      color: #a7b0bf;
-      opacity: .75;
-      word-break: break-all;
-    }
-    .jsonbox{
+    .sub .delta{ font-weight:700; margin-left:8px; }
+    .delta.pos{ color:var(--red); }
+    .delta.neg{ color:var(--green); }
+
+    .debug{
+      margin-top:10px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size:12px;
+      color:#cfe3ffcc;
       white-space: pre-wrap;
-      line-height: 1.35;
-      font-size: 12px;
-      color: #c7d0df;
+      word-break: break-word;
+      opacity:.9;
     }
-    .footer{
-      margin-top: 10px;
-      font-size: 12px;
-      color: #a7b0bf;
-      opacity: .65;
+    .tiny{
       display:flex;
-      justify-content: space-between;
+      justify-content:space-between;
       gap:10px;
-      flex-wrap: wrap;
+      color:var(--muted);
+      font-size:12px;
+      margin-top:8px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background:#0b1220aa;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:14px;
+    }
+    .title{
+      font-size:18px;
+      font-weight:800;
+      letter-spacing:.02em;
+    }
+    .dot{
+      width:8px;height:8px;border-radius:99px;background:var(--red);
+      box-shadow:0 0 0 3px #ff5a7a22;
+    }
+    .dot.ok{
+      background:var(--green);
+      box-shadow:0 0 0 3px #35d07f22;
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="grid">
-      <div class="card" id="lastCard">
-        <div class="label">Last lap</div>
-        <div class="value" id="lastLap">—</div>
-        <div class="delta">
-          <span>Δ</span>
-          <span id="deltaBest" class="">—</span>
-        </div>
-      </div>
+    <div class="row">
+      <div class="title">Live</div>
+      <div class="pill"><span id="dot" class="dot"></span><span id="statusText">нет связи</span></div>
+    </div>
 
-      <div class="card" id="bestCard">
-        <div class="label">Best lap</div>
-        <div class="value purple" id="bestLap">—</div>
-      </div>
+    <div class="card">
+      <div class="label">LAST LAP</div>
+      <div id="lastLap" class="value">—</div>
+      <div class="sub">Δ к best: <span id="deltaBest" class="delta">—</span></div>
+    </div>
 
-      <div class="card" id="currentCard">
-        <div class="label">Current lap</div>
-        <div class="value" id="currentLap">—</div>
-      </div>
+    <div class="card">
+      <div class="label">BEST LAP</div>
+      <div id="bestLap" class="value purple">—</div>
+    </div>
 
-      <div class="card">
-        <div class="label">Debug</div>
-        <div class="jsonbox" id="rawJson">{}</div>
-        <div class="footer">
-          <span id="sourceLine">source: —</span>
-          <span id="tsLine">ts: —</span>
-        </div>
+    <div class="card">
+      <div class="label">CURRENT LAP</div>
+      <div id="currentLap" class="value">—</div>
+      <div class="tiny">
+        <div>poll: <span id="pollMs">—</span> ms</div>
+        <div>ts: <span id="ts">—</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">DEBUG</div>
+      <div class="debug" id="debug">{}</div>
+      <div class="tiny">
+        <div>source: <span id="source">—</span></div>
+        <div>err: <span id="err">—</span></div>
       </div>
     </div>
   </div>
 
   <script>
-    const API_URL = "https://racemann-api.vsmirnoff.workers.dev/state";
+    // === Настройка: твой Worker ===
+    const API_BASE = "https://racemann-api.vsmirnoff.workers.dev";
+    const STATE_URL = API_BASE + "/state";
 
-    const elLast = document.getElementById("lastLap");
-    const elBest = document.getElementById("bestLap");
-    const elCur  = document.getElementById("currentLap");
-    const elDelta = document.getElementById("deltaBest");
-    const elRaw = document.getElementById("rawJson");
-    const elTS = document.getElementById("tsLine");
-    const elSource = document.getElementById("sourceLine");
+    const $ = (id) => document.getElementById(id);
 
-    function fmt(x){
-      if (x === null || x === undefined || Number.isNaN(x)) return "—";
-      const n = Number(x);
+    function fmt(v){
+      if (v === null || v === undefined) return "—";
+      const n = Number(v);
+      if (!Number.isFinite(n)) return "—";
       return n.toFixed(3);
     }
 
-    function updateUI(data){
-      const last = Number(data.lastLap);
-      const best = Number(data.bestLap);
-      const cur  = Number(data.currentLapTime);
-
-      elLast.textContent = fmt(last);
-      elBest.textContent = fmt(best);
-      elCur.textContent  = fmt(cur);
-
-      // Δ к best (только если оба есть)
-      if (Number.isFinite(last) && Number.isFinite(best)) {
-        const d = last - best;
-        const sign = d >= 0 ? "+" : "−";
-        const abs = Math.abs(d).toFixed(3);
-        elDelta.textContent = `${sign}${abs}`;
-        elDelta.className = d <= 0 ? "good" : "bad";
-      } else {
-        elDelta.textContent = "—";
-        elDelta.className = "";
-      }
-
-      elRaw.textContent = JSON.stringify(data, null, 2);
-      elTS.textContent = `ts: ${data.ts ?? "—"}`;
-      elSource.textContent = `source: api`;
+    function setDelta(el, delta){
+      if (delta === null || delta === undefined) { el.textContent = "—"; el.className = "delta"; return; }
+      const n = Number(delta);
+      if (!Number.isFinite(n)) { el.textContent = "—"; el.className = "delta"; return; }
+      const sign = n > 0 ? "+" : "";
+      el.textContent = sign + n.toFixed(3);
+      el.className = "delta " + (n > 0 ? "pos" : "neg");
     }
+
+    let timer = null;
 
     async function tick(){
+      const t0 = performance.now();
+      $("source").textContent = "fetch";
+      $("err").textContent = "—";
+
       try{
-        const r = await fetch(API_URL, { cache: "no-store" });
-        const data = await r.json();
-        updateUI(data);
+        const res = await fetch(STATE_URL, { cache: "no-store" });
+        const ms = Math.round(performance.now() - t0);
+        $("pollMs").textContent = ms;
+
+        if (!res.ok){
+          $("dot").classList.remove("ok");
+          $("statusText").textContent = "ошибка " + res.status;
+          $("err").textContent = "HTTP " + res.status;
+          return;
+        }
+
+        const data = await res.json();
+
+        // UI values
+        $("currentLap").textContent = fmt(data.currentLapTime);
+        $("lastLap").textContent = fmt(data.lastLap);
+        $("bestLap").textContent = fmt(data.bestLap);
+
+        // Δ to best
+        if (data.lastLap != null && data.bestLap != null){
+          const d = Number(data.lastLap) - Number(data.bestLap);
+          setDelta($("deltaBest"), d);
+        } else {
+          setDelta($("deltaBest"), null);
+        }
+
+        // status pill
+        $("dot").classList.add("ok");
+        $("statusText").textContent = data.status || "ok";
+
+        // ts
+        $("ts").textContent = (data.ts ?? "—");
+
+        // debug
+        $("debug").textContent = JSON.stringify(data, null, 2);
+
       } catch (e){
-        elSource.textContent = "source: error";
+        $("dot").classList.remove("ok");
+        $("statusText").textContent = "нет связи";
+        $("err").textContent = e?.message || String(e);
+        $("pollMs").textContent = "—";
       }
     }
 
-    tick();
-    setInterval(tick, 1000);
+    function start(){
+      if (timer) clearInterval(timer);
+      tick(); // сразу
+      timer = setInterval(tick, 1000);
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      // чтобы не жечь батарейку, когда вкладка не активна
+      if (document.hidden){
+        if (timer) clearInterval(timer);
+        timer = null;
+      } else {
+        start();
+      }
+    });
+
+    start();
   </script>
 </body>
 </html>

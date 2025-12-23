@@ -2,250 +2,339 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Racemann Pilot — Live</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RaceMann Live</title>
   <style>
     :root{
-      --bg1:#05070b;
-      --bg2:#0a1020;
-      --card:#0f1624cc;
-      --stroke:#ffffff14;
-      --text:#e9eefc;
-      --muted:#aab3c6;
-      --purple:#b46cff;
-      --green:#35d07f;
-      --red:#ff5a7a;
+      --bg:#070A12;
+      --card:#0E1422;
+      --card2:#0B1020;
+      --text:#EAF0FF;
+      --muted:rgba(234,240,255,.55);
+      --accent:#A855F7;
+      --ok:#22C55E;
+      --bad:#EF4444;
+      --border:rgba(255,255,255,.07);
     }
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(168,85,247,.18), transparent 60%),
+                  radial-gradient(900px 500px at 80% 20%, rgba(59,130,246,.10), transparent 55%),
+                  var(--bg);
       color:var(--text);
-      background:
-        radial-gradient(1200px 900px at 20% -10%, #1a2b60 0%, transparent 55%),
-        radial-gradient(800px 700px at 90% 10%, #2a1450 0%, transparent 55%),
-        linear-gradient(180deg,var(--bg2),var(--bg1));
-      min-height:100vh;
     }
     .wrap{
       max-width:520px;
       margin:0 auto;
-      padding:16px 14px 24px;
-      padding-top: max(16px, env(safe-area-inset-top));
-      padding-bottom: max(24px, env(safe-area-inset-bottom));
+      padding:20px 16px 40px;
     }
-    .card{
-      background: linear-gradient(180deg, #0f1727cc, #0b1220cc);
-      border:1px solid var(--stroke);
-      border-radius:22px;
-      padding:18px 18px 16px;
-      box-shadow: 0 12px 50px #00000066;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      margin-bottom:14px;
-    }
-    .label{
-      font-size:12px;
-      letter-spacing: .22em;
-      text-transform: uppercase;
-      color:var(--muted);
-      opacity:.9;
-    }
-    .value{
-      margin-top:8px;
-      font-weight:800;
-      font-size: clamp(44px, 9vw, 84px);
-      line-height:1;
-    }
-    .value.purple{ color: var(--purple); }
-    .sub{
-      margin-top:10px;
-      color:var(--muted);
-      font-size:16px;
-    }
-    .sub .delta{ font-weight:700; margin-left:8px; }
-    .delta.pos{ color:var(--red); }
-    .delta.neg{ color:var(--green); }
-
-    .debug{
-      margin-top:10px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
-      font-size:12px;
-      color:#cfe3ffcc;
-      white-space: pre-wrap;
-      word-break: break-word;
-      opacity:.9;
-    }
-    .tiny{
+    .top{
       display:flex;
-      justify-content:space-between;
-      gap:10px;
-      color:var(--muted);
-      font-size:12px;
-      margin-top:8px;
-    }
-    .pill{
-      display:inline-flex;
       align-items:center;
-      gap:8px;
-      padding:8px 12px;
-      border-radius:999px;
-      border:1px solid var(--stroke);
-      background:#0b1220aa;
-      font-size:13px;
-      color:var(--muted);
-    }
-    .row{
-      display:flex;
       justify-content:space-between;
-      align-items:center;
-      gap:10px;
+      gap:12px;
       margin-bottom:14px;
     }
     .title{
-      font-size:18px;
-      font-weight:800;
-      letter-spacing:.02em;
+      font-size:28px;
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+    .pill{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:999px;
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      font-size:13px;
+      color:var(--muted);
+      min-width:120px;
+      justify-content:center;
     }
     .dot{
-      width:8px;height:8px;border-radius:99px;background:var(--red);
-      box-shadow:0 0 0 3px #ff5a7a22;
+      width:10px;height:10px;border-radius:50%;
+      background: rgba(255,255,255,.22);
+      box-shadow:0 0 0 4px rgba(255,255,255,.05);
     }
-    .dot.ok{
-      background:var(--green);
-      box-shadow:0 0 0 3px #35d07f22;
+    .dot.ok{ background: var(--ok); box-shadow:0 0 0 4px rgba(34,197,94,.16); }
+    .dot.bad{ background: var(--bad); box-shadow:0 0 0 4px rgba(239,68,68,.16); }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      border-radius:24px;
+      padding:18px 18px 16px;
+      margin:14px 0;
+      box-shadow: 0 25px 55px rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+    }
+    .label{
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:rgba(234,240,255,.45);
+      margin-bottom:10px;
+    }
+    .big{
+      font-size:76px;
+      line-height:1;
+      font-weight:800;
+      letter-spacing:-.02em;
+    }
+    .big.accent{ color: var(--accent); }
+    .smallrow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-top:10px;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .debug{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size:12px;
+      white-space:pre-wrap;
+      word-break:break-word;
+      color:rgba(234,240,255,.72);
+      margin-top:10px;
+    }
+
+    .ctrls{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    input{
+      flex:1;
+      width:100%;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.25);
+      color:var(--text);
+      outline:none;
+      font-size:14px;
+    }
+    input::placeholder{ color: rgba(234,240,255,.35); }
+    button{
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.08);
+      color:var(--text);
+      font-weight:600;
+      cursor:pointer;
+      user-select:none;
+    }
+    button.primary{
+      background: rgba(168,85,247,.25);
+      border-color: rgba(168,85,247,.35);
+    }
+    button:disabled{ opacity:.5; cursor:not-allowed; }
+
+    .hint{
+      color:rgba(234,240,255,.45);
+      font-size:12px;
+      line-height:1.4;
+    }
+    .hint code{
+      color:rgba(234,240,255,.75);
+      background:rgba(255,255,255,.06);
+      padding:2px 6px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,.07);
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="row">
+    <div class="top">
       <div class="title">Live</div>
-      <div class="pill"><span id="dot" class="dot"></span><span id="statusText">нет связи</span></div>
+      <div class="pill"><span id="dot" class="dot"></span><span id="statusText">idle</span></div>
     </div>
 
     <div class="card">
-      <div class="label">LAST LAP</div>
-      <div id="lastLap" class="value">—</div>
-      <div class="sub">Δ к best: <span id="deltaBest" class="delta">—</span></div>
+      <div class="label">Подключение</div>
+      <div class="ctrls">
+        <div class="row">
+          <input id="raceUrl" placeholder="Вставь ссылку RaceMann (…/Race/id/…#race)" />
+        </div>
+        <div class="row">
+          <input id="workerBase" placeholder="Worker base URL (например https://racemann-api.vsmirnoff.workers.dev)" />
+        </div>
+        <div class="row">
+          <button id="btnStart" class="primary">Start</button>
+          <button id="btnStop" disabled>Stop</button>
+          <button id="btnClear">Clear</button>
+        </div>
+        <div class="hint">
+          UI будет раз в секунду делать запрос: <code>{workerBase}/state?raceUrl=...</code><br/>
+          Ссылку и workerBase сохраняем в браузере (localStorage).
+        </div>
+      </div>
     </div>
 
     <div class="card">
-      <div class="label">BEST LAP</div>
-      <div id="bestLap" class="value purple">—</div>
+      <div class="label">Last lap</div>
+      <div id="lastLap" class="big">—</div>
+      <div class="smallrow">
+        <div>Δ к best: <span id="deltaBest">—</span></div>
+        <div>poll: <span id="pollMs">—</span></div>
+      </div>
     </div>
 
     <div class="card">
-      <div class="label">CURRENT LAP</div>
-      <div id="currentLap" class="value">—</div>
-      <div class="tiny">
-        <div>poll: <span id="pollMs">—</span> ms</div>
+      <div class="label">Best lap</div>
+      <div id="bestLap" class="big accent">—</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Current lap</div>
+      <div id="currentLap" class="big">—</div>
+      <div class="smallrow">
+        <div>source: <span id="source">—</span></div>
         <div>ts: <span id="ts">—</span></div>
       </div>
     </div>
 
     <div class="card">
-      <div class="label">DEBUG</div>
-      <div class="debug" id="debug">{}</div>
-      <div class="tiny">
-        <div>source: <span id="source">—</span></div>
-        <div>err: <span id="err">—</span></div>
-      </div>
+      <div class="label">Debug</div>
+      <div id="debug" class="debug">{}</div>
     </div>
   </div>
 
   <script>
-    // === Настройка: твой Worker ===
-    const API_BASE = "https://racemann-api.vsmirnoff.workers.dev";
-    const STATE_URL = API_BASE + "/state";
-
     const $ = (id) => document.getElementById(id);
 
-    function fmt(v){
-      if (v === null || v === undefined) return "—";
-      const n = Number(v);
-      if (!Number.isFinite(n)) return "—";
-      return n.toFixed(3);
-    }
+    const raceUrlEl = $("raceUrl");
+    const workerBaseEl = $("workerBase");
+    const btnStart = $("btnStart");
+    const btnStop  = $("btnStop");
+    const btnClear = $("btnClear");
 
-    function setDelta(el, delta){
-      if (delta === null || delta === undefined) { el.textContent = "—"; el.className = "delta"; return; }
-      const n = Number(delta);
-      if (!Number.isFinite(n)) { el.textContent = "—"; el.className = "delta"; return; }
-      const sign = n > 0 ? "+" : "";
-      el.textContent = sign + n.toFixed(3);
-      el.className = "delta " + (n > 0 ? "pos" : "neg");
-    }
+    const dot = $("dot");
+    const statusText = $("statusText");
+
+    const lastLapEl = $("lastLap");
+    const bestLapEl = $("bestLap");
+    const currentLapEl = $("currentLap");
+    const deltaBestEl = $("deltaBest");
+    const pollMsEl = $("pollMs");
+    const sourceEl = $("source");
+    const tsEl = $("ts");
+    const debugEl = $("debug");
 
     let timer = null;
 
-    async function tick(){
+    function setStatus(kind, text){
+      dot.className = "dot" + (kind ? (" " + kind) : "");
+      statusText.textContent = text;
+    }
+
+    function fmt(v){
+      if (v === null || v === undefined) return "—";
+      if (typeof v === "number") return v.toFixed(3);
+      return String(v);
+    }
+
+    function loadSaved(){
+      raceUrlEl.value = localStorage.getItem("raceUrl") || "";
+      workerBaseEl.value = localStorage.getItem("workerBase") || "https://racemann-api.vsmirnoff.workers.dev";
+    }
+
+    function save(){
+      localStorage.setItem("raceUrl", raceUrlEl.value.trim());
+      localStorage.setItem("workerBase", workerBaseEl.value.trim().replace(/\/+$/,""));
+    }
+
+    async function pollOnce(){
       const t0 = performance.now();
-      $("source").textContent = "fetch";
-      $("err").textContent = "—";
+      const raceUrl = raceUrlEl.value.trim();
+      const base = workerBaseEl.value.trim().replace(/\/+$/,"");
+
+      if(!raceUrl || !base){
+        setStatus("bad","no url");
+        return;
+      }
+
+      const url = base + "/state?raceUrl=" + encodeURIComponent(raceUrl) + "&_=" + Date.now();
 
       try{
-        const res = await fetch(STATE_URL, { cache: "no-store" });
+        const r = await fetch(url, { cache: "no-store" });
         const ms = Math.round(performance.now() - t0);
-        $("pollMs").textContent = ms;
+        pollMsEl.textContent = ms + " ms";
 
-        if (!res.ok){
-          $("dot").classList.remove("ok");
-          $("statusText").textContent = "ошибка " + res.status;
-          $("err").textContent = "HTTP " + res.status;
+        if(!r.ok){
+          setStatus("bad", "http " + r.status);
+          const txt = await r.text().catch(()=> "");
+          debugEl.textContent = txt || ("HTTP " + r.status);
+          sourceEl.textContent = "error";
           return;
         }
 
-        const data = await res.json();
+        const data = await r.json();
+        setStatus("ok", data.status || "ok");
+        sourceEl.textContent = "fetch";
+        tsEl.textContent = data.ts ?? "—";
 
-        // UI values
-        $("currentLap").textContent = fmt(data.currentLapTime);
-        $("lastLap").textContent = fmt(data.lastLap);
-        $("bestLap").textContent = fmt(data.bestLap);
+        // ожидаем такой формат (как ты показывал):
+        // { status, sessionTime, currentLapTime, lastLap, bestLap, ... }
+        currentLapEl.textContent = fmt(data.currentLapTime);
+        lastLapEl.textContent    = fmt(data.lastLap);
+        bestLapEl.textContent    = fmt(data.bestLap);
 
-        // Δ to best
-        if (data.lastLap != null && data.bestLap != null){
-          const d = Number(data.lastLap) - Number(data.bestLap);
-          setDelta($("deltaBest"), d);
+        if (typeof data.bestLap === "number" && typeof data.lastLap === "number"){
+          const d = data.lastLap - data.bestLap;
+          deltaBestEl.textContent = (d >= 0 ? "+" : "") + d.toFixed(3);
         } else {
-          setDelta($("deltaBest"), null);
+          deltaBestEl.textContent = "—";
         }
 
-        // status pill
-        $("dot").classList.add("ok");
-        $("statusText").textContent = data.status || "ok";
-
-        // ts
-        $("ts").textContent = (data.ts ?? "—");
-
-        // debug
-        $("debug").textContent = JSON.stringify(data, null, 2);
-
-      } catch (e){
-        $("dot").classList.remove("ok");
-        $("statusText").textContent = "нет связи";
-        $("err").textContent = e?.message || String(e);
-        $("pollMs").textContent = "—";
+        debugEl.textContent = JSON.stringify(data, null, 2);
+      } catch(e){
+        setStatus("bad","fetch error");
+        sourceEl.textContent = "error";
+        debugEl.textContent = String(e);
       }
     }
 
     function start(){
+      save();
       if (timer) clearInterval(timer);
-      tick(); // сразу
-      timer = setInterval(tick, 1000);
+      setStatus("", "starting");
+      pollOnce();
+      timer = setInterval(pollOnce, 1000);
+      btnStart.disabled = true;
+      btnStop.disabled = false;
     }
 
-    document.addEventListener("visibilitychange", () => {
-      // чтобы не жечь батарейку, когда вкладка не активна
-      if (document.hidden){
-        if (timer) clearInterval(timer);
-        timer = null;
-      } else {
-        start();
-      }
+    function stop(){
+      if (timer) clearInterval(timer);
+      timer = null;
+      setStatus("", "stopped");
+      btnStart.disabled = false;
+      btnStop.disabled = true;
+    }
+
+    btnStart.addEventListener("click", start);
+    btnStop.addEventListener("click", stop);
+    btnClear.addEventListener("click", () => {
+      raceUrlEl.value = "";
+      localStorage.removeItem("raceUrl");
     });
 
-    start();
+    loadSaved();
+    setStatus("", "idle");
   </script>
 </body>
 </html>

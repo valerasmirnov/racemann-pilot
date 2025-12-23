@@ -3,30 +3,106 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Racemann Pilot</title>
+  <title>Racemann Pilot — Training</title>
+  <meta name="theme-color" content="#0b0f14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
   <style>
     :root{
       --bg:#0b0f14;
       --card:#141b23;
+      --card2:#10161e;
       --text:#e8eef6;
       --muted:#9fb0c3;
       --accent:#4da3ff;
-      --danger:#ff4d4d;
+      --ok:#7CFF9A;
+      --warn:#FFD37C;
+      --bad:#FF6B6B;
       --border:rgba(255,255,255,.12);
       --shadow:0 10px 30px rgba(0,0,0,.35);
     }
     *{box-sizing:border-box;}
-    html,body{height:100%; margin:0; background:var(--bg); color:var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;}
-    /* Горизонтально, без “прыжков” */
-    body{ overflow:hidden; }
-    .wrap{
+    html,body{height:100%; margin:0; background:var(--bg); color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;}
+    body{overflow:hidden;}
+
+    /* Portrait hint */
+    @media (orientation: portrait){
+      .app{display:none;}
+      .rotateHint{display:flex;}
+    }
+    .rotateHint{
+      display:none;
+      position:fixed; inset:0;
+      background:var(--bg);
+      align-items:center; justify-content:center;
+      padding:20px; text-align:center;
+    }
+    .rotateHint .box{
+      max-width:520px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:18px;
+      box-shadow:var(--shadow);
+    }
+    .rotateHint b{font-size:18px;}
+    .rotateHint div{margin-top:8px; color:var(--muted);}
+
+    .app{height:100svh; display:flex; flex-direction:column;}
+
+    /* Top bar */
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+      padding:10px 12px;
+      border-bottom:1px solid var(--border);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
+    }
+    .brand{display:flex; flex-direction:column; gap:2px; min-width:0;}
+    .brand b{font-size:14px; letter-spacing:.2px;}
+    .sub{font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .pills{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;}
+    .pill{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px; border-radius:999px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--border);
+      font-size:12px; color:var(--muted);
+      white-space:nowrap;
+    }
+    .pill strong{color:var(--text); font-weight:700;}
+    .pill.ok{border-color:rgba(124,255,154,.35); color:rgba(124,255,154,.95);}
+    .pill.warn{border-color:rgba(255,211,124,.35); color:rgba(255,211,124,.95);}
+    .pill.bad{border-color:rgba(255,107,107,.35); color:rgba(255,107,107,.95);}
+
+    /* Main layout */
+    .main{
+      flex:1 1 auto;
+      display:grid;
+      grid-template-columns: 1.25fr 0.95fr;
+      gap:12px;
+      padding:12px;
+      min-height:0;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:12px;
+      min-width:0;
+      min-height:0;
+    }
+
+    /* Setup screen */
+    .setupWrap{
       height:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      display:flex; align-items:center; justify-content:center;
       padding:18px;
     }
-    .panel{
+    .setupPanel{
       width:min(920px, 100%);
       background:var(--card);
       border:1px solid var(--border);
@@ -34,30 +110,17 @@
       box-shadow:var(--shadow);
       padding:22px;
     }
-    .top{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:16px;
+    .setupTop{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
       margin-bottom:14px;
     }
-    h1{
-      font-size:20px;
-      margin:0;
-      letter-spacing:.2px;
-    }
-    .sub{
-      margin-top:6px;
-      color:var(--muted);
-      font-size:13px;
-    }
-    .mode{
-      font-size:12px;
-      color:var(--muted);
+    h1{font-size:20px; margin:0; letter-spacing:.2px;}
+    .setupSub{margin-top:6px; color:var(--muted); font-size:13px;}
+    .modePill{
+      font-size:12px; color:var(--muted);
       border:1px solid var(--border);
       border-radius:999px;
-      padding:6px 10px;
-      height:fit-content;
+      padding:6px 10px; height:fit-content;
     }
     .content{
       display:grid;
@@ -65,44 +128,32 @@
       gap:18px;
       align-items:stretch;
     }
-    @media (max-width: 720px){
-      .content{grid-template-columns: 1fr;}
-    }
+    @media (max-width: 720px){ .content{grid-template-columns:1fr;} }
 
     .box{
       border:1px solid var(--border);
       border-radius:14px;
       padding:16px;
       background:rgba(255,255,255,.03);
+      min-height:0;
     }
-
-    label{
-      display:block;
-      font-size:13px;
-      color:var(--muted);
-      margin-bottom:8px;
-    }
+    label{display:block; font-size:13px; color:var(--muted); margin-bottom:8px;}
     input{
       width:100%;
       font-size:22px;
       padding:14px 14px;
       border-radius:12px;
       border:1px solid var(--border);
-      background:#0b1016;
+      background:var(--card2);
       color:var(--text);
       outline:none;
     }
     input:focus{ border-color: rgba(77,163,255,.55); box-shadow: 0 0 0 4px rgba(77,163,255,.12); }
 
-    .row{
-      display:flex;
-      gap:10px;
-      margin-top:12px;
-      flex-wrap:wrap;
-    }
+    .row{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;}
     button{
       border:1px solid var(--border);
-      background:#0b1016;
+      background:var(--card2);
       color:var(--text);
       padding:12px 14px;
       border-radius:12px;
@@ -110,124 +161,541 @@
       cursor:pointer;
       user-select:none;
     }
-    button.primary{
-      background: rgba(77,163,255,.16);
-      border-color: rgba(77,163,255,.35);
+    button.primary{background: rgba(77,163,255,.16); border-color: rgba(77,163,255,.35);}
+    button.danger{background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.35);}
+    button.ok{background: rgba(124,255,154,.12); border-color: rgba(124,255,154,.35);}
+    button:active{transform:scale(.99);}
+    .divider{height:1px; background:var(--border); margin:12px 0;}
+    .hint{color:var(--muted); font-size:13px; line-height:1.35;}
+    .big{font-size:44px; font-weight:800; letter-spacing:1px; margin:4px 0 6px;}
+
+    /* Race UI */
+    .screen{display:none;}
+    .screen.show{display:block;}
+
+    .metrics{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      min-height:0;
     }
-    button.danger{
-      background: rgba(255,77,77,.12);
-      border-color: rgba(255,77,77,.35);
+    .metric{
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      min-height:120px;
+    }
+    .metric .t{font-size:12px; color:var(--muted); letter-spacing:.2px;}
+    .metric .v{font-size:clamp(34px, 6vw, 70px); font-weight:900; margin-top:4px;}
+    .metric .s{font-size:12px; color:var(--muted); margin-top:6px;}
+    .delta.ok{color:var(--ok);}
+    .delta.bad{color:var(--bad);}
+    .delta.neu{color:var(--muted);}
+
+    .controls{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top:12px;
     }
 
-    .big{
-      font-size:44px;
-      font-weight:700;
-      letter-spacing:1px;
-      margin:4px 0 6px;
+    .rightHead{
+      display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+      margin-bottom:8px;
     }
-    .hint{
+    .rightHead b{font-size:14px;}
+    .small{font-size:12px; color:var(--muted);}
+
+    .tableWrap{
+      border:1px solid var(--border);
+      border-radius:16px;
+      overflow:hidden;
+      background:rgba(255,255,255,.02);
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+    }
+    table{width:100%; border-collapse:collapse;}
+    thead th{
+      text-align:left;
+      padding:10px 10px;
+      font-size:12px;
       color:var(--muted);
+      border-bottom:1px solid var(--border);
+      background:rgba(0,0,0,.12);
+    }
+    tbody{display:block; overflow:auto; flex:1 1 auto;}
+    thead, tbody tr{display:table; width:100%; table-layout:fixed;}
+    tbody td{
+      padding:10px 10px;
+      border-bottom:1px solid rgba(255,255,255,.08);
       font-size:13px;
-      line-height:1.35;
     }
-    .ok{ color:#7CFF9A; }
-    .warn{ color:#FFD37C; }
-
-    .divider{
-      height:1px; background:var(--border); margin:12px 0;
+    tr.best{background:rgba(124,255,154,.10);}
+    td.badge{
+      width:84px;
+      color:var(--muted);
     }
+    .tag{
+      display:inline-block;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      font-size:11px;
+      color:var(--muted);
+      background:rgba(255,255,255,.03);
+    }
+    .tag.best{border-color:rgba(124,255,154,.35); color:rgba(124,255,154,.95);}
+    .tag.pause{border-color:rgba(255,211,124,.35); color:rgba(255,211,124,.95);}
+    .tag.finish{border-color:rgba(255,107,107,.35); color:rgba(255,107,107,.95);}
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="panel">
-      <div class="top">
-        <div>
-          <h1>Интерфейс пилота</h1>
-          <div class="sub">Тренировка • горизонтальный экран • без свайпов</div>
-        </div>
-        <div class="mode">MODE: TRAINING</div>
+  <div class="rotateHint">
+    <div class="box">
+      <b>Поверни устройство горизонтально</b>
+      <div>Экран “Пилот” рассчитан на тренировку в landscape.</div>
+    </div>
+  </div>
+
+  <div class="app">
+
+    <!-- TOPBAR (показываем только в race screen; в setup скрыт) -->
+    <div class="topbar" id="topbar" style="display:none;">
+      <div class="brand">
+        <b>Тренировка</b>
+        <div class="sub" id="sessionSub">UX • симуляция кругов кнопкой “+Круг”</div>
       </div>
+      <div class="pills">
+        <span class="pill" id="kartPill">Карт: <strong>—</strong></span>
+        <span class="pill warn" id="statePill">Статус: <strong>Готов</strong></span>
+        <span class="pill" id="timePill">Сессия: <strong>00:00</strong></span>
+        <span class="pill" id="lapsPill">Кругов: <strong>0</strong></span>
+      </div>
+    </div>
 
-      <div class="content">
-        <!-- Левая часть: ввод -->
-        <div class="box" id="setupBox">
-          <label for="kartInput">Номер карта</label>
-          <input id="kartInput" inputmode="numeric" placeholder="Например: 12" maxlength="3" />
-
-          <div class="row">
-            <button class="primary" id="saveBtn">Сохранить</button>
-            <button class="danger" id="changeBtn" style="display:none;">Сменить карт</button>
+    <!-- SETUP SCREEN -->
+    <div class="screen show" id="setupScreen">
+      <div class="setupWrap">
+        <div class="setupPanel">
+          <div class="setupTop">
+            <div>
+              <h1>Интерфейс пилота</h1>
+              <div class="setupSub">Тренировка • горизонтальный экран • без свайпов</div>
+            </div>
+            <div class="modePill">MODE: TRAINING</div>
           </div>
 
-          <div class="divider"></div>
-          <div class="hint">
-            После сохранения номер запоминается на устройстве.<br/>
-            Потом сделаем автоподхват текущего заезда с miks.racemann.com и обновление данных.
-          </div>
-        </div>
+          <div class="content">
+            <div class="box">
+              <label for="kartInput">Номер карта</label>
+              <input id="kartInput" inputmode="numeric" placeholder="Например: 12" maxlength="3" />
 
-        <!-- Правая часть: статус -->
-        <div class="box">
-          <div class="hint">Текущий карт</div>
-          <div class="big" id="kartView">—</div>
-          <div class="hint" id="statusLine">
-            <span class="warn">Нет сохранённого номера.</span> Введите номер и нажмите «Сохранить».
-          </div>
+              <div class="row">
+                <button class="primary" id="saveBtn">Сохранить</button>
+                <button class="danger" id="changeBtn" style="display:none;">Сменить карт</button>
+                <button class="ok" id="startBtn" style="display:none;">Старт тренировки</button>
+              </div>
 
-          <div class="divider"></div>
-          <div class="hint">
-            Следующее: кнопка «Старт тренировки» и экран с кругами/временем.
+              <div class="divider"></div>
+              <div class="hint">
+                Номер сохраняется на устройстве. “Старт тренировки” открывает экран заезда (пока UX-симулятор).
+              </div>
+            </div>
+
+            <div class="box">
+              <div class="hint">Текущий карт</div>
+              <div class="big" id="kartView">—</div>
+              <div class="hint" id="statusLine">
+                <span style="color:var(--warn);">Нет сохранённого номера.</span> Введите номер и нажмите «Сохранить».
+              </div>
+              <div class="divider"></div>
+              <div class="hint">Дальше подключим реальные круги из RaceMann через API.</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- RACE (TRAINING) SCREEN -->
+    <div class="screen" id="raceScreen">
+      <div class="main">
+
+        <!-- LEFT: big metrics + controls -->
+        <div class="card" style="display:flex; flex-direction:column; gap:12px; min-height:0;">
+          <div class="metrics">
+            <div class="metric">
+              <div class="t">LAST LAP</div>
+              <div class="v" id="lastLapVal">—</div>
+              <div class="s delta neu" id="deltaVal">Δ к best: —</div>
+            </div>
+            <div class="metric">
+              <div class="t">BEST LAP</div>
+              <div class="v" id="bestLapVal">—</div>
+              <div class="s" id="bestLapSub">Лучший круг в сессии</div>
+            </div>
+          </div>
+
+          <div class="metric" style="min-height:unset;">
+            <div class="t">CURRENT LAP</div>
+            <div class="v" id="curLapVal">0</div>
+            <div class="s" id="curLapSub">Нажимай “+Круг” чтобы добавить круг (UX)</div>
+          </div>
+
+          <div class="controls">
+            <button class="ok" id="addLapBtn">+ Круг</button>
+            <button class="primary" id="pauseBtn">Пауза</button>
+            <button class="danger" id="finishBtn">Финиш</button>
+            <button id="resetBtn">Сброс</button>
+            <button id="backBtn">Сменить карт</button>
+          </div>
+
+          <div class="hint">
+            Кнопка “+Круг” сейчас имитирует приход данных. Потом её заменит RaceMann.
+          </div>
+        </div>
+
+        <!-- RIGHT: laps table -->
+        <div class="card" style="display:flex; flex-direction:column; min-height:0;">
+          <div class="rightHead">
+            <b>Круги</b>
+            <span class="small" id="tableHint">Показываем последние 15</span>
+          </div>
+
+          <div class="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:70px;">#</th>
+                  <th>Время</th>
+                  <th style="width:110px;">Δ к best</th>
+                  <th style="width:90px;">Метка</th>
+                </tr>
+              </thead>
+              <tbody id="lapsBody">
+                <!-- rows injected -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="hint" style="margin-top:10px;">
+            Когда подключим RaceMann: тут будет live-таблица по всем кругам и подсветка BEST.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 
-  <script>
-    const LS_KEY = "racemann_kart_number";
+<script>
+  const LS_KEY = "racemann_kart_number";
 
-    const kartInput = document.getElementById("kartInput");
-    const kartView  = document.getElementById("kartView");
-    const statusLine= document.getElementById("statusLine");
-    const saveBtn   = document.getElementById("saveBtn");
-    const changeBtn = document.getElementById("changeBtn");
+  // Setup elements
+  const setupScreen = document.getElementById("setupScreen");
+  const raceScreen  = document.getElementById("raceScreen");
+  const topbar      = document.getElementById("topbar");
 
-    function render() {
-      const saved = localStorage.getItem(LS_KEY);
-      if (saved) {
-        kartView.textContent = saved;
-        statusLine.innerHTML = '<span class="ok">Сохранено.</span> Можно начинать тренировку.';
-        kartInput.value = saved;
-        kartInput.disabled = true;
-        saveBtn.style.display = "none";
-        changeBtn.style.display = "inline-block";
-      } else {
-        kartView.textContent = "—";
-        statusLine.innerHTML = '<span class="warn">Нет сохранённого номера.</span> Введите номер и нажмите «Сохранить».';
-        kartInput.disabled = false;
-        saveBtn.style.display = "inline-block";
-        changeBtn.style.display = "none";
-      }
+  const kartInput   = document.getElementById("kartInput");
+  const kartView    = document.getElementById("kartView");
+  const statusLine  = document.getElementById("statusLine");
+  const saveBtn     = document.getElementById("saveBtn");
+  const changeBtn   = document.getElementById("changeBtn");
+  const startBtn    = document.getElementById("startBtn");
+
+  // Race UI elements
+  const kartPill = document.getElementById("kartPill");
+  const statePill = document.getElementById("statePill");
+  const timePill = document.getElementById("timePill");
+  const lapsPill = document.getElementById("lapsPill");
+
+  const lastLapVal = document.getElementById("lastLapVal");
+  const bestLapVal = document.getElementById("bestLapVal");
+  const bestLapSub = document.getElementById("bestLapSub");
+  const deltaVal = document.getElementById("deltaVal");
+  const curLapVal = document.getElementById("curLapVal");
+
+  const addLapBtn = document.getElementById("addLapBtn");
+  const pauseBtn = document.getElementById("pauseBtn");
+  const finishBtn = document.getElementById("finishBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const backBtn = document.getElementById("backBtn");
+
+  const lapsBody = document.getElementById("lapsBody");
+
+  // Session state (UX simulation)
+  let sessionState = "ready"; // ready | running | paused | finished
+  let startMs = 0;
+  let timerId = null;
+
+  const laps = []; // {n, ms, deltaMs, isBest}
+  let bestMs = null;
+
+  function msToTime(ms) {
+    if (ms == null) return "—";
+    const total = Math.max(0, Math.round(ms));
+    const m = Math.floor(total / 60000);
+    const s = Math.floor((total % 60000) / 1000);
+    const mm = total % 1000;
+    const pad2 = (x) => String(x).padStart(2,"0");
+    const pad3 = (x) => String(x).padStart(3,"0");
+    return `${pad2(m)}:${pad2(s)}.${pad3(mm)}`;
+  }
+
+  function msToDelta(ms) {
+    if (ms == null) return "—";
+    const sign = ms > 0 ? "+" : ms < 0 ? "−" : "";
+    const abs = Math.abs(ms);
+    const s = Math.floor(abs / 1000);
+    const mm = abs % 1000;
+    const pad3 = (x) => String(x).padStart(3,"0");
+    return `${sign}${s}.${pad3(mm)}`;
+  }
+
+  function setPillState() {
+    if (sessionState === "ready") {
+      statePill.className = "pill warn";
+      statePill.innerHTML = `Статус: <strong>Готов</strong>`;
+    } else if (sessionState === "running") {
+      statePill.className = "pill ok";
+      statePill.innerHTML = `Статус: <strong>Едет</strong>`;
+    } else if (sessionState === "paused") {
+      statePill.className = "pill warn";
+      statePill.innerHTML = `Статус: <strong>Пауза</strong>`;
+    } else if (sessionState === "finished") {
+      statePill.className = "pill bad";
+      statePill.innerHTML = `Статус: <strong>Финиш</strong>`;
+    }
+  }
+
+  function updateTopPills() {
+    const kart = localStorage.getItem(LS_KEY) || "—";
+    kartPill.innerHTML = `Карт: <strong>${kart}</strong>`;
+    lapsPill.innerHTML = `Кругов: <strong>${laps.length}</strong>`;
+    setPillState();
+  }
+
+  function updateTimer() {
+    if (!startMs) return;
+    const now = Date.now();
+    const elapsed = now - startMs;
+    const m = Math.floor(elapsed / 60000);
+    const s = Math.floor((elapsed % 60000) / 1000);
+    const pad2 = (x) => String(x).padStart(2,"0");
+    timePill.innerHTML = `Сессия: <strong>${pad2(m)}:${pad2(s)}</strong>`;
+  }
+
+  function setMainMetrics() {
+    const last = laps[laps.length - 1];
+    lastLapVal.textContent = msToTime(last?.ms ?? null);
+    bestLapVal.textContent = msToTime(bestMs);
+
+    if (bestMs != null && last?.ms != null) {
+      const d = last.ms - bestMs;
+      deltaVal.textContent = `Δ к best: ${msToDelta(d)}`;
+      deltaVal.className = "s delta " + (d > 0 ? "bad" : d < 0 ? "ok" : "neu");
+    } else {
+      deltaVal.textContent = "Δ к best: —";
+      deltaVal.className = "s delta neu";
     }
 
-    saveBtn.addEventListener("click", () => {
-      const v = (kartInput.value || "").trim();
-      if (!v) return alert("Введите номер карта");
-      if (!/^\d{1,3}$/.test(v)) return alert("Номер должен быть 1–3 цифры");
-      localStorage.setItem(LS_KEY, v);
-      render();
-    });
+    curLapVal.textContent = String(laps.length);
+    bestLapSub.textContent = bestMs == null ? "Лучший круг в сессии" : `Лучший: ${msToTime(bestMs)}`;
+  }
 
-    changeBtn.addEventListener("click", () => {
-      localStorage.removeItem(LS_KEY);
+  function renderLapsTable() {
+    const maxRows = 15;
+    const view = laps.slice(-maxRows).reverse(); // newest first
+    lapsBody.innerHTML = "";
+
+    for (const lap of view) {
+      const tr = document.createElement("tr");
+      if (lap.isBest) tr.classList.add("best");
+
+      const tdN = document.createElement("td");
+      tdN.textContent = lap.n;
+      tdN.style.width = "70px";
+
+      const tdT = document.createElement("td");
+      tdT.textContent = msToTime(lap.ms);
+
+      const tdD = document.createElement("td");
+      tdD.textContent = bestMs == null ? "—" : msToDelta(lap.ms - bestMs);
+      tdD.style.width = "110px";
+      tdD.style.color = lap.isBest ? "rgba(124,255,154,.95)" : "var(--muted)";
+
+      const tdB = document.createElement("td");
+      tdB.style.width = "90px";
+      tdB.className = "badge";
+      const tag = document.createElement("span");
+      tag.className = "tag" + (lap.isBest ? " best" : "");
+      tag.textContent = lap.isBest ? "BEST" : "";
+      tdB.appendChild(tag);
+
+      tr.appendChild(tdN);
+      tr.appendChild(tdT);
+      tr.appendChild(tdD);
+      tr.appendChild(tdB);
+
+      lapsBody.appendChild(tr);
+    }
+  }
+
+  function refreshRaceUI() {
+    updateTopPills();
+    setMainMetrics();
+    renderLapsTable();
+  }
+
+  function showSetup() {
+    setupScreen.classList.add("show");
+    raceScreen.classList.remove("show");
+    topbar.style.display = "none";
+  }
+
+  function showRace() {
+    setupScreen.classList.remove("show");
+    raceScreen.classList.add("show");
+    topbar.style.display = "flex";
+    refreshRaceUI();
+  }
+
+  function renderSetup() {
+    const saved = localStorage.getItem(LS_KEY);
+    if (saved) {
+      kartView.textContent = saved;
+      statusLine.innerHTML = '<span style="color:var(--ok);">Сохранено.</span> Можно нажать «Старт тренировки».';
+      kartInput.value = saved;
+      kartInput.disabled = true;
+      saveBtn.style.display = "none";
+      changeBtn.style.display = "inline-block";
+      startBtn.style.display = "inline-block";
+    } else {
+      kartView.textContent = "—";
+      statusLine.innerHTML = '<span style="color:var(--warn);">Нет сохранённого номера.</span> Введите номер и нажмите «Сохранить».';
       kartInput.value = "";
-      render();
-      kartInput.focus();
-    });
+      kartInput.disabled = false;
+      saveBtn.style.display = "inline-block";
+      changeBtn.style.display = "none";
+      startBtn.style.display = "none";
+    }
+  }
 
-    render();
-  </script>
+  // Setup actions
+  saveBtn.addEventListener("click", () => {
+    const v = (kartInput.value || "").trim();
+    if (!v) return alert("Введите номер карта");
+    if (!/^\d{1,3}$/.test(v)) return alert("Номер должен быть 1–3 цифры");
+    localStorage.setItem(LS_KEY, v);
+    renderSetup();
+  });
+
+  changeBtn.addEventListener("click", () => {
+    localStorage.removeItem(LS_KEY);
+    renderSetup();
+    kartInput.focus();
+  });
+
+  startBtn.addEventListener("click", () => {
+    // Start session (UX)
+    sessionState = "running";
+    startMs = Date.now();
+    clearInterval(timerId);
+    timerId = setInterval(updateTimer, 500);
+    updateTimer();
+    showRace();
+  });
+
+  kartInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && saveBtn.style.display !== "none") saveBtn.click();
+  });
+
+  // Race actions (UX)
+  function addLapSimulated() {
+    if (sessionState !== "running") return;
+
+    // Generate plausible lap times (feel free to tweak)
+    // Base ~ 54.0s with random jitter
+    const base = 54000;
+    const jitter = Math.round((Math.random() - 0.5) * 1400); // +/- 0.7s
+    // a little fatigue/consistency factor
+    const drift = Math.round(laps.length * 35); // +0.035s per lap
+    const ms = Math.max(45000, base + jitter + drift);
+
+    const n = laps.length + 1;
+    const isNewBest = (bestMs == null) || (ms < bestMs);
+    if (isNewBest) bestMs = ms;
+
+    // Mark all laps best=false first if new best
+    if (isNewBest) {
+      for (const l of laps) l.isBest = false;
+    }
+
+    laps.push({ n, ms, isBest: isNewBest });
+    refreshRaceUI();
+  }
+
+  addLapBtn.addEventListener("click", addLapSimulated);
+
+  pauseBtn.addEventListener("click", () => {
+    if (sessionState === "running") {
+      sessionState = "paused";
+      clearInterval(timerId);
+      refreshRaceUI();
+    } else if (sessionState === "paused") {
+      sessionState = "running";
+      // resume timer: keep elapsed — simplest UX: restart from now (we can refine later)
+      // For UX we keep it simple: do not jump back; just continue from current.
+      // We'll store elapsed offset later when real data comes.
+      startMs = Date.now() - (parseDisplayedSessionSeconds() * 1000);
+      timerId = setInterval(updateTimer, 500);
+      refreshRaceUI();
+    }
+  });
+
+  function parseDisplayedSessionSeconds() {
+    // Parses "MM:SS" from timePill
+    const m = timePill.textContent.match(/(\d{2}):(\d{2})/);
+    if (!m) return 0;
+    return (parseInt(m[1],10) * 60) + parseInt(m[2],10);
+  }
+
+  finishBtn.addEventListener("click", () => {
+    if (sessionState === "finished") return;
+    sessionState = "finished";
+    clearInterval(timerId);
+    refreshRaceUI();
+  });
+
+  resetBtn.addEventListener("click", () => {
+    sessionState = "ready";
+    clearInterval(timerId);
+    startMs = 0;
+    bestMs = null;
+    laps.length = 0;
+    timePill.innerHTML = `Сессия: <strong>00:00</strong>`;
+    showSetup();
+    renderSetup();
+  });
+
+  backBtn.addEventListener("click", () => {
+    // Change kart = back to setup and clear number
+    localStorage.removeItem(LS_KEY);
+    sessionState = "ready";
+    clearInterval(timerId);
+    startMs = 0;
+    bestMs = null;
+    laps.length = 0;
+    timePill.innerHTML = `Сессия: <strong>00:00</strong>`;
+    showSetup();
+    renderSetup();
+  });
+
+  // init
+  renderSetup();
+</script>
 </body>
 </html>

@@ -1,389 +1,329 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>RaceMann Pilot — Debug</title>
   <style>
     :root{
-      --bg:#070812;
-      --card:#0c1022cc;
-      --stroke:#ffffff1a;
-      --text:#e8e8ff;
-      --muted:#a9abd6;
-      --accent:#b892ff;
-      --good:#42d392;
-      --bad:#ff5b6e;
-      --shadow: 0 24px 80px rgba(0,0,0,.45);
-      --radius: 22px;
-      font-synthesis-weight:none;
+      --bg:#0b0c14;
+      --card:rgba(255,255,255,.06);
+      --stroke:rgba(255,255,255,.10);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+      --accent:#b48cff;
+      --bad:#ff5a7a;
+      --ok:#35d07f;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: -apple-system, system-ui, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      background:
-        radial-gradient(1200px 700px at 30% -20%, rgba(184,146,255,.25), transparent 60%),
-        radial-gradient(900px 600px at 120% 10%, rgba(86,225,255,.14), transparent 55%),
-        radial-gradient(800px 500px at 40% 120%, rgba(255,120,198,.10), transparent 60%),
-        var(--bg);
-      color:var(--text);
-      font: 15px/1.45 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      padding: 20px 14px 48px;
-    }
-    .wrap{max-width:760px;margin:0 auto}
-    h1{font-size:22px;margin:8px 0 14px;font-weight:700;letter-spacing:.2px}
-    .pill{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:8px 12px;border:1px solid var(--stroke);
-      border-radius:999px;background:rgba(255,255,255,.05)
-    }
-    .dot{width:10px;height:10px;border-radius:50%}
-    .dot.good{background:var(--good)}
-    .dot.bad{background:var(--bad)}
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);margin:0;}
+    .wrap{max-width:820px;margin:0 auto;padding:24px 16px 60px;}
+    h1{font-size:22px;margin:0 0 14px;}
+    .row{display:grid;grid-template-columns:1fr;gap:12px;}
     .card{
-      background:var(--card);
       border:1px solid var(--stroke);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 16px;
-      margin: 14px 0;
-      backdrop-filter: blur(10px);
+      background:linear-gradient(180deg, rgba(180,140,255,.10), rgba(255,255,255,.03));
+      border-radius:18px;
+      padding:14px;
+      box-shadow:0 12px 30px rgba(0,0,0,.35);
     }
-    .label{color:var(--muted);font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 8px}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .label{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:6px 0;}
     input{
       width:100%;
-      padding:14px 14px;
-      border-radius: 16px;
+      background:rgba(0,0,0,.25);
       border:1px solid var(--stroke);
-      background: rgba(255,255,255,.04);
       color:var(--text);
+      padding:12px 12px;
+      border-radius:14px;
+      font-size:15px;
       outline:none;
     }
-    input::placeholder{color:#bdbfe6aa}
-    .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
     button{
       border:1px solid var(--stroke);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      padding: 12px 14px;
-      border-radius: 16px;
+      background:rgba(0,0,0,.22);
+      color:var(--text);
+      padding:12px 14px;
+      border-radius:14px;
+      font-size:15px;
       cursor:pointer;
-      font-weight:600;
     }
-    button.primary{background:rgba(184,146,255,.20);border-color:rgba(184,146,255,.35)}
-    button:active{transform: translateY(1px)}
-    .kv{
-      display:grid;
-      grid-template-columns: 150px 1fr;
-      gap:8px 12px;
-      font-size:13px;
-      align-items:center;
-    }
-    .k{color:var(--muted)}
-    .v{word-break:break-word}
-    .grid2{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    @media (max-width:720px){ .grid2{grid-template-columns:1fr} .kv{grid-template-columns:110px 1fr}}
-    .box{
-      border:1px solid var(--stroke);
-      border-radius: 18px;
-      padding: 14px;
-      background: rgba(255,255,255,.03);
-      min-height: 108px;
-    }
-    .big{
-      font-size:44px;
-      letter-spacing:.02em;
-      font-weight:800;
-      margin: 4px 0 2px;
-    }
-    .sub{color:var(--muted);font-size:12px}
-    .statusline{
-      display:flex;align-items:center;justify-content:space-between;
-      gap:10px;margin-top:4px
-    }
-    .bar{
-      height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid var(--stroke)
-    }
-    .bar > i{display:block;height:100%;width:55%;background:rgba(184,146,255,.85)}
+    button.primary{background:rgba(180,140,255,.25);border-color:rgba(180,140,255,.55)}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .kv{display:grid;grid-template-columns:160px 1fr;gap:10px;align-items:start}
+    .kv .k{color:var(--muted)}
+    .kv .v{word-break:break-word}
     pre{
       margin:0;
-      white-space:pre-wrap;
-      word-break:break-word;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid var(--stroke);
+      background:rgba(0,0,0,.25);
+      color:var(--text);
+      overflow:auto;
+      font-family:var(--mono);
       font-size:12px;
-      color:#eaeaff;
+      line-height:1.35;
+      white-space:pre-wrap;
+      word-wrap:break-word;
     }
-    .hint{color:var(--muted);font-size:13px;margin-top:8px}
+    .statusline{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 12px;border-radius:999px;
+      border:1px solid var(--stroke);background:rgba(0,0,0,.18);
+      color:var(--muted);
+    }
+    .dot{width:10px;height:10px;border-radius:50%;}
+    .dot.ok{background:var(--ok)}
+    .dot.bad{background:var(--bad)}
+    .dot.mid{background:var(--accent)}
+    .bar{height:10px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden;flex:1}
+    .bar > i{display:block;height:100%;width:60%;background:var(--accent)}
+    .muted{color:var(--muted)}
   </style>
 </head>
-
 <body>
   <div class="wrap">
-    <div class="row" style="justify-content:space-between;align-items:center">
-      <h1>RaceMann Pilot — Debug</h1>
-      <div class="pill" id="healthPill"><span class="dot bad" id="healthDot"></span><span id="healthTxt">/health …</span></div>
-    </div>
+    <h1>RaceMann Pilot — Debug</h1>
 
     <div class="card">
-      <div class="label">Настройки</div>
-
-      <div style="margin-bottom:10px">
-        <div class="sub">Worker API (не меняй, если всё ок)</div>
-        <input id="apiBase" placeholder="https://racemann-api.vsmirnoff.workers.dev" />
+      <div class="statusline">
+        <div class="pill" id="healthPill"><span class="dot mid"></span><span id="healthText">/health …</span></div>
+        <div class="muted">UI → Worker → SignalR</div>
       </div>
 
-      <div style="margin-bottom:10px">
-        <div class="sub">Ссылка на заезд (RaceMann)</div>
-        <input id="raceUrl" placeholder="https://miks.racemann.com/Race/id/…#race" />
-      </div>
-
-      <div style="margin-bottom:10px">
-        <div class="sub">Номер карта (как в RaceMann: 05, 10, 19, 55, 78 и т.д.)</div>
-        <input id="kart" placeholder="например 55" />
-      </div>
-
-      <div style="margin-bottom:10px">
-        <div class="sub">Период опроса, мс</div>
-        <input id="pollMs" placeholder="1000" />
-      </div>
-
-      <div class="btnrow">
-        <button class="primary" id="btnShowId">Показать Race ID</button>
-        <button id="btnStart">Старт (debug/all)</button>
-        <button id="btnRegistry">Registry (сырьё)</button>
-        <button id="btnHealth">Проверить /health</button>
-        <button id="btnStop">Стоп</button>
-      </div>
-
-      <div class="card" style="margin:14px 0 0; background:rgba(255,255,255,.02)">
-        <div class="kv">
-          <div class="k">Race ID</div><div class="v" id="outRaceId">—</div>
-          <div class="k">Normalized</div><div class="v" id="outNorm">—</div>
-          <div class="k">Kart</div><div class="v" id="outKart">—</div>
+      <div class="row" style="margin-top:12px">
+        <div>
+          <div class="label">Worker API (не меняй, если всё ок)</div>
+          <input id="apiBase" value="https://racemann-api.vsmirnoff.workers.dev"/>
         </div>
-        <div class="hint">
-          Сейчас “Старт” будет звать воркер <b>/debug/all</b> и показывать:
-          <b>allMessages</b> (ВСЕ сообщения), <b>kartsSeen</b> (какие карты вообще приходят),
-          и <b>foundForKart</b> (если удалось найти именно твой kart).
+
+        <div>
+          <div class="label">Ссылка на заезд (RaceMann)</div>
+          <input id="raceUrl" placeholder="https://miks.racemann.com/Race/id/....#race"/>
+        </div>
+
+        <div class="grid2">
+          <div>
+            <div class="label">Номер карта (как в RaceMann: 05, 10, 19…)</div>
+            <input id="kart" value="77"/>
+          </div>
+          <div>
+            <div class="label">Период опроса, мс</div>
+            <input id="pollMs" value="1000"/>
+          </div>
+        </div>
+
+        <div class="btns">
+          <button class="primary" id="btnShowId">Показать Race ID</button>
+          <button class="primary" id="btnStartAll">Старт (debug/all)</button>
+          <button id="btnRegistry">Registry (сырьё)</button>
+          <button id="btnHealth">Проверить /health</button>
+          <button id="btnStop">Стоп</button>
+        </div>
+
+        <div class="kv" style="margin-top:10px">
+          <div class="k">Race ID</div><div class="v" id="raceIdOut">—</div>
+          <div class="k">Normalized</div><div class="v" id="normOut">—</div>
+          <div class="k">Kart</div><div class="v" id="kartOut">—</div>
         </div>
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" style="margin-top:14px">
       <div class="label">LIVE</div>
       <div class="statusline">
-        <div style="min-width:220px">
-          <div class="sub">STATUS</div>
-          <div class="bar"><i id="bar"></i></div>
+        <div class="pill"><span class="dot bad" id="connDot"></span><span id="connText">stopped</span></div>
+        <div class="bar"><i id="bar"></i></div>
+        <div class="muted">poll: <span id="pollOut">—</span> ms • ts: <span id="tsOut">—</span></div>
+      </div>
+      <div style="margin-top:12px" class="grid2">
+        <div class="card" style="background:rgba(255,255,255,.03)">
+          <div class="label">LAST LAP</div>
+          <div style="font-size:34px" id="lastLap">—</div>
+          <div class="muted" id="delta">Δ к best: —</div>
         </div>
-        <div class="pill"><span class="dot" id="connDot"></span><span id="connTxt">—</span></div>
+        <div class="card" style="background:rgba(255,255,255,.03)">
+          <div class="label">BEST LAP</div>
+          <div style="font-size:34px" id="bestLap">—</div>
+          <div class="muted">kart: <span id="kartLive">—</span></div>
+        </div>
       </div>
-      <div class="statusline">
-        <div class="sub">poll: <span id="outPoll">—</span> ms</div>
-        <div class="sub">ts: <span id="outTs">—</span></div>
+
+      <div class="card" style="margin-top:12px;background:rgba(255,255,255,.03)">
+        <div class="label">CURRENT LAP</div>
+        <div style="font-size:34px" id="curLap">—</div>
+        <div class="muted">source: <span id="sourceOut">—</span></div>
       </div>
-    </div>
 
-    <div class="card">
-      <div class="label">DEBUG</div>
-      <div class="box"><pre id="outDebug">{}</pre></div>
-    </div>
+      <div style="margin-top:12px">
+        <div class="label">DEBUG</div>
+        <pre id="debug">{}</pre>
+      </div>
 
-    <div class="card">
-      <div class="label">REGISTRY (сырьё)</div>
-      <div class="box"><pre id="outRegistry">{}</pre></div>
+      <div style="margin-top:12px">
+        <div class="label">REGISTRY (сырьё)</div>
+        <pre id="registry">{}</pre>
+      </div>
     </div>
   </div>
 
 <script>
   const els = {
-    apiBase: document.getElementById("apiBase"),
-    raceUrl: document.getElementById("raceUrl"),
-    kart: document.getElementById("kart"),
-    pollMs: document.getElementById("pollMs"),
+    apiBase: document.getElementById('apiBase'),
+    raceUrl: document.getElementById('raceUrl'),
+    kart: document.getElementById('kart'),
+    pollMs: document.getElementById('pollMs'),
 
-    btnShowId: document.getElementById("btnShowId"),
-    btnStart: document.getElementById("btnStart"),
-    btnRegistry: document.getElementById("btnRegistry"),
-    btnHealth: document.getElementById("btnHealth"),
-    btnStop: document.getElementById("btnStop"),
+    btnShowId: document.getElementById('btnShowId'),
+    btnStartAll: document.getElementById('btnStartAll'),
+    btnRegistry: document.getElementById('btnRegistry'),
+    btnHealth: document.getElementById('btnHealth'),
+    btnStop: document.getElementById('btnStop'),
 
-    outRaceId: document.getElementById("outRaceId"),
-    outNorm: document.getElementById("outNorm"),
-    outKart: document.getElementById("outKart"),
-    outPoll: document.getElementById("outPoll"),
-    outTs: document.getElementById("outTs"),
+    raceIdOut: document.getElementById('raceIdOut'),
+    normOut: document.getElementById('normOut'),
+    kartOut: document.getElementById('kartOut'),
 
-    outDebug: document.getElementById("outDebug"),
-    outRegistry: document.getElementById("outRegistry"),
+    connDot: document.getElementById('connDot'),
+    connText: document.getElementById('connText'),
+    pollOut: document.getElementById('pollOut'),
+    tsOut: document.getElementById('tsOut'),
+    bar: document.getElementById('bar'),
 
-    connDot: document.getElementById("connDot"),
-    connTxt: document.getElementById("connTxt"),
-    bar: document.getElementById("bar"),
+    lastLap: document.getElementById('lastLap'),
+    bestLap: document.getElementById('bestLap'),
+    curLap: document.getElementById('curLap'),
+    delta: document.getElementById('delta'),
+    kartLive: document.getElementById('kartLive'),
+    sourceOut: document.getElementById('sourceOut'),
 
-    healthDot: document.getElementById("healthDot"),
-    healthTxt: document.getElementById("healthTxt"),
+    debug: document.getElementById('debug'),
+    registry: document.getElementById('registry'),
+
+    healthPill: document.getElementById('healthPill'),
+    healthText: document.getElementById('healthText'),
   };
-
-  // defaults
-  const LS = {
-    apiBase: "racemann_api_base",
-    raceUrl: "racemann_race_url",
-    kart: "racemann_kart",
-    pollMs: "racemann_poll_ms",
-  };
-
-  function loadState(){
-    els.apiBase.value = localStorage.getItem(LS.apiBase) || "https://racemann-api.vsmirnoff.workers.dev";
-    els.raceUrl.value = localStorage.getItem(LS.raceUrl) || "";
-    els.kart.value = localStorage.getItem(LS.kart) || "";
-    els.pollMs.value = localStorage.getItem(LS.pollMs) || "1000";
-  }
-  function saveState(){
-    localStorage.setItem(LS.apiBase, els.apiBase.value.trim());
-    localStorage.setItem(LS.raceUrl, els.raceUrl.value.trim());
-    localStorage.setItem(LS.kart, els.kart.value.trim());
-    localStorage.setItem(LS.pollMs, els.pollMs.value.trim());
-  }
-
-  function parseRaceIdFromUrl(u){
-    try{
-      const url = new URL(u);
-      const m = url.pathname.match(/\/Race\/id\/([0-9a-fA-F-]{36})/);
-      if (!m) return { ok:false, error:"Cannot extract Race ID" };
-      const raceId = m[1].toLowerCase();
-      const normalized = `https://miks.racemann.com/Race/id/${raceId}`;
-      return { ok:true, raceId, normalized };
-    }catch(e){
-      return { ok:false, error:"Invalid URL" };
-    }
-  }
-
-  function setConn(status, ok=true){
-    els.connTxt.textContent = status;
-    els.connDot.className = "dot " + (ok ? "good" : "bad");
-    els.bar.style.width = ok ? "100%" : "55%";
-  }
-
-  async function checkHealth(){
-    const base = els.apiBase.value.trim().replace(/\/+$/,"");
-    try{
-      const r = await fetch(base + "/health");
-      const j = await r.json();
-      els.healthTxt.textContent = r.ok ? "/health ok" : "/health error";
-      els.healthDot.className = "dot " + (r.ok ? "good" : "bad");
-      els.outRegistry.textContent = JSON.stringify(j, null, 2);
-    }catch(e){
-      els.healthTxt.textContent = "/health error";
-      els.healthDot.className = "dot bad";
-    }
-  }
-
-  async function fetchJson(url){
-    const r = await fetch(url);
-    const t = await r.text();
-    let j;
-    try{ j = JSON.parse(t); }catch(e){ j = { error:"Invalid JSON from server", raw:t }; }
-    if(!r.ok){
-      throw new Error(`HTTP ${r.status}: ${t}`);
-    }
-    return j;
-  }
-
-  async function showRaceId(){
-    const s = parseRaceIdFromUrl(els.raceUrl.value.trim());
-    if(!s.ok){
-      els.outRaceId.textContent = "—";
-      els.outNorm.textContent = "—";
-      els.outDebug.textContent = JSON.stringify(s, null, 2);
-      return;
-    }
-    els.outRaceId.textContent = s.raceId;
-    els.outNorm.textContent = s.normalized;
-    els.outKart.textContent = els.kart.value.trim() || "—";
-    els.outDebug.textContent = JSON.stringify({ ok:true, raceId:s.raceId, normalized:s.normalized }, null, 2);
-  }
 
   let timer = null;
 
-  async function pollDebugAllOnce(){
-    const base = els.apiBase.value.trim().replace(/\/+$/,"");
-    const raceUrl = encodeURIComponent(els.raceUrl.value.trim());
-    const kart = encodeURIComponent(els.kart.value.trim());
-    const url = `${base}/debug/all?raceUrl=${raceUrl}&kart=${kart}`;
-
-    const j = await fetchJson(url);
-
-    // show id
-    if (j.raceId) els.outRaceId.textContent = j.raceId;
-    if (j.normalized) els.outNorm.textContent = j.normalized;
-    els.outKart.textContent = els.kart.value.trim() || "—";
-    els.outTs.textContent = j.ts || "—";
-
-    // status
-    setConn(j.status || "ok", j.ok);
-
-    // full debug object
-    els.outDebug.textContent = JSON.stringify(j, null, 2);
+  function extractRaceId(s){
+    const m = String(s||'').match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+    return m ? m[0].toLowerCase() : null;
+  }
+  function normalizeRaceUrl(s){
+    const id = extractRaceId(s);
+    return id ? `https://miks.racemann.com/Race/id/${id}` : null;
   }
 
-  async function pollRegistryOnce(){
-    const base = els.apiBase.value.trim().replace(/\/+$/,"");
-    const raceUrl = encodeURIComponent(els.raceUrl.value.trim());
-    const kart = encodeURIComponent(els.kart.value.trim());
-    const url = `${base}/debug/registry?raceUrl=${raceUrl}&kart=${kart}`;
-
-    const j = await fetchJson(url);
-    els.outRegistry.textContent = JSON.stringify(j, null, 2);
+  function setConn(text, ok=null){
+    els.connText.textContent = text;
+    if (ok === true){ els.connDot.className = "dot ok"; }
+    else if (ok === false){ els.connDot.className = "dot bad"; }
+    else { els.connDot.className = "dot mid"; }
   }
 
-  function start(){
-    saveState();
-    stop();
-    setConn("starting…", true);
+  function fmt(v){
+    if (v == null) return "—";
+    if (typeof v === "number") return v.toFixed(3);
+    return String(v);
+  }
 
-    const ms = Math.max(250, Number(els.pollMs.value || "1000"));
-    els.outPoll.textContent = ms;
+  function api(path){
+    const base = els.apiBase.value.replace(/\/+$/,'');
+    return base + path;
+  }
 
-    // first hit immediately
-    pollDebugAllOnce().catch(e => {
+  async function checkHealth(){
+    try{
+      const r = await fetch(api('/health'));
+      const j = await r.json();
+      els.healthText.textContent = r.ok ? "/health ok" : "/health error";
+      els.healthPill.querySelector('.dot').className = "dot " + (r.ok ? "ok":"bad");
+      els.debug.textContent = JSON.stringify(j, null, 2);
+    }catch(e){
+      els.healthText.textContent = "/health error";
+      els.healthPill.querySelector('.dot').className = "dot bad";
+      els.debug.textContent = JSON.stringify({error:String(e)}, null, 2);
+    }
+  }
+
+  function showRaceId(){
+    const id = extractRaceId(els.raceUrl.value);
+    const norm = normalizeRaceUrl(els.raceUrl.value);
+    els.raceIdOut.textContent = id || "—";
+    els.normOut.textContent = norm || "—";
+    els.kartOut.textContent = els.kart.value || "—";
+    els.kartLive.textContent = els.kart.value || "—";
+    return { id, norm };
+  }
+
+  async function fetchRegistry(){
+    const { norm } = showRaceId();
+    if (!norm) return;
+    const u = api(`/debug/registry?raceUrl=${encodeURIComponent(els.raceUrl.value)}&kart=${encodeURIComponent(els.kart.value||'')}`);
+    const r = await fetch(u);
+    const j = await r.json();
+    els.registry.textContent = JSON.stringify(j, null, 2);
+  }
+
+  async function pollAllOnce(){
+    const { norm } = showRaceId();
+    if (!norm) return;
+
+    const u = api(`/debug/all?raceUrl=${encodeURIComponent(els.raceUrl.value)}&kart=${encodeURIComponent(els.kart.value||'')}`);
+    const r = await fetch(u);
+    const j = await r.json();
+
+    els.tsOut.textContent = j.ts ?? "—";
+    els.pollOut.textContent = els.pollMs.value || "—";
+
+    if (r.ok && j.ok){
+      setConn(j.status || "ok", j.status !== "signalr_error");
+    }else{
       setConn("connection error", false);
-      els.outDebug.textContent = JSON.stringify({ error: String(e) }, null, 2);
-    });
+    }
 
-    timer = setInterval(() => {
-      pollDebugAllOnce().catch(e => {
-        setConn("connection error", false);
-        els.outDebug.textContent = JSON.stringify({ error: String(e) }, null, 2);
-      });
-    }, ms);
+    els.sourceOut.textContent = j.source || "—";
+
+    // Пока у нас цель — видеть ВСЕ, поэтому времена не парсим (они будут в raw/allMessages)
+    els.lastLap.textContent = "—";
+    els.bestLap.textContent = "—";
+    els.curLap.textContent = "—";
+    els.delta.textContent = "Δ к best: —";
+
+    els.debug.textContent = JSON.stringify(j, null, 2);
+
+    // registry snapshot
+    await fetchRegistry();
+  }
+
+  function startAll(){
+    stop();
+    setConn("starting…", null);
+    pollAllOnce();
+    const ms = Math.max(250, Number(els.pollMs.value || 1000));
+    timer = setInterval(pollAllOnce, ms);
   }
 
   function stop(){
-    if(timer) clearInterval(timer);
+    if (timer) clearInterval(timer);
     timer = null;
-    setConn("stopped", true);
+    setConn("stopped", false);
   }
 
   // wiring
-  els.btnShowId.addEventListener("click", showRaceId);
-  els.btnStart.addEventListener("click", start);
-  els.btnStop.addEventListener("click", stop);
-  els.btnRegistry.addEventListener("click", () => {
-    saveState();
-    pollRegistryOnce().catch(e => {
-      els.outRegistry.textContent = JSON.stringify({ error: String(e) }, null, 2);
-    });
-  });
-  els.btnHealth.addEventListener("click", checkHealth);
+  els.btnHealth.addEventListener('click', checkHealth);
+  els.btnShowId.addEventListener('click', showRaceId);
+  els.btnStartAll.addEventListener('click', startAll);
+  els.btnRegistry.addEventListener('click', fetchRegistry);
+  els.btnStop.addEventListener('click', stop);
 
-  loadState();
-  showRaceId();
+  // auto
   checkHealth();
+  showRaceId();
 </script>
 </body>
 </html>

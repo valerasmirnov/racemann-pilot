@@ -2,221 +2,361 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>RaceMann Pilot — Debug</title>
   <style>
     :root{
-      --bg:#070816;
-      --card:#0e1028cc;
-      --stroke:#2a2d4a;
-      --txt:#e9eaf6;
-      --muted:#a7a9c8;
-      --accent:#b37bff;
-      --good:#32d583;
-      --bad:#ff5a6a;
+      --bg1:#070816;
+      --bg2:#0b0b1f;
+      --card:#111226cc;
+      --card2:#0f1022cc;
+      --text:#e8e8ef;
+      --muted:#a7a7b5;
+      --stroke:#24254a;
+      --accent:#b77bff;
+      --good:#40d17a;
+      --bad:#ff4d6d;
+      --pill:#15163a;
     }
-    html,body{height:100%;}
+    *{box-sizing:border-box}
     body{
       margin:0;
-      background: radial-gradient(1200px 900px at 20% -10%, #2b2b7a55 0%, transparent 60%),
-                  radial-gradient(900px 700px at 80% 10%, #b37bff33 0%, transparent 55%),
-                  var(--bg);
-      color:var(--txt);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Arial, sans-serif;
+      font-family: ui-sans-serif, -apple-system, system-ui, Segoe UI, Roboto, Arial;
+      color:var(--text);
+      background: radial-gradient(1200px 800px at 20% -10%, #2a1660 0%, rgba(42,22,96,0) 55%),
+                  radial-gradient(900px 600px at 90% 10%, #1a2a66 0%, rgba(26,42,102,0) 60%),
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height:100vh;
     }
-    .wrap{max-width:900px;margin:0 auto;padding:24px 16px 80px;}
-    .top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;}
-    h1{font-size:22px;margin:0;font-weight:700;letter-spacing:.2px;}
-    .pill{
-      display:inline-flex;align-items:center;gap:10px;
-      padding:10px 14px;border:1px solid var(--stroke);
-      background: #0b0d20aa;border-radius:999px;
-      color:var(--muted);font-size:14px;
+    .wrap{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 14px 60px;
     }
-    .dot{width:10px;height:10px;border-radius:999px;background:#6b7280;}
-    .dot.good{background:var(--good);}
-    .dot.bad{background:var(--bad);}
-
+    .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    h1{
+      font-weight:700;
+      font-size: 22px;
+      margin:0;
+      letter-spacing: .2px;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:999px;
+      background: rgba(17,18,38,.55);
+      border: 1px solid var(--stroke);
+      backdrop-filter: blur(8px);
+      font-size: 14px;
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background: var(--bad);
+      box-shadow: 0 0 0 3px rgba(255,77,109,.15);
+    }
+    .dot.good{ background: var(--good); box-shadow: 0 0 0 3px rgba(64,209,122,.15); }
     .card{
-      margin-top:14px;
-      background: linear-gradient(180deg, #13163a99 0%, #0d102a99 100%);
-      border:1px solid #2b2f55aa;
-      border-radius:18px;
-      padding:16px;
-      box-shadow: 0 14px 40px rgba(0,0,0,.35);
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(18,19,45,.55), rgba(12,13,28,.55));
+      border-radius: 22px;
+      padding: 16px;
+      backdrop-filter: blur(10px);
+      margin: 12px 0;
+      overflow:hidden;
     }
-    .grid{display:grid;grid-template-columns:1fr;gap:12px;}
-    @media (min-width:860px){ .grid{grid-template-columns:1.2fr .8fr;} }
+    .card h2{
+      margin:0 0 12px 0;
+      font-size: 14px;
+      letter-spacing: 4px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    @media (min-width: 760px){
+      .grid{ grid-template-columns: 1fr 1fr; }
+      .grid .wide{ grid-column: 1 / -1; }
+    }
 
-    label{display:block;font-size:13px;color:var(--muted);margin:10px 0 8px;}
+    label{
+      display:block;
+      font-size: 12px;
+      color: var(--muted);
+      margin: 6px 0 6px;
+    }
     input{
       width:100%;
-      box-sizing:border-box;
-      padding:14px 14px;
-      border-radius:14px;
-      background:#07081a;
-      border:1px solid #2a2d4a;
-      color:var(--txt);
-      font-size:15px;
+      border-radius: 16px;
+      border: 1px solid var(--stroke);
+      background: rgba(10,10,28,.55);
+      color: var(--text);
+      padding: 14px 14px;
+      font-size: 15px;
       outline:none;
     }
-    input:focus{border-color:#6b5cffaa; box-shadow:0 0 0 3px #6b5cff22;}
-    .row{display:grid;grid-template-columns:1fr;gap:12px;}
-    @media (min-width:650px){ .row{grid-template-columns:1fr 1fr;} }
+    input:focus{ border-color: rgba(183,123,255,.7); box-shadow: 0 0 0 3px rgba(183,123,255,.15); }
 
-    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
-    button{
-      appearance:none;border:0;
-      padding:12px 14px;border-radius:14px;
-      background:#1a1d3f;border:1px solid #2a2d4a;
-      color:var(--txt);font-size:15px;font-weight:600;
+    .btns{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 10px;
     }
-    button.primary{background: #1b1340; border-color:#3a2c75;}
-    button:active{transform:translateY(1px);}
-    .hint{color:var(--muted);font-size:14px;line-height:1.35;margin:12px 0 0;}
+    button{
+      border:1px solid var(--stroke);
+      background: rgba(21,22,58,.55);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 16px;
+      font-size: 15px;
+      cursor:pointer;
+    }
+    button.primary{
+      background: rgba(183,123,255,.22);
+      border-color: rgba(183,123,255,.55);
+    }
+    button:active{ transform: translateY(1px); }
 
     .kv{
-      display:grid;grid-template-columns:160px 1fr;gap:8px 12px;
-      margin-top:14px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size:13px;
-      color:#dfe1ff;
-      opacity:.95;
+      display:grid;
+      grid-template-columns: 160px 1fr;
+      gap: 8px 12px;
+      align-items:start;
+      margin-top: 10px;
     }
-    .kv div:nth-child(odd){color:#aeb2e8;}
-    .mono{
-      white-space:pre-wrap;
-      word-break:break-word;
-      background:#07081a;
-      border:1px solid #2a2d4a;
-      border-radius:14px;
-      padding:12px;
-      font-size:12.5px;
-      color:#d9dcff;
-      line-height:1.35;
-      max-height:360px;
-      overflow:auto;
+    .k{ color: var(--muted); font-size: 13px; }
+    .v{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; word-break: break-all; }
+
+    .liveRow{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    @media (min-width: 760px){
+      .liveRow{ grid-template-columns: 1fr 1fr; }
+      .liveRow .wide{ grid-column: 1 / -1; }
     }
 
-    .liveGrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-      margin-top:12px;
-    }
     .tile{
-      border:1px solid #2a2d4a;
-      background:#07081a;
-      border-radius:16px;
-      padding:14px;
-      min-height:92px;
+      border:1px solid var(--stroke);
+      background: rgba(9,10,26,.45);
+      border-radius: 22px;
+      padding: 14px;
+      min-height: 120px;
     }
-    .tile.big{grid-column:1 / -1; min-height:110px;}
-    .tTitle{color:var(--muted);font-size:12px;letter-spacing:.18em;}
-    .tValue{margin-top:10px;font-size:44px;font-weight:800;letter-spacing:.02em;}
-    .tSub{margin-top:10px;color:var(--muted);font-size:14px;}
+    .tile .title{
+      font-size: 12px;
+      letter-spacing: 4px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .big{
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      margin: 0;
+    }
+    .sub{
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 6px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border:1px solid var(--stroke);
+      background: rgba(21,22,58,.5);
+      color: var(--muted);
+      font-size: 14px;
+      white-space:nowrap;
+    }
     .bar{
-      height:10px;border-radius:999px;background:#13163a;border:1px solid #2a2d4a;
-      overflow:hidden;margin-top:10px;
+      height: 8px;
+      border-radius: 999px;
+      border:1px solid var(--stroke);
+      background: rgba(9,10,26,.6);
+      overflow:hidden;
+      margin-top: 10px;
     }
-    .bar > div{height:100%;width:60%;background:var(--accent);}
-    .smallRow{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-top:10px;}
+    .bar > div{
+      height:100%;
+      width: 40%;
+      background: var(--accent);
+      opacity: .9;
+      border-radius: 999px;
+      transition: width .2s ease;
+    }
+
+    pre{
+      margin:0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      color: #d7d7e6;
+      background: rgba(7,8,20,.55);
+      border: 1px solid var(--stroke);
+      border-radius: 18px;
+      padding: 12px;
+    }
+
+    .hint{
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      margin-top: 10px;
+    }
+
+    .muted{ color: var(--muted); }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <div class="top">
       <h1>RaceMann Pilot — Debug</h1>
-      <div class="pill" id="healthPill"><span class="dot" id="healthDot"></span><span id="healthText">/health …</span></div>
+      <div class="badge" id="healthBadge">
+        <span class="dot" id="healthDot"></span>
+        <span id="healthText">/health …</span>
+      </div>
     </div>
 
-    <div class="grid">
-      <div class="card">
-        <div style="color:var(--muted);letter-spacing:.2em;font-size:12px;margin-bottom:8px;">НАСТРОЙКИ</div>
-
-        <label>Worker API (не меняй, если всё ок)</label>
-        <input id="apiBase" value="https://racemann-api.vsmirnoff.workers.dev" />
-
-        <label>Ссылка на заезд (RaceMann)</label>
-        <input id="raceUrl" placeholder="https://miks.racemann.com/Race/id/....#race" />
-
-        <div class="row">
-          <div>
-            <label>Номер карта (как в RaceMann: 05, 10, 19 и т.д.)</label>
-            <input id="kart" value="05" />
-          </div>
-          <div>
-            <label>Период опроса, мс</label>
-            <input id="pollMs" value="1000" />
-          </div>
+    <div class="card">
+      <h2>НАСТРОЙКИ</h2>
+      <div class="grid">
+        <div class="wide">
+          <label>Worker API (не меняй, если всё ок)</label>
+          <input id="apiBase" placeholder="https://racemann-api.vsmirnoff.workers.dev" />
         </div>
 
-        <div class="btns">
-          <button class="primary" id="btnShowId">Показать Race ID</button>
-          <button id="btnHealth">Проверить /health</button>
-          <button id="btnStart">Старт (LIVE)</button>
-          <button id="btnStop">Стоп</button>
-          <button id="btnRegistry">Показать реестр (сырьё)</button>
+        <div class="wide">
+          <label>Ссылка на заезд (RaceMann)</label>
+          <input id="raceUrl" placeholder="https://miks.racemann.com/Race/id/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX#race" />
         </div>
 
-        <div class="kv" style="margin-top:14px;">
-          <div>Race ID</div><div id="raceIdOut">—</div>
-          <div>Normalized</div><div id="normOut">—</div>
-          <div>Kart</div><div id="kartOut">—</div>
+        <div>
+          <label>Номер карта (как в RaceMann: 05, 10, 19 и т.д.)</label>
+          <input id="kart" placeholder="05" />
         </div>
 
-        <div class="hint">
-          Теперь отладка делается прямо тут: нажми <b>“Показать реестр (сырьё)”</b> — увидишь,
-          какие SignalR-сообщения реально приходят воркеру (и по каким “командам”).
+        <div>
+          <label>Период опроса, мс</label>
+          <input id="pollMs" placeholder="1000" />
         </div>
       </div>
 
-      <div class="card">
-        <div style="color:var(--muted);letter-spacing:.2em;font-size:12px;margin-bottom:8px;">LIVE</div>
+      <div class="btns">
+        <button class="primary" id="btnShowId">Показать Race ID</button>
+        <button id="btnHealth">Проверить /health</button>
+        <button class="primary" id="btnStart">Старт</button>
+        <button id="btnStop">Стоп</button>
+      </div>
 
-        <div class="tile big">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-            <div class="tTitle">STATUS</div>
-            <div class="pill" style="padding:8px 10px;">
-              <span class="dot" id="connDot"></span>
-              <span id="connText">stopped</span>
-            </div>
+      <div class="kv">
+        <div class="k">Race ID</div>
+        <div class="v" id="raceIdOut">—</div>
+
+        <div class="k">Normalized</div>
+        <div class="v" id="normalizedOut">—</div>
+
+        <div class="k">Kart</div>
+        <div class="v" id="kartOut">—</div>
+      </div>
+
+      <div class="hint">
+        Сейчас “Старт” будет опрашивать воркер и ждать JSON с временами.
+        Если в воркере эндпоинт называется иначе — поправь константы <span class="muted">LIVE_PATH / REG_PATH</span> внизу.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>LIVE</h2>
+
+      <div class="tile wide">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+          <div class="title">STATUS</div>
+          <div class="pill">
+            <span class="dot" id="connDot"></span>
+            <span id="connText">idle</span>
           </div>
-          <div class="bar"><div id="connBar"></div></div>
-          <div class="smallRow"><span>poll: <span id="pollOut">—</span> ms</span><span>ts: <span id="tsOut">—</span></span></div>
+        </div>
+        <div class="bar"><div id="connBar"></div></div>
+        <div class="sub">
+          <span>poll: <span id="pollLabel">—</span> ms</span>
+          <span>ts: <span id="tsLabel">—</span></span>
+        </div>
+      </div>
+
+      <div class="liveRow">
+        <div class="tile">
+          <div class="title">LAST LAP</div>
+          <div class="big" id="lastLap">—</div>
+          <div class="sub">
+            <span>Δ к best:</span>
+            <span id="delta">—</span>
+          </div>
         </div>
 
-        <div class="liveGrid">
-          <div class="tile">
-            <div class="tTitle">LAST LAP</div>
-            <div class="tValue" id="lastLap">—</div>
-            <div class="tSub">Δ к best: <span id="delta">—</span></div>
-          </div>
-          <div class="tile">
-            <div class="tTitle">BEST LAP</div>
-            <div class="tValue" id="bestLap" style="color:var(--accent);">—</div>
-            <div class="tSub">kart: <span id="kartLive">—</span></div>
-          </div>
-          <div class="tile big">
-            <div class="tTitle">CURRENT LAP</div>
-            <div class="tValue" id="curLap">—</div>
-            <div class="tSub">source: <span id="sourceOut">—</span></div>
+        <div class="tile">
+          <div class="title">BEST LAP</div>
+          <div class="big" id="bestLap">—</div>
+          <div class="sub">
+            <span>kart:</span>
+            <span id="kartMini">—</span>
           </div>
         </div>
 
-        <div style="margin-top:12px;color:var(--muted);letter-spacing:.2em;font-size:12px;">DEBUG</div>
-        <div class="mono" id="debugOut">{}</div>
+        <div class="tile wide">
+          <div class="title">CURRENT LAP</div>
+          <div class="big" id="currentLap">—</div>
+          <div class="sub">
+            <span>source:</span>
+            <span id="sourceLabel">—</span>
+          </div>
+        </div>
 
-        <div style="margin-top:12px;color:var(--muted);letter-spacing:.2em;font-size:12px;">REGISTRY (сырьё)</div>
-        <div class="mono" id="registryOut">Нажми “Показать реестр (сырьё)”.</div>
+        <div class="tile wide">
+          <div class="title">DEBUG</div>
+          <pre id="debugOut">{}</pre>
+          <div class="hint" id="errLine"></div>
+        </div>
+
+        <div class="tile wide">
+          <div class="title">REGISTRY (сырьё)</div>
+          <pre id="registryOut">{}</pre>
+        </div>
       </div>
     </div>
   </div>
 
 <script>
-  const LIVE_PATH = "/live";            // основной эндпоинт времени
-  const REGISTRY_PATH = "/debug/registry"; // новый: сырой реестр сообщений
+  // ==== ENDPOINTS in your Worker ====
+  const HEALTH_PATH = "/health";
+  const LIVE_PATH   = "/live";
+  const REG_PATH    = "/debug/registry";
 
+  // ==== UI elements ====
   const els = {
     apiBase: document.getElementById("apiBase"),
     raceUrl: document.getElementById("raceUrl"),
@@ -227,10 +367,9 @@
     btnHealth: document.getElementById("btnHealth"),
     btnStart: document.getElementById("btnStart"),
     btnStop: document.getElementById("btnStop"),
-    btnRegistry: document.getElementById("btnRegistry"),
 
     raceIdOut: document.getElementById("raceIdOut"),
-    normOut: document.getElementById("normOut"),
+    normalizedOut: document.getElementById("normalizedOut"),
     kartOut: document.getElementById("kartOut"),
 
     healthDot: document.getElementById("healthDot"),
@@ -239,164 +378,181 @@
     connDot: document.getElementById("connDot"),
     connText: document.getElementById("connText"),
     connBar: document.getElementById("connBar"),
-    pollOut: document.getElementById("pollOut"),
-    tsOut: document.getElementById("tsOut"),
+    pollLabel: document.getElementById("pollLabel"),
+    tsLabel: document.getElementById("tsLabel"),
 
     lastLap: document.getElementById("lastLap"),
     bestLap: document.getElementById("bestLap"),
-    curLap: document.getElementById("curLap"),
+    currentLap: document.getElementById("currentLap"),
     delta: document.getElementById("delta"),
-    sourceOut: document.getElementById("sourceOut"),
-    kartLive: document.getElementById("kartLive"),
+    sourceLabel: document.getElementById("sourceLabel"),
 
     debugOut: document.getElementById("debugOut"),
     registryOut: document.getElementById("registryOut"),
+    errLine: document.getElementById("errLine"),
+    kartMini: document.getElementById("kartMini"),
   };
+
+  // defaults
+  els.apiBase.value = localStorage.getItem("apiBase") || "https://racemann-api.vsmirnoff.workers.dev";
+  els.raceUrl.value = localStorage.getItem("raceUrl") || "";
+  els.kart.value    = localStorage.getItem("kart")    || "";
+  els.pollMs.value  = localStorage.getItem("pollMs")  || "1000";
 
   let timer = null;
 
-  function normalizeRaceUrl(raw){
-    const s = String(raw || "").trim().replace(/#.*$/, "");
-    const m = s.match(/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/);
-    if(!m) return { ok:false, error:"Не нашёл Race ID в ссылке" };
-    const raceId = m[1].toLowerCase();
-    return {
-      ok:true,
-      raceId,
-      normalized:`https://miks.racemann.com/Race/id/${raceId}`
-    };
+  function saveState(){
+    localStorage.setItem("apiBase", els.apiBase.value.trim());
+    localStorage.setItem("raceUrl", els.raceUrl.value.trim());
+    localStorage.setItem("kart", els.kart.value.trim());
+    localStorage.setItem("pollMs", els.pollMs.value.trim());
   }
 
-  function setHealth(ok, text){
-    els.healthText.textContent = text;
-    els.healthDot.className = "dot " + (ok ? "good" : "bad");
-  }
-  function setConn(text){
-    els.connText.textContent = text;
-    els.connDot.className = "dot " + (text && text !== "connection error" ? "good" : "bad");
-    els.connBar.style.width = (text && text !== "connection error") ? "60%" : "18%";
+  function normalizeRaceUrl(input){
+    try{
+      const u = new URL(input.trim());
+      u.hash = "";
+      const m = u.pathname.match(/\/Race\/id\/([0-9a-fA-F-]{16,})/);
+      if(!m) return { ok:false, error:"Race ID not found in URL" };
+      const id = m[1];
+      return { ok:true, raceId:id, normalized:`${u.origin}/Race/id/${id}` };
+    }catch(e){
+      return { ok:false, error:"Invalid URL" };
+    }
   }
 
   function fmt(v){
-    if(v == null) return "—";
+    if(v === null || v === undefined) return "—";
     const n = Number(v);
     if(!Number.isFinite(n)) return String(v);
-    return n.toFixed(3);
+    const s = n.toFixed(3);
+    // 65.123 -> 1:05.123 красиво, если хочешь:
+    if(n >= 60){
+      const mm = Math.floor(n/60);
+      const ss = (n - mm*60).toFixed(3).padStart(6,"0");
+      return `${mm}:${ss}`;
+    }
+    return s;
   }
 
-  function saveState(){
-    localStorage.setItem("rm_apiBase", els.apiBase.value.trim());
-    localStorage.setItem("rm_raceUrl", els.raceUrl.value.trim());
-    localStorage.setItem("rm_kart", els.kart.value.trim());
-    localStorage.setItem("rm_pollMs", els.pollMs.value.trim());
+  function setHealth(ok){
+    if(ok){
+      els.healthDot.classList.add("good");
+      els.healthText.textContent = "/health ok";
+    }else{
+      els.healthDot.classList.remove("good");
+      els.healthText.textContent = "/health error";
+    }
   }
-  function loadState(){
-    const a = localStorage.getItem("rm_apiBase"); if(a) els.apiBase.value = a;
-    const r = localStorage.getItem("rm_raceUrl"); if(r) els.raceUrl.value = r;
-    const k = localStorage.getItem("rm_kart"); if(k) els.kart.value = k;
-    const p = localStorage.getItem("rm_pollMs"); if(p) els.pollMs.value = p;
+
+  function setConn(status){
+    els.connText.textContent = status;
+    if(status === "ok" || status === "stub"){
+      els.connDot.classList.add("good");
+      els.connBar.style.width = "70%";
+    }else if(status === "no_data"){
+      els.connDot.classList.add("good");
+      els.connBar.style.width = "55%";
+    }else if(status.includes("error")){
+      els.connDot.classList.remove("good");
+      els.connBar.style.width = "25%";
+    }else{
+      els.connDot.classList.remove("good");
+      els.connBar.style.width = "35%";
+    }
   }
 
   async function checkHealth(){
+    saveState();
+    const base = els.apiBase.value.trim().replace(/\/+$/,"");
     try{
-      const base = els.apiBase.value.trim().replace(/\/+$/, "");
-      const r = await fetch(base + "/health", { cache:"no-store" });
-      if(!r.ok) throw new Error("HTTP " + r.status);
+      const r = await fetch(base + HEALTH_PATH, { cache:"no-store" });
       const j = await r.json();
-      setHealth(true, "/health ok");
+      setHealth(!!j.ok);
       els.debugOut.textContent = JSON.stringify(j, null, 2);
+      els.errLine.textContent = "";
     }catch(e){
-      setHealth(false, "/health error");
-      els.debugOut.textContent = JSON.stringify({ error:String(e) }, null, 2);
+      setHealth(false);
+      els.errLine.textContent = "health err: " + String(e);
     }
   }
 
   function showRaceId(){
-    const kart = (els.kart.value || "").trim();
+    saveState();
     const n = normalizeRaceUrl(els.raceUrl.value);
     if(!n.ok){
       els.raceIdOut.textContent = "—";
-      els.normOut.textContent = "—";
-      els.kartOut.textContent = kart || "—";
-      els.debugOut.textContent = JSON.stringify(n, null, 2);
+      els.normalizedOut.textContent = "—";
+      els.errLine.textContent = n.error;
       return;
     }
     els.raceIdOut.textContent = n.raceId;
-    els.normOut.textContent = n.normalized;
-    els.kartOut.textContent = kart || "—";
-    els.debugOut.textContent = JSON.stringify({ ok:true, ...n, kart }, null, 2);
-  }
-
-  async function fetchRegistry(){
-    saveState();
-    const base = els.apiBase.value.trim().replace(/\/+$/, "");
-    const raceUrl = els.raceUrl.value.trim();
-    const kart = els.kart.value.trim();
-
-    const u = new URL(base + REGISTRY_PATH);
-    u.searchParams.set("raceUrl", raceUrl);
-    u.searchParams.set("kart", kart);
-
-    els.registryOut.textContent = "loading…";
-
-    try{
-      const r = await fetch(u.toString(), { cache:"no-store" });
-      const txt = await r.text();
-      els.registryOut.textContent = txt;
-
-      // ещё покажем в debugOut кратко
-      els.debugOut.textContent = JSON.stringify({
-        ok: r.ok,
-        status: r.status,
-        url: u.toString()
-      }, null, 2);
-
-      if(!r.ok) setConn("connection error");
-      else setConn("registry ok");
-    }catch(e){
-      setConn("connection error");
-      els.registryOut.textContent = JSON.stringify({ error:String(e) }, null, 2);
-    }
+    els.normalizedOut.textContent = n.normalized;
+    els.kartOut.textContent = (els.kart.value || "—").trim();
+    els.kartMini.textContent = (els.kart.value || "—").trim();
+    els.errLine.textContent = "";
   }
 
   async function pollOnce(){
-    const base = els.apiBase.value.trim().replace(/\/+$/, "");
+    saveState();
+    const base = els.apiBase.value.trim().replace(/\/+$/,"");
     const raceUrl = els.raceUrl.value.trim();
     const kart = els.kart.value.trim();
     const ms = Math.max(250, Number(els.pollMs.value || 1000));
 
-    els.pollOut.textContent = String(ms);
+    els.pollLabel.textContent = String(ms);
 
-    const u = new URL(base + LIVE_PATH);
-    u.searchParams.set("raceUrl", raceUrl);
-    u.searchParams.set("kart", kart);
+    // show id block always
+    showRaceId();
+
+    // LIVE
+    const liveUrl = `${base}${LIVE_PATH}?raceUrl=${encodeURIComponent(raceUrl)}&kart=${encodeURIComponent(kart)}`;
+    // REGISTRY (сырьё)
+    const regUrl  = `${base}${REG_PATH}?raceUrl=${encodeURIComponent(raceUrl)}&kart=${encodeURIComponent(kart)}`;
 
     try{
-      const r = await fetch(u.toString(), { cache:"no-store" });
+      const r = await fetch(liveUrl, { cache:"no-store" });
       const j = await r.json();
 
-      els.tsOut.textContent = j.ts ?? "—";
-      els.kartLive.textContent = j.kart ?? kart ?? "—";
+      if(!r.ok){
+        setConn("connection error");
+        els.errLine.textContent = `HTTP ${r.status}: ${JSON.stringify(j)}`;
+        els.debugOut.textContent = JSON.stringify({ error:`HTTP ${r.status}`, url: liveUrl, body:j }, null, 2);
+        return;
+      }
 
+      // times
       els.lastLap.textContent = fmt(j.lastLap);
       els.bestLap.textContent = fmt(j.bestLap);
-      els.curLap.textContent = fmt(j.currentLapTime);
-      els.delta.textContent = fmt(j.deltaBest);
-      els.sourceOut.textContent = j.source ?? "—";
+      els.currentLap.textContent = fmt(j.currentLapTime);
+      els.delta.textContent = j.deltaBest === null ? "—" : fmt(j.deltaBest);
 
+      els.sourceLabel.textContent = j.source || "—";
+      els.tsLabel.textContent = j.ts ? String(j.ts) : "—";
       setConn(j.status || "ok");
+
       els.debugOut.textContent = JSON.stringify(j, null, 2);
+      els.errLine.textContent = "";
+
     }catch(e){
       setConn("connection error");
-      els.debugOut.textContent = JSON.stringify({ error:String(e), url: u.toString() }, null, 2);
+      els.errLine.textContent = String(e);
+      els.debugOut.textContent = JSON.stringify({ error:String(e), url: liveUrl }, null, 2);
+    }
+
+    // registry отдельно — чтобы даже при no_data понимать, что реально пришло
+    try{
+      const rr = await fetch(regUrl, { cache:"no-store" });
+      const rj = await rr.json();
+      els.registryOut.textContent = JSON.stringify(rj, null, 2);
+    }catch(e){
+      els.registryOut.textContent = JSON.stringify({ error:String(e), url: regUrl }, null, 2);
     }
   }
 
   function start(){
-    saveState();
     stop();
-    showRaceId();
-    setConn("starting…");
+    setConn("starting...");
     pollOnce();
     const ms = Math.max(250, Number(els.pollMs.value || 1000));
     timer = setInterval(pollOnce, ms);
@@ -408,14 +564,15 @@
     setConn("stopped");
   }
 
-  loadState();
-  checkHealth();
-
+  // wiring
   els.btnShowId.addEventListener("click", showRaceId);
   els.btnHealth.addEventListener("click", checkHealth);
   els.btnStart.addEventListener("click", start);
   els.btnStop.addEventListener("click", stop);
-  els.btnRegistry.addEventListener("click", fetchRegistry);
+
+  // auto health on load
+  checkHealth();
+  showRaceId();
 </script>
 </body>
 </html>

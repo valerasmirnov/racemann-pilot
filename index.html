@@ -2,361 +2,204 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>RaceMann Pilot — Debug</title>
   <style>
     :root{
-      --bg1:#070816;
-      --bg2:#0b0b1f;
-      --card:#111226cc;
-      --card2:#0f1022cc;
-      --text:#e8e8ef;
-      --muted:#a7a7b5;
-      --stroke:#24254a;
-      --accent:#b77bff;
-      --good:#40d17a;
-      --bad:#ff4d6d;
-      --pill:#15163a;
+      --bg:#070812;
+      --card:#0c1022cc;
+      --stroke:#ffffff1a;
+      --text:#e8e8ff;
+      --muted:#a9abd6;
+      --accent:#b892ff;
+      --good:#42d392;
+      --bad:#ff5b6e;
+      --shadow: 0 24px 80px rgba(0,0,0,.45);
+      --radius: 22px;
+      font-synthesis-weight:none;
     }
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: ui-sans-serif, -apple-system, system-ui, Segoe UI, Roboto, Arial;
+      background:
+        radial-gradient(1200px 700px at 30% -20%, rgba(184,146,255,.25), transparent 60%),
+        radial-gradient(900px 600px at 120% 10%, rgba(86,225,255,.14), transparent 55%),
+        radial-gradient(800px 500px at 40% 120%, rgba(255,120,198,.10), transparent 60%),
+        var(--bg);
       color:var(--text);
-      background: radial-gradient(1200px 800px at 20% -10%, #2a1660 0%, rgba(42,22,96,0) 55%),
-                  radial-gradient(900px 600px at 90% 10%, #1a2a66 0%, rgba(26,42,102,0) 60%),
-                  linear-gradient(180deg, var(--bg1), var(--bg2));
-      min-height:100vh;
+      font: 15px/1.45 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      padding: 20px 14px 48px;
     }
-    .wrap{
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 18px 14px 60px;
+    .wrap{max-width:760px;margin:0 auto}
+    h1{font-size:22px;margin:8px 0 14px;font-weight:700;letter-spacing:.2px}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 12px;border:1px solid var(--stroke);
+      border-radius:999px;background:rgba(255,255,255,.05)
     }
-    .top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:12px;
-    }
-    h1{
-      font-weight:700;
-      font-size: 22px;
-      margin:0;
-      letter-spacing: .2px;
-    }
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      padding:10px 12px;
-      border-radius:999px;
-      background: rgba(17,18,38,.55);
-      border: 1px solid var(--stroke);
-      backdrop-filter: blur(8px);
-      font-size: 14px;
-      color: var(--muted);
-      white-space:nowrap;
-    }
-    .dot{
-      width:10px;height:10px;border-radius:50%;
-      background: var(--bad);
-      box-shadow: 0 0 0 3px rgba(255,77,109,.15);
-    }
-    .dot.good{ background: var(--good); box-shadow: 0 0 0 3px rgba(64,209,122,.15); }
+    .dot{width:10px;height:10px;border-radius:50%}
+    .dot.good{background:var(--good)}
+    .dot.bad{background:var(--bad)}
     .card{
+      background:var(--card);
       border:1px solid var(--stroke);
-      background: linear-gradient(180deg, rgba(18,19,45,.55), rgba(12,13,28,.55));
-      border-radius: 22px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
       padding: 16px;
+      margin: 14px 0;
       backdrop-filter: blur(10px);
-      margin: 12px 0;
-      overflow:hidden;
     }
-    .card h2{
-      margin:0 0 12px 0;
-      font-size: 14px;
-      letter-spacing: 4px;
-      color: var(--muted);
-      font-weight: 700;
-    }
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-    @media (min-width: 760px){
-      .grid{ grid-template-columns: 1fr 1fr; }
-      .grid .wide{ grid-column: 1 / -1; }
-    }
-
-    label{
-      display:block;
-      font-size: 12px;
-      color: var(--muted);
-      margin: 6px 0 6px;
-    }
+    .label{color:var(--muted);font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 8px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
     input{
       width:100%;
+      padding:14px 14px;
       border-radius: 16px;
-      border: 1px solid var(--stroke);
-      background: rgba(10,10,28,.55);
-      color: var(--text);
-      padding: 14px 14px;
-      font-size: 15px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
       outline:none;
     }
-    input:focus{ border-color: rgba(183,123,255,.7); box-shadow: 0 0 0 3px rgba(183,123,255,.15); }
-
-    .btns{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top: 10px;
-    }
+    input::placeholder{color:#bdbfe6aa}
+    .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
     button{
       border:1px solid var(--stroke);
-      background: rgba(21,22,58,.55);
+      background: rgba(255,255,255,.06);
       color: var(--text);
       padding: 12px 14px;
       border-radius: 16px;
-      font-size: 15px;
       cursor:pointer;
+      font-weight:600;
     }
-    button.primary{
-      background: rgba(183,123,255,.22);
-      border-color: rgba(183,123,255,.55);
-    }
-    button:active{ transform: translateY(1px); }
-
+    button.primary{background:rgba(184,146,255,.20);border-color:rgba(184,146,255,.35)}
+    button:active{transform: translateY(1px)}
     .kv{
       display:grid;
-      grid-template-columns: 160px 1fr;
-      gap: 8px 12px;
-      align-items:start;
-      margin-top: 10px;
+      grid-template-columns: 150px 1fr;
+      gap:8px 12px;
+      font-size:13px;
+      align-items:center;
     }
-    .k{ color: var(--muted); font-size: 13px; }
-    .v{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; word-break: break-all; }
-
-    .liveRow{
+    .k{color:var(--muted)}
+    .v{word-break:break-word}
+    .grid2{
       display:grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      margin-top: 10px;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
     }
-    @media (min-width: 760px){
-      .liveRow{ grid-template-columns: 1fr 1fr; }
-      .liveRow .wide{ grid-column: 1 / -1; }
-    }
-
-    .tile{
+    @media (max-width:720px){ .grid2{grid-template-columns:1fr} .kv{grid-template-columns:110px 1fr}}
+    .box{
       border:1px solid var(--stroke);
-      background: rgba(9,10,26,.45);
-      border-radius: 22px;
+      border-radius: 18px;
       padding: 14px;
-      min-height: 120px;
-    }
-    .tile .title{
-      font-size: 12px;
-      letter-spacing: 4px;
-      color: var(--muted);
-      font-weight: 700;
-      margin-bottom: 10px;
+      background: rgba(255,255,255,.03);
+      min-height: 108px;
     }
     .big{
-      font-size: 42px;
-      font-weight: 800;
-      letter-spacing: .5px;
-      margin: 0;
+      font-size:44px;
+      letter-spacing:.02em;
+      font-weight:800;
+      margin: 4px 0 2px;
     }
-    .sub{
-      color: var(--muted);
-      font-size: 13px;
-      margin-top: 6px;
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      padding: 10px 12px;
-      border-radius: 999px;
-      border:1px solid var(--stroke);
-      background: rgba(21,22,58,.5);
-      color: var(--muted);
-      font-size: 14px;
-      white-space:nowrap;
+    .sub{color:var(--muted);font-size:12px}
+    .statusline{
+      display:flex;align-items:center;justify-content:space-between;
+      gap:10px;margin-top:4px
     }
     .bar{
-      height: 8px;
-      border-radius: 999px;
-      border:1px solid var(--stroke);
-      background: rgba(9,10,26,.6);
-      overflow:hidden;
-      margin-top: 10px;
+      height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid var(--stroke)
     }
-    .bar > div{
-      height:100%;
-      width: 40%;
-      background: var(--accent);
-      opacity: .9;
-      border-radius: 999px;
-      transition: width .2s ease;
-    }
-
+    .bar > i{display:block;height:100%;width:55%;background:rgba(184,146,255,.85)}
     pre{
       margin:0;
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 12px;
-      color: #d7d7e6;
-      background: rgba(7,8,20,.55);
-      border: 1px solid var(--stroke);
-      border-radius: 18px;
-      padding: 12px;
+      white-space:pre-wrap;
+      word-break:break-word;
+      font-size:12px;
+      color:#eaeaff;
     }
-
-    .hint{
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.35;
-      margin-top: 10px;
-    }
-
-    .muted{ color: var(--muted); }
+    .hint{color:var(--muted);font-size:13px;margin-top:8px}
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <div class="top">
+    <div class="row" style="justify-content:space-between;align-items:center">
       <h1>RaceMann Pilot — Debug</h1>
-      <div class="badge" id="healthBadge">
-        <span class="dot" id="healthDot"></span>
-        <span id="healthText">/health …</span>
-      </div>
+      <div class="pill" id="healthPill"><span class="dot bad" id="healthDot"></span><span id="healthTxt">/health …</span></div>
     </div>
 
     <div class="card">
-      <h2>НАСТРОЙКИ</h2>
-      <div class="grid">
-        <div class="wide">
-          <label>Worker API (не меняй, если всё ок)</label>
-          <input id="apiBase" placeholder="https://racemann-api.vsmirnoff.workers.dev" />
-        </div>
+      <div class="label">Настройки</div>
 
-        <div class="wide">
-          <label>Ссылка на заезд (RaceMann)</label>
-          <input id="raceUrl" placeholder="https://miks.racemann.com/Race/id/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX#race" />
-        </div>
-
-        <div>
-          <label>Номер карта (как в RaceMann: 05, 10, 19 и т.д.)</label>
-          <input id="kart" placeholder="05" />
-        </div>
-
-        <div>
-          <label>Период опроса, мс</label>
-          <input id="pollMs" placeholder="1000" />
-        </div>
+      <div style="margin-bottom:10px">
+        <div class="sub">Worker API (не меняй, если всё ок)</div>
+        <input id="apiBase" placeholder="https://racemann-api.vsmirnoff.workers.dev" />
       </div>
 
-      <div class="btns">
+      <div style="margin-bottom:10px">
+        <div class="sub">Ссылка на заезд (RaceMann)</div>
+        <input id="raceUrl" placeholder="https://miks.racemann.com/Race/id/…#race" />
+      </div>
+
+      <div style="margin-bottom:10px">
+        <div class="sub">Номер карта (как в RaceMann: 05, 10, 19, 55, 78 и т.д.)</div>
+        <input id="kart" placeholder="например 55" />
+      </div>
+
+      <div style="margin-bottom:10px">
+        <div class="sub">Период опроса, мс</div>
+        <input id="pollMs" placeholder="1000" />
+      </div>
+
+      <div class="btnrow">
         <button class="primary" id="btnShowId">Показать Race ID</button>
+        <button id="btnStart">Старт (debug/all)</button>
+        <button id="btnRegistry">Registry (сырьё)</button>
         <button id="btnHealth">Проверить /health</button>
-        <button class="primary" id="btnStart">Старт</button>
         <button id="btnStop">Стоп</button>
       </div>
 
-      <div class="kv">
-        <div class="k">Race ID</div>
-        <div class="v" id="raceIdOut">—</div>
-
-        <div class="k">Normalized</div>
-        <div class="v" id="normalizedOut">—</div>
-
-        <div class="k">Kart</div>
-        <div class="v" id="kartOut">—</div>
-      </div>
-
-      <div class="hint">
-        Сейчас “Старт” будет опрашивать воркер и ждать JSON с временами.
-        Если в воркере эндпоинт называется иначе — поправь константы <span class="muted">LIVE_PATH / REG_PATH</span> внизу.
+      <div class="card" style="margin:14px 0 0; background:rgba(255,255,255,.02)">
+        <div class="kv">
+          <div class="k">Race ID</div><div class="v" id="outRaceId">—</div>
+          <div class="k">Normalized</div><div class="v" id="outNorm">—</div>
+          <div class="k">Kart</div><div class="v" id="outKart">—</div>
+        </div>
+        <div class="hint">
+          Сейчас “Старт” будет звать воркер <b>/debug/all</b> и показывать:
+          <b>allMessages</b> (ВСЕ сообщения), <b>kartsSeen</b> (какие карты вообще приходят),
+          и <b>foundForKart</b> (если удалось найти именно твой kart).
+        </div>
       </div>
     </div>
 
     <div class="card">
-      <h2>LIVE</h2>
-
-      <div class="tile wide">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-          <div class="title">STATUS</div>
-          <div class="pill">
-            <span class="dot" id="connDot"></span>
-            <span id="connText">idle</span>
-          </div>
+      <div class="label">LIVE</div>
+      <div class="statusline">
+        <div style="min-width:220px">
+          <div class="sub">STATUS</div>
+          <div class="bar"><i id="bar"></i></div>
         </div>
-        <div class="bar"><div id="connBar"></div></div>
-        <div class="sub">
-          <span>poll: <span id="pollLabel">—</span> ms</span>
-          <span>ts: <span id="tsLabel">—</span></span>
-        </div>
+        <div class="pill"><span class="dot" id="connDot"></span><span id="connTxt">—</span></div>
       </div>
-
-      <div class="liveRow">
-        <div class="tile">
-          <div class="title">LAST LAP</div>
-          <div class="big" id="lastLap">—</div>
-          <div class="sub">
-            <span>Δ к best:</span>
-            <span id="delta">—</span>
-          </div>
-        </div>
-
-        <div class="tile">
-          <div class="title">BEST LAP</div>
-          <div class="big" id="bestLap">—</div>
-          <div class="sub">
-            <span>kart:</span>
-            <span id="kartMini">—</span>
-          </div>
-        </div>
-
-        <div class="tile wide">
-          <div class="title">CURRENT LAP</div>
-          <div class="big" id="currentLap">—</div>
-          <div class="sub">
-            <span>source:</span>
-            <span id="sourceLabel">—</span>
-          </div>
-        </div>
-
-        <div class="tile wide">
-          <div class="title">DEBUG</div>
-          <pre id="debugOut">{}</pre>
-          <div class="hint" id="errLine"></div>
-        </div>
-
-        <div class="tile wide">
-          <div class="title">REGISTRY (сырьё)</div>
-          <pre id="registryOut">{}</pre>
-        </div>
+      <div class="statusline">
+        <div class="sub">poll: <span id="outPoll">—</span> ms</div>
+        <div class="sub">ts: <span id="outTs">—</span></div>
       </div>
+    </div>
+
+    <div class="card">
+      <div class="label">DEBUG</div>
+      <div class="box"><pre id="outDebug">{}</pre></div>
+    </div>
+
+    <div class="card">
+      <div class="label">REGISTRY (сырьё)</div>
+      <div class="box"><pre id="outRegistry">{}</pre></div>
     </div>
   </div>
 
 <script>
-  // ==== ENDPOINTS in your Worker ====
-  const HEALTH_PATH = "/health";
-  const LIVE_PATH   = "/live";
-  const REG_PATH    = "/debug/registry";
-
-  // ==== UI elements ====
   const els = {
     apiBase: document.getElementById("apiBase"),
     raceUrl: document.getElementById("raceUrl"),
@@ -364,215 +207,183 @@
     pollMs: document.getElementById("pollMs"),
 
     btnShowId: document.getElementById("btnShowId"),
-    btnHealth: document.getElementById("btnHealth"),
     btnStart: document.getElementById("btnStart"),
+    btnRegistry: document.getElementById("btnRegistry"),
+    btnHealth: document.getElementById("btnHealth"),
     btnStop: document.getElementById("btnStop"),
 
-    raceIdOut: document.getElementById("raceIdOut"),
-    normalizedOut: document.getElementById("normalizedOut"),
-    kartOut: document.getElementById("kartOut"),
+    outRaceId: document.getElementById("outRaceId"),
+    outNorm: document.getElementById("outNorm"),
+    outKart: document.getElementById("outKart"),
+    outPoll: document.getElementById("outPoll"),
+    outTs: document.getElementById("outTs"),
 
-    healthDot: document.getElementById("healthDot"),
-    healthText: document.getElementById("healthText"),
+    outDebug: document.getElementById("outDebug"),
+    outRegistry: document.getElementById("outRegistry"),
 
     connDot: document.getElementById("connDot"),
-    connText: document.getElementById("connText"),
-    connBar: document.getElementById("connBar"),
-    pollLabel: document.getElementById("pollLabel"),
-    tsLabel: document.getElementById("tsLabel"),
+    connTxt: document.getElementById("connTxt"),
+    bar: document.getElementById("bar"),
 
-    lastLap: document.getElementById("lastLap"),
-    bestLap: document.getElementById("bestLap"),
-    currentLap: document.getElementById("currentLap"),
-    delta: document.getElementById("delta"),
-    sourceLabel: document.getElementById("sourceLabel"),
-
-    debugOut: document.getElementById("debugOut"),
-    registryOut: document.getElementById("registryOut"),
-    errLine: document.getElementById("errLine"),
-    kartMini: document.getElementById("kartMini"),
+    healthDot: document.getElementById("healthDot"),
+    healthTxt: document.getElementById("healthTxt"),
   };
 
   // defaults
-  els.apiBase.value = localStorage.getItem("apiBase") || "https://racemann-api.vsmirnoff.workers.dev";
-  els.raceUrl.value = localStorage.getItem("raceUrl") || "";
-  els.kart.value    = localStorage.getItem("kart")    || "";
-  els.pollMs.value  = localStorage.getItem("pollMs")  || "1000";
+  const LS = {
+    apiBase: "racemann_api_base",
+    raceUrl: "racemann_race_url",
+    kart: "racemann_kart",
+    pollMs: "racemann_poll_ms",
+  };
 
-  let timer = null;
-
+  function loadState(){
+    els.apiBase.value = localStorage.getItem(LS.apiBase) || "https://racemann-api.vsmirnoff.workers.dev";
+    els.raceUrl.value = localStorage.getItem(LS.raceUrl) || "";
+    els.kart.value = localStorage.getItem(LS.kart) || "";
+    els.pollMs.value = localStorage.getItem(LS.pollMs) || "1000";
+  }
   function saveState(){
-    localStorage.setItem("apiBase", els.apiBase.value.trim());
-    localStorage.setItem("raceUrl", els.raceUrl.value.trim());
-    localStorage.setItem("kart", els.kart.value.trim());
-    localStorage.setItem("pollMs", els.pollMs.value.trim());
+    localStorage.setItem(LS.apiBase, els.apiBase.value.trim());
+    localStorage.setItem(LS.raceUrl, els.raceUrl.value.trim());
+    localStorage.setItem(LS.kart, els.kart.value.trim());
+    localStorage.setItem(LS.pollMs, els.pollMs.value.trim());
   }
 
-  function normalizeRaceUrl(input){
+  function parseRaceIdFromUrl(u){
     try{
-      const u = new URL(input.trim());
-      u.hash = "";
-      const m = u.pathname.match(/\/Race\/id\/([0-9a-fA-F-]{16,})/);
-      if(!m) return { ok:false, error:"Race ID not found in URL" };
-      const id = m[1];
-      return { ok:true, raceId:id, normalized:`${u.origin}/Race/id/${id}` };
+      const url = new URL(u);
+      const m = url.pathname.match(/\/Race\/id\/([0-9a-fA-F-]{36})/);
+      if (!m) return { ok:false, error:"Cannot extract Race ID" };
+      const raceId = m[1].toLowerCase();
+      const normalized = `https://miks.racemann.com/Race/id/${raceId}`;
+      return { ok:true, raceId, normalized };
     }catch(e){
       return { ok:false, error:"Invalid URL" };
     }
   }
 
-  function fmt(v){
-    if(v === null || v === undefined) return "—";
-    const n = Number(v);
-    if(!Number.isFinite(n)) return String(v);
-    const s = n.toFixed(3);
-    // 65.123 -> 1:05.123 красиво, если хочешь:
-    if(n >= 60){
-      const mm = Math.floor(n/60);
-      const ss = (n - mm*60).toFixed(3).padStart(6,"0");
-      return `${mm}:${ss}`;
-    }
-    return s;
-  }
-
-  function setHealth(ok){
-    if(ok){
-      els.healthDot.classList.add("good");
-      els.healthText.textContent = "/health ok";
-    }else{
-      els.healthDot.classList.remove("good");
-      els.healthText.textContent = "/health error";
-    }
-  }
-
-  function setConn(status){
-    els.connText.textContent = status;
-    if(status === "ok" || status === "stub"){
-      els.connDot.classList.add("good");
-      els.connBar.style.width = "70%";
-    }else if(status === "no_data"){
-      els.connDot.classList.add("good");
-      els.connBar.style.width = "55%";
-    }else if(status.includes("error")){
-      els.connDot.classList.remove("good");
-      els.connBar.style.width = "25%";
-    }else{
-      els.connDot.classList.remove("good");
-      els.connBar.style.width = "35%";
-    }
+  function setConn(status, ok=true){
+    els.connTxt.textContent = status;
+    els.connDot.className = "dot " + (ok ? "good" : "bad");
+    els.bar.style.width = ok ? "100%" : "55%";
   }
 
   async function checkHealth(){
-    saveState();
     const base = els.apiBase.value.trim().replace(/\/+$/,"");
     try{
-      const r = await fetch(base + HEALTH_PATH, { cache:"no-store" });
+      const r = await fetch(base + "/health");
       const j = await r.json();
-      setHealth(!!j.ok);
-      els.debugOut.textContent = JSON.stringify(j, null, 2);
-      els.errLine.textContent = "";
+      els.healthTxt.textContent = r.ok ? "/health ok" : "/health error";
+      els.healthDot.className = "dot " + (r.ok ? "good" : "bad");
+      els.outRegistry.textContent = JSON.stringify(j, null, 2);
     }catch(e){
-      setHealth(false);
-      els.errLine.textContent = "health err: " + String(e);
+      els.healthTxt.textContent = "/health error";
+      els.healthDot.className = "dot bad";
     }
   }
 
-  function showRaceId(){
-    saveState();
-    const n = normalizeRaceUrl(els.raceUrl.value);
-    if(!n.ok){
-      els.raceIdOut.textContent = "—";
-      els.normalizedOut.textContent = "—";
-      els.errLine.textContent = n.error;
+  async function fetchJson(url){
+    const r = await fetch(url);
+    const t = await r.text();
+    let j;
+    try{ j = JSON.parse(t); }catch(e){ j = { error:"Invalid JSON from server", raw:t }; }
+    if(!r.ok){
+      throw new Error(`HTTP ${r.status}: ${t}`);
+    }
+    return j;
+  }
+
+  async function showRaceId(){
+    const s = parseRaceIdFromUrl(els.raceUrl.value.trim());
+    if(!s.ok){
+      els.outRaceId.textContent = "—";
+      els.outNorm.textContent = "—";
+      els.outDebug.textContent = JSON.stringify(s, null, 2);
       return;
     }
-    els.raceIdOut.textContent = n.raceId;
-    els.normalizedOut.textContent = n.normalized;
-    els.kartOut.textContent = (els.kart.value || "—").trim();
-    els.kartMini.textContent = (els.kart.value || "—").trim();
-    els.errLine.textContent = "";
+    els.outRaceId.textContent = s.raceId;
+    els.outNorm.textContent = s.normalized;
+    els.outKart.textContent = els.kart.value.trim() || "—";
+    els.outDebug.textContent = JSON.stringify({ ok:true, raceId:s.raceId, normalized:s.normalized }, null, 2);
   }
 
-  async function pollOnce(){
-    saveState();
+  let timer = null;
+
+  async function pollDebugAllOnce(){
     const base = els.apiBase.value.trim().replace(/\/+$/,"");
-    const raceUrl = els.raceUrl.value.trim();
-    const kart = els.kart.value.trim();
-    const ms = Math.max(250, Number(els.pollMs.value || 1000));
+    const raceUrl = encodeURIComponent(els.raceUrl.value.trim());
+    const kart = encodeURIComponent(els.kart.value.trim());
+    const url = `${base}/debug/all?raceUrl=${raceUrl}&kart=${kart}`;
 
-    els.pollLabel.textContent = String(ms);
+    const j = await fetchJson(url);
 
-    // show id block always
-    showRaceId();
+    // show id
+    if (j.raceId) els.outRaceId.textContent = j.raceId;
+    if (j.normalized) els.outNorm.textContent = j.normalized;
+    els.outKart.textContent = els.kart.value.trim() || "—";
+    els.outTs.textContent = j.ts || "—";
 
-    // LIVE
-    const liveUrl = `${base}${LIVE_PATH}?raceUrl=${encodeURIComponent(raceUrl)}&kart=${encodeURIComponent(kart)}`;
-    // REGISTRY (сырьё)
-    const regUrl  = `${base}${REG_PATH}?raceUrl=${encodeURIComponent(raceUrl)}&kart=${encodeURIComponent(kart)}`;
+    // status
+    setConn(j.status || "ok", j.ok);
 
-    try{
-      const r = await fetch(liveUrl, { cache:"no-store" });
-      const j = await r.json();
+    // full debug object
+    els.outDebug.textContent = JSON.stringify(j, null, 2);
+  }
 
-      if(!r.ok){
-        setConn("connection error");
-        els.errLine.textContent = `HTTP ${r.status}: ${JSON.stringify(j)}`;
-        els.debugOut.textContent = JSON.stringify({ error:`HTTP ${r.status}`, url: liveUrl, body:j }, null, 2);
-        return;
-      }
+  async function pollRegistryOnce(){
+    const base = els.apiBase.value.trim().replace(/\/+$/,"");
+    const raceUrl = encodeURIComponent(els.raceUrl.value.trim());
+    const kart = encodeURIComponent(els.kart.value.trim());
+    const url = `${base}/debug/registry?raceUrl=${raceUrl}&kart=${kart}`;
 
-      // times
-      els.lastLap.textContent = fmt(j.lastLap);
-      els.bestLap.textContent = fmt(j.bestLap);
-      els.currentLap.textContent = fmt(j.currentLapTime);
-      els.delta.textContent = j.deltaBest === null ? "—" : fmt(j.deltaBest);
-
-      els.sourceLabel.textContent = j.source || "—";
-      els.tsLabel.textContent = j.ts ? String(j.ts) : "—";
-      setConn(j.status || "ok");
-
-      els.debugOut.textContent = JSON.stringify(j, null, 2);
-      els.errLine.textContent = "";
-
-    }catch(e){
-      setConn("connection error");
-      els.errLine.textContent = String(e);
-      els.debugOut.textContent = JSON.stringify({ error:String(e), url: liveUrl }, null, 2);
-    }
-
-    // registry отдельно — чтобы даже при no_data понимать, что реально пришло
-    try{
-      const rr = await fetch(regUrl, { cache:"no-store" });
-      const rj = await rr.json();
-      els.registryOut.textContent = JSON.stringify(rj, null, 2);
-    }catch(e){
-      els.registryOut.textContent = JSON.stringify({ error:String(e), url: regUrl }, null, 2);
-    }
+    const j = await fetchJson(url);
+    els.outRegistry.textContent = JSON.stringify(j, null, 2);
   }
 
   function start(){
+    saveState();
     stop();
-    setConn("starting...");
-    pollOnce();
-    const ms = Math.max(250, Number(els.pollMs.value || 1000));
-    timer = setInterval(pollOnce, ms);
+    setConn("starting…", true);
+
+    const ms = Math.max(250, Number(els.pollMs.value || "1000"));
+    els.outPoll.textContent = ms;
+
+    // first hit immediately
+    pollDebugAllOnce().catch(e => {
+      setConn("connection error", false);
+      els.outDebug.textContent = JSON.stringify({ error: String(e) }, null, 2);
+    });
+
+    timer = setInterval(() => {
+      pollDebugAllOnce().catch(e => {
+        setConn("connection error", false);
+        els.outDebug.textContent = JSON.stringify({ error: String(e) }, null, 2);
+      });
+    }, ms);
   }
 
   function stop(){
     if(timer) clearInterval(timer);
     timer = null;
-    setConn("stopped");
+    setConn("stopped", true);
   }
 
   // wiring
   els.btnShowId.addEventListener("click", showRaceId);
-  els.btnHealth.addEventListener("click", checkHealth);
   els.btnStart.addEventListener("click", start);
   els.btnStop.addEventListener("click", stop);
+  els.btnRegistry.addEventListener("click", () => {
+    saveState();
+    pollRegistryOnce().catch(e => {
+      els.outRegistry.textContent = JSON.stringify({ error: String(e) }, null, 2);
+    });
+  });
+  els.btnHealth.addEventListener("click", checkHealth);
 
-  // auto health on load
-  checkHealth();
+  loadState();
   showRaceId();
+  checkHealth();
 </script>
 </body>
 </html>

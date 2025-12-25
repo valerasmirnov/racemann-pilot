@@ -1,58 +1,220 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>RaceMann RAW messages</title>
   <style>
-    body { font-family: monospace; background: #111; color: #0f0; }
-    input, button { font-size: 16px; padding: 6px; }
-    #log { white-space: pre-wrap; margin-top: 10px; }
+    body { margin:0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono"; background:#0b0b0b; color:#d7ffd7; }
+    header { padding:12px 12px 8px; border-bottom:1px solid #1e1e1e; }
+    h1 { margin:0 0 10px; font-size:16px; color:#7CFF7C; }
+    .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    input[type="text"] { flex:1; min-width:260px; padding:8px; background:#121212; color:#d7ffd7; border:1px solid #2a2a2a; border-radius:6px; }
+    button { padding:8px 12px; border:1px solid #2a2a2a; background:#141414; color:#d7ffd7; border-radius:6px; cursor:pointer; }
+    button:hover { background:#1a1a1a; }
+    label { font-size:12px; color:#bdeebd; display:flex; gap:6px; align-items:center; }
+    .status { margin-top:8px; font-size:12px; color:#9fe39f; }
+    .status.bad { color:#ff6b6b; }
+    main { padding:12px; }
+    pre { white-space:pre-wrap; word-break:break-word; background:#0e0e0e; border:1px solid #1e1e1e; border-radius:8px; padding:10px; max-height:70vh; overflow:auto; }
+    .small { font-size:12px; color:#9fe39f; }
   </style>
 </head>
 <body>
+  <header>
+    <h1>RaceMann RAW messages</h1>
+    <div class="row">
+      <input id="raceUrl" type="text" placeholder="https://miks.racemann.com/Race/id/...#race" />
+      <button id="start">START</button>
+      <button id="stop" disabled>STOP</button>
+      <button id="download" disabled>Download JSON</button>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <label><input id="dropHb" type="checkbox" checked /> drop hb</label>
+      <label>Kart <input id="kart" type="text" style="width:80px" placeholder="72"></label>
+      <button id="onlyKart" disabled>Show kart</button>
+      <span class="small" id="counts"></span>
+    </div>
+    <div id="status" class="status">idle</div>
+  </header>
 
-<h2>RaceMann RAW messages</h2>
-
-<input id="raceUrl" size="80"
-  placeholder="https://miks.racemann.com/Race/id/....#race" />
-<button onclick="start()">START</button>
-
-<pre id="log"></pre>
+  <main>
+    <pre id="out"></pre>
+  </main>
 
 <script>
-const WORKER = "https://racemann-api.vsmirnoff.workers.dev";
+  let ws = null;
 
-function log(s) {
-  const el = document.getElementById("log");
-  el.textContent += s + "\n";
-  el.scrollTop = el.scrollHeight;
-}
+  // храним:
+  // frames[] = raw frames (то, что в Network->Messages)
+  // cmds[]   = распарсенные RaceHub/newCommand payloads (A[0])
+  const frames = [];
+  const cmds = [];
 
-function start() {
-  document.getElementById("log").textContent = "";
+  const out = document.getElementById("out");
+  const statusEl = document.getElementById("status");
+  const countsEl = document.getElementById("counts");
 
-  const raceUrl = document.getElementById("raceUrl").value.trim();
-  if (!raceUrl) return alert("raceUrl required");
+  const dropHbEl = document.getElementById("dropHb");
+  const kartEl = document.getElementById("kart");
 
-  const es = new EventSource(
-    `${WORKER}/stream?raceUrl=${encodeURIComponent(raceUrl)}`
-  );
+  const startBtn = document.getElementById("start");
+  const stopBtn = document.getElementById("stop");
+  const dlBtn = document.getElementById("download");
+  const onlyKartBtn = document.getElementById("onlyKart");
 
-  es.onmessage = (e) => {
-    try {
-      const j = JSON.parse(e.data);
-      log(JSON.stringify(j, null, 2));
-    } catch {
-      log(e.data);
+  function setStatus(text, bad=false) {
+    statusEl.textContent = text;
+    statusEl.className = "status" + (bad ? " bad" : "");
+  }
+
+  function updateCounts() {
+    countsEl.textContent = `frames: ${frames.length} | newCommand: ${cmds.length}`;
+    dlBtn.disabled = frames.length === 0 && cmds.length === 0;
+    onlyKartBtn.disabled = cmds.length === 0;
+  }
+
+  function append(line) {
+    out.textContent += line + "\n";
+    // автоскролл вниз
+    out.scrollTop = out.scrollHeight;
+  }
+
+  function safeParseJSON(s) {
+    try { return JSON.parse(s); } catch { return null; }
+  }
+
+  function handleFrame(frameStr) {
+    frames.push(frameStr);
+
+    // пытаемся вытащить "M":[{H:"RaceHub", M:"newCommand", A:[{...}]}]
+    const obj = safeParseJSON(frameStr);
+    if (!obj || !obj.M) return;
+
+    for (const m of obj.M) {
+      if (m && m.H === "RaceHub" && m.M === "newCommand" && Array.isArray(m.A) && m.A[0]) {
+        const payload = m.A[0];
+
+        // фильтр hb
+        if (dropHbEl.checked && payload.Method === "hb") continue;
+
+        cmds.push(payload);
+
+        append(JSON.stringify({
+          t: payload.Time,
+          method: payload.Method,
+          rn: payload.rn || payload.nn || null,
+          ll: payload.ll ?? null,
+          bl: payload.bl ?? null,
+          pos: payload.pos ?? null,
+          raw: payload
+        }));
+      }
     }
+  }
+
+  function wsUrlForWorker(raceUrl) {
+    const proto = location.protocol === "https:" ? "wss:" : "ws:";
+    return `${proto}//${location.host}/ws?raceUrl=${encodeURIComponent(raceUrl)}&hub=racehub`;
+  }
+
+  startBtn.onclick = () => {
+    const raceUrl = document.getElementById("raceUrl").value.trim();
+    if (!raceUrl) return setStatus("Введите raceUrl", true);
+
+    // reset view
+    out.textContent = "";
+    frames.length = 0;
+    cmds.length = 0;
+    updateCounts();
+
+    setStatus("connecting...");
+    const url = wsUrlForWorker(raceUrl);
+
+    ws = new WebSocket(url);
+
+    ws.onopen = () => {
+      setStatus("connected");
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+    };
+
+    ws.onmessage = (ev) => {
+      const msg = safeParseJSON(ev.data);
+
+      // если worker прислал служебное
+      if (msg && msg.type && msg.type !== "frame") {
+        append("SYS " + JSON.stringify(msg));
+        updateCounts();
+        return;
+      }
+
+      // основной поток:
+      if (msg && msg.type === "frame" && typeof msg.data === "string") {
+        handleFrame(msg.data);
+        updateCounts();
+        return;
+      }
+
+      // на случай если worker отдаст сырую строку
+      if (typeof ev.data === "string") {
+        handleFrame(ev.data);
+        updateCounts();
+      }
+    };
+
+    ws.onerror = () => setStatus("ws error", true);
+    ws.onclose = (e) => {
+      setStatus(`closed (${e.code}) ${e.reason || ""}`, true);
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      ws = null;
+    };
   };
 
-  es.onerror = () => {
-    log("❌ stream error / closed");
-    es.close();
+  stopBtn.onclick = () => {
+    if (ws) ws.close(1000, "stop");
   };
-}
+
+  dlBtn.onclick = () => {
+    const blob = new Blob([JSON.stringify({ frames, newCommand: cmds }, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "racemann_messages.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  onlyKartBtn.onclick = () => {
+    const kart = kartEl.value.trim();
+    if (!kart) return;
+
+    out.textContent = "";
+    let n = 0;
+
+    for (const c of cmds) {
+      const rn = String(c.rn || c.nn || "");
+      if (rn !== kart) continue;
+
+      // покажем только Comp для этого карта (если хочешь — уберём условие)
+      if (c.Method !== "Comp") continue;
+
+      append(JSON.stringify({
+        t: c.Time,
+        method: c.Method,
+        rn,
+        ll: c.ll ?? null,
+        bl: c.bl ?? null,
+        pos: c.pos ?? null,
+        cs: c.Command?.cs || null
+      }));
+      n++;
+    }
+
+    setStatus(`filtered kart=${kart}, lines=${n}`);
+  };
+
+  updateCounts();
 </script>
-
 </body>
 </html>

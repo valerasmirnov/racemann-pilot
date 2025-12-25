@@ -1,187 +1,58 @@
-<!doctype html>
-<html lang="ru">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>RaceMann Messages Dump</title>
+  <meta charset="UTF-8" />
+  <title>RaceMann RAW messages</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 16px; }
-    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
-    label { display:block; font-size: 12px; opacity: .8; margin-bottom: 4px; }
-    input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 10px; }
-    button { padding: 10px 14px; border: 0; border-radius: 10px; cursor: pointer; }
-    button.primary { background: #111; color:#fff; }
-    .box { border: 1px solid #eee; border-radius: 12px; padding: 12px; margin-top: 12px; }
-    pre { white-space: pre-wrap; word-break: break-word; }
-    table { width:100%; border-collapse: collapse; }
-    th, td { border-bottom:1px solid #eee; padding: 8px; vertical-align: top; font-size: 13px; }
-    th { text-align:left; font-size:12px; opacity:.8; }
-    .muted { opacity:.7; }
+    body { font-family: monospace; background: #111; color: #0f0; }
+    input, button { font-size: 16px; padding: 6px; }
+    #log { white-space: pre-wrap; margin-top: 10px; }
   </style>
 </head>
 <body>
-  <h2>RaceMann — выгрузка всех messages</h2>
 
-  <div class="row">
-    <div style="flex: 1 1 520px;">
-      <label>Ссылка на заезд (Race/id/...#race)</label>
-      <input id="raceUrl" placeholder="https://miks.racemann.com/Race/id/....#race" />
-    </div>
+<h2>RaceMann RAW messages</h2>
 
-    <div style="width:140px;">
-      <label>Seconds</label>
-      <input id="seconds" value="30" />
-    </div>
+<input id="raceUrl" size="80"
+  placeholder="https://miks.racemann.com/Race/id/....#race" />
+<button onclick="start()">START</button>
 
-    <div style="width:160px;">
-      <label>Interval (ms)</label>
-      <input id="intervalMs" value="1000" />
-    </div>
-
-    <div style="width:140px;">
-      <label>Kart filter</label>
-      <input id="kart" placeholder="например 72" />
-    </div>
-
-    <div style="width:180px;">
-      <button class="primary" id="btn">Dump messages</button>
-    </div>
-  </div>
-
-  <div class="box">
-    <div class="row">
-      <div style="flex: 1 1 auto;">
-        <div class="muted" id="status">Готов.</div>
-      </div>
-      <div>
-        <button id="copyJson">Copy JSON</button>
-      </div>
-    </div>
-    <pre id="summary"></pre>
-  </div>
-
-  <div class="box">
-    <h3 style="margin-top:0;">Messages</h3>
-    <table>
-      <thead>
-        <tr>
-          <th style="width:180px;">ts</th>
-          <th style="width:160px;">hub.method</th>
-          <th>args (сокращенно)</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
+<pre id="log"></pre>
 
 <script>
-  // ВАЖНО: сюда вставь URL твоего Cloudflare Worker
-  const WORKER_BASE = "https://YOUR-WORKER.your-subdomain.workers.dev";
+const WORKER = "https://racemann-api.vsmirnoff.workers.dev";
 
-  let lastResult = null;
+function log(s) {
+  const el = document.getElementById("log");
+  el.textContent += s + "\n";
+  el.scrollTop = el.scrollHeight;
+}
 
-  const el = (id) => document.getElementById(id);
+function start() {
+  document.getElementById("log").textContent = "";
 
-  function fmtTs(ms) {
-    const d = new Date(ms);
-    return d.toLocaleString();
-  }
+  const raceUrl = document.getElementById("raceUrl").value.trim();
+  if (!raceUrl) return alert("raceUrl required");
 
-  function shortJson(x, n=500) {
-    const s = JSON.stringify(x);
-    return s.length > n ? s.slice(0, n) + "…": s;
-  }
+  const es = new EventSource(
+    `${WORKER}/stream?raceUrl=${encodeURIComponent(raceUrl)}`
+  );
 
-  function extractKartCandidates(msg) {
-    // Мы НЕ знаем заранее все форматы, но из твоего примера:
-    // args[0].Command.rn / args[0].Command.nn / args[0].Command.fn / args[0].Command.cs.rn
+  es.onmessage = (e) => {
     try {
-      const a0 = msg?.args?.[0];
-      const cmd = a0?.Command;
-      const rn = cmd?.rn || cmd?.nn || cmd?.cs?.rn;
-      return rn ? String(rn) : "";
-    } catch { return ""; }
-  }
-
-  function renderMessages(messages, kartFilter) {
-    const tbody = el("tbody");
-    tbody.innerHTML = "";
-
-    const k = (kartFilter || "").trim();
-    const filtered = k
-      ? messages.filter(m => extractKartCandidates(m) === k)
-      : messages;
-
-    for (const m of filtered) {
-      const tr = document.createElement("tr");
-
-      const tdTs = document.createElement("td");
-      tdTs.textContent = fmtTs(m.ts);
-
-      const tdHM = document.createElement("td");
-      tdHM.textContent = `${m.hub}.${m.method}`;
-
-      const tdArgs = document.createElement("td");
-      tdArgs.textContent = shortJson(m.args);
-
-      tr.appendChild(tdTs);
-      tr.appendChild(tdHM);
-      tr.appendChild(tdArgs);
-
-      tbody.appendChild(tr);
+      const j = JSON.parse(e.data);
+      log(JSON.stringify(j, null, 2));
+    } catch {
+      log(e.data);
     }
+  };
 
-    return { shown: filtered.length, total: messages.length };
-  }
-
-  async function dump() {
-    const raceUrl = el("raceUrl").value.trim();
-    const seconds = el("seconds").value.trim() || "30";
-    const intervalMs = el("intervalMs").value.trim() || "1000";
-    const kart = el("kart").value.trim();
-
-    el("status").textContent = "Запрос к воркеру...";
-    el("summary").textContent = "";
-    el("tbody").innerHTML = "";
-
-    const u = new URL(WORKER_BASE + "/dump");
-    u.searchParams.set("raceUrl", raceUrl);
-    u.searchParams.set("seconds", seconds);
-    u.searchParams.set("intervalMs", intervalMs);
-    u.searchParams.set("dropHb", "1");
-    u.searchParams.set("raw", "0");
-
-    const res = await fetch(u.toString());
-    const data = await res.json();
-    lastResult = data;
-
-    if (!data.ok) {
-      el("status").textContent = "Ошибка: " + (data.error || data.stage || "unknown");
-      el("summary").textContent = JSON.stringify(data, null, 2);
-      return;
-    }
-
-    el("status").textContent = `Готово. Connect calls: ${data.totalConnects}, messages: ${data.messageCount}`;
-    el("summary").textContent = JSON.stringify({
-      raceId: data.raceId,
-      seconds: data.seconds,
-      intervalMs: data.intervalMs,
-      totalConnects: data.totalConnects,
-      messageCount: data.messageCount,
-      stats: data.stats
-    }, null, 2);
-
-    const info = renderMessages(data.messages || [], kart);
-    el("status").textContent += ` | показано: ${info.shown}${kart ? " (фильтр по карту " + kart + ")" : ""}`;
-  }
-
-  el("btn").addEventListener("click", dump);
-
-  el("copyJson").addEventListener("click", async () => {
-    if (!lastResult) return alert("Сначала сделай Dump messages");
-    await navigator.clipboard.writeText(JSON.stringify(lastResult, null, 2));
-    alert("Скопировано");
-  });
+  es.onerror = () => {
+    log("❌ stream error / closed");
+    es.close();
+  };
+}
 </script>
+
 </body>
 </html>

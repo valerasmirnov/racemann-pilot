@@ -3,325 +3,197 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>RaceMann RAW messages</title>
+  <title>RaceMann Messages Dumper</title>
   <style>
-    :root { color-scheme: dark; }
-    body { margin:0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; background:#0b0f0c; color:#d7ffe2; }
-    .wrap { max-width: 980px; margin: 0 auto; padding: 18px; }
-    h1 { margin: 0 0 14px; color:#4dff7a; font-size: 22px; letter-spacing: .5px; }
-    .row { display:flex; gap:10px; align-items:center; flex-wrap: wrap; }
-    input[type="text"], input[type="number"]{
-      background:#0f1612; border:1px solid #213628; color:#d7ffe2;
-      padding:10px 12px; border-radius:12px; outline:none;
-    }
-    input[type="text"]{ flex:1; min-width: 260px; }
-    button{
-      background:#132018; border:1px solid #234d33; color:#d7ffe2;
-      padding:10px 14px; border-radius:12px; cursor:pointer;
-    }
-    button:disabled{ opacity:.45; cursor:not-allowed; }
-    .pill { display:inline-flex; align-items:center; gap:10px; padding:10px 12px; border-radius:999px; border:1px solid #213628; background:#0f1612; }
-    label { user-select:none; }
-    .status { margin-top: 10px; font-weight: 700; }
-    .ok { color:#4dff7a; }
-    .bad { color:#ff4d4d; }
-    .muted { color:#9bd5aa; opacity: .9; }
-    .box{
-      margin-top: 12px; padding:12px; border-radius:16px;
-      border:1px solid #213628; background:#0f1612;
-    }
-    .box h3{ margin:0 0 8px; font-size:14px; color:#bfffd0; }
-    pre{
-      margin:0; white-space:pre-wrap; word-break: break-word;
-      font-size: 12px; line-height: 1.25;
-      max-height: 44vh; overflow:auto;
-    }
-    .small{ font-size: 12px; }
-    .hint { margin-top: 8px; opacity: .9; }
+    body { font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial; margin: 16px; }
+    input, button { font-size: 16px; padding: 10px; }
+    input { width: 100%; box-sizing: border-box; margin: 6px 0 12px; }
+    button { margin-right: 8px; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .box { border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin-top: 12px; }
+    pre { white-space: pre-wrap; word-break: break-word; max-height: 45vh; overflow: auto; background: #f7f7f7; padding: 10px; border-radius: 8px; }
+    .kpi { display: flex; gap: 16px; flex-wrap: wrap; }
+    .kpi div { background:#fafafa; border:1px solid #eee; border-radius:10px; padding:10px 12px; }
+    label { font-weight: 600; }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>RaceMann RAW messages</h1>
+  <h2>RaceMann — выгрузка всех SignalR messages</h2>
+
+  <label>Worker base (без /start):</label>
+  <input id="workerBase" placeholder="https://YOUR-WORKER.workers.dev" />
+
+  <label>Race URL:</label>
+  <input id="raceUrl" placeholder="https://miks.racemann.com/Race/id/....#race" />
 
   <div class="row">
-    <input id="raceUrl" type="text" placeholder="https://miks.racemann.com/Race/id/....#race" />
-    <button id="startBtn">START</button>
-    <button id="stopBtn" disabled>STOP</button>
-    <button id="dlBtn" disabled>Download JSON</button>
-    <label class="pill"><input id="dropHb" type="checkbox" checked /> drop hb</label>
-  </div>
-
-  <div class="row" style="margin-top:10px;">
-    <span class="pill" id="counters">frames: 0 | newCommand: 0</span>
-    <span class="pill small muted">Подсказка: в DevTools это поле часто = rn или nn</span>
-  </div>
-
-  <div class="row" style="margin-top:10px;">
-    <span class="small muted">Kart</span>
-    <input id="kart" type="number" min="0" step="1" value="72" style="width:120px;" />
-    <button id="showKartBtn">Show kart</button>
-  </div>
-
-  <div class="status" id="statusLine"><span class="bad">✖ disconnected</span></div>
-
-  <div class="box">
-    <h3>Последнее событие по карту</h3>
-    <div id="lastKart" class="small muted">—</div>
+    <label>Interval ms:</label>
+    <input id="intervalMs" style="width:140px" value="700" />
+    <label>Drop hb:</label>
+    <input id="dropHb" style="width:90px" value="0" />
+    <button id="btnStart">Start</button>
+    <button id="btnStop" disabled>Stop</button>
+    <button id="btnDownload" disabled>Download JSON</button>
+    <button id="btnClear">Clear</button>
   </div>
 
   <div class="box">
-    <h3>Лог</h3>
+    <div class="kpi">
+      <div><b>Frames:</b> <span id="frames">0</span></div>
+      <div><b>Messages:</b> <span id="msgs">0</span></div>
+      <div><b>Last has M:</b> <span id="hasM">—</span></div>
+      <div><b>RaceId:</b> <span id="raceId">—</span></div>
+    </div>
+    <div style="margin-top:10px"><b>Log</b></div>
     <pre id="log"></pre>
   </div>
-
-  <div class="box">
-    <h3>Worker endpoint</h3>
-    <div class="small muted" id="endpoint">—</div>
-  </div>
-</div>
 
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
 
-  const raceUrlEl = $("raceUrl");
-  const startBtn = $("startBtn");
-  const stopBtn = $("stopBtn");
-  const dlBtn = $("dlBtn");
-  const dropHbEl = $("dropHb");
-  const countersEl = $("counters");
-  const statusLine = $("statusLine");
-  const logEl = $("log");
-  const kartEl = $("kart");
-  const lastKartEl = $("lastKart");
-  const endpointEl = $("endpoint");
-  const showKartBtn = $("showKartBtn");
-
-  let ws = null;
+  let timer = null;
+  let state = null;
+  let raceId = null;
   let frames = 0;
-  let newCommands = 0;
-  let store = []; // сохраняем только frame.data (SignalR кадры)
-  let lastFoundForKart = null;
+  let msgCount = 0;
+  let allFrames = []; // store everything for download
 
   function log(line) {
-    logEl.textContent += line + "\n";
-    logEl.scrollTop = logEl.scrollHeight;
+    const el = $("log");
+    el.textContent = (el.textContent ? el.textContent + "\n" : "") + line;
+    el.scrollTop = el.scrollHeight;
   }
 
-  function setStatus(ok, text) {
-    statusLine.innerHTML = ok
-      ? `<span class="ok">✔ ${text}</span>`
-      : `<span class="bad">✖ ${text}</span>`;
+  function setRunning(r) {
+    $("btnStart").disabled = r;
+    $("btnStop").disabled = !r;
+    $("btnDownload").disabled = (msgCount === 0);
   }
 
-  function updateCounters() {
-    countersEl.textContent = `frames: ${frames} | newCommand: ${newCommands}`;
-    dlBtn.disabled = store.length === 0;
+  function updateKpi(hasM = "—") {
+    $("frames").textContent = String(frames);
+    $("msgs").textContent = String(msgCount);
+    $("hasM").textContent = String(hasM);
+    $("raceId").textContent = raceId || "—";
+    $("btnDownload").disabled = (msgCount === 0);
   }
 
-  function extractKartFromCommand(cmd) {
-    // чаще всего rn / nn строкой
-    const rn = cmd?.rn ?? cmd?.nn ?? cmd?.cs?.rn ?? cmd?.cs?.nn;
-    if (rn == null) return null;
-    const s = String(rn).trim();
-    if (!s) return null;
-    // "43" или "KART 43" — оставим только число если можно
-    const m = s.match(/(\d+)/);
-    return m ? m[1] : s;
-  }
+  async function start() {
+    const base = $("workerBase").value.trim().replace(/\/+$/, "");
+    const raceUrl = $("raceUrl").value.trim();
+    const intervalMs = Math.max(200, parseInt($("intervalMs").value.trim(), 10) || 700);
+    const dropHb = $("dropHb").value.trim() === "1";
 
-  function scanFrameForComp(frameObj, kart) {
-    if (!frameObj || !Array.isArray(frameObj.M)) return null;
-
-    for (const m of frameObj.M) {
-      if (m?.M !== "newCommand") continue;
-      const a0 = Array.isArray(m.A) ? m.A[0] : null;
-      if (!a0) continue;
-
-      // нам интересны Comp (пересечение/компаратор)
-      if (a0.Method !== "Comp") continue;
-
-      const cmd = a0.Command;
-      const k = extractKartFromCommand(cmd);
-      if (k && String(k) === String(kart)) {
-        return a0; // вернём целиком событие
-      }
-    }
-    return null;
-  }
-
-  function onShowKart() {
-    const kart = String(kartEl.value || "").trim();
-    if (!kart) return;
-
-    // найдём последнее Comp по этому карту
-    for (let i = store.length - 1; i >= 0; i--) {
-      const hit = scanFrameForComp(store[i], kart);
-      if (hit) {
-        lastFoundForKart = hit;
-        const bl = hit?.Command?.bl; // best lap (ms)
-        const ll = hit?.Command?.ll; // last lap (ms)
-        const best = (typeof bl === "number") ? (bl/1000).toFixed(3) : "—";
-        const last = (typeof ll === "number") ? (ll/1000).toFixed(3) : "—";
-        lastKartEl.textContent =
-          `Comp по карту ${kart}: last=${last}s best=${best}s pos=${hit?.Command?.pos ?? "—"} laps=${hit?.Command?.pd?.Laps ?? "—"}`;
-        return;
-      }
-    }
-    lastKartEl.textContent = `Не нашёл Comp по карту ${kart} (пока). Подожди пару секунд или сними drop hb.`;
-  }
-
-  showKartBtn.onclick = onShowKart;
-
-  function buildWsUrl() {
-    // UI и worker могут быть на разных доменах.
-    // Самое простое: явно прописать твой воркер-домен:
-    const workerHost = "racemann-api.vsmirnoff.workers.dev";
-
-    const raceUrl = encodeURIComponent(raceUrlEl.value.trim());
-    const drop = dropHbEl.checked ? "1" : "0";
-
-    const wsProto = "wss";
-    return `${wsProto}://${workerHost}/ws?raceUrl=${raceUrl}&dropHb=${drop}`;
-  }
-
-  function resetState() {
-    frames = 0;
-    newCommands = 0;
-    store = [];
-    lastFoundForKart = null;
-    logEl.textContent = "";
-    lastKartEl.textContent = "—";
-    updateCounters();
-  }
-
-  startBtn.onclick = () => {
-    const raceUrl = raceUrlEl.value.trim();
-    if (!raceUrl) {
-      setStatus(false, "enter race url");
+    if (!base || !raceUrl) {
+      alert("Нужно заполнить Worker base и Race URL");
       return;
     }
 
-    resetState();
+    // reset
+    stop();
+    state = null;
+    raceId = null;
+    frames = 0;
+    msgCount = 0;
+    allFrames = [];
+    $("log").textContent = "";
+    updateKpi();
 
-    const wsUrl = buildWsUrl();
-    endpointEl.textContent = wsUrl;
+    log("Starting…");
 
-    setStatus(false, "connecting...");
+    const startUrl = `${base}/start?raceUrl=${encodeURIComponent(raceUrl)}`;
+    const startRes = await fetch(startUrl);
+    const startJson = await startRes.json();
+    if (!startJson.ok) {
+      log("START ERROR:\n" + JSON.stringify(startJson, null, 2));
+      alert("Start error — смотри Log");
+      return;
+    }
 
-    ws = new WebSocket(wsUrl);
+    state = startJson.state;
+    raceId = startJson.raceId;
+    log("START OK: " + raceId);
+    log("Debug: " + JSON.stringify(startJson.debug, null, 2));
+    setRunning(true);
 
-    ws.onopen = () => {
-      setStatus(true, "connected");
-      startBtn.disabled = true;
-      stopBtn.disabled = false;
-      dlBtn.disabled = true;
-      log("WS open");
-    };
+    timer = setInterval(async () => {
+      try {
+        const nextUrl = `${base}/next?state=${encodeURIComponent(state)}`;
+        const r = await fetch(nextUrl);
+        const j = await r.json();
 
-    ws.onmessage = (ev) => {
-      let msg;
-      try { msg = JSON.parse(ev.data); } catch {
-        log("[raw] " + String(ev.data).slice(0, 200));
-        return;
-      }
-
-      if (msg.type === "status") {
-        if (msg.stage === "init") log(`[status] init ${msg.sessionId}`);
-        else log(`[status] ${msg.stage}`);
-        return;
-      }
-
-      if (msg.type === "error") {
-        log(`[error] ${msg.stage}: ${msg.error || ""}`);
-        return;
-      }
-
-      if (msg.type === "fatal") {
-        log(`[fatal] ${msg.error || "fatal"}`);
-        try { ws.close(); } catch {}
-        return;
-      }
-
-      if (msg.type === "frame") {
-        frames++;
-        const frameObj = msg.data;
-        store.push(frameObj);
-
-        // считаем newCommand (после drop hb фильтра — hb сюда обычно не попадёт)
-        if (frameObj && Array.isArray(frameObj.M)) {
-          for (const m of frameObj.M) {
-            if (m?.M === "newCommand") newCommands++;
-          }
+        if (!j.ok) {
+          log("NEXT ERROR:\n" + JSON.stringify(j, null, 2));
+          stop();
+          return;
         }
 
-        // авто-обновление по карту (если уже выбран)
-        const kart = String(kartEl.value || "").trim();
-        if (kart) {
-          const hit = scanFrameForComp(frameObj, kart);
-          if (hit) {
-            lastFoundForKart = hit;
-            const bl = hit?.Command?.bl;
-            const ll = hit?.Command?.ll;
-            const best = (typeof bl === "number") ? (bl/1000).toFixed(3) : "—";
-            const last = (typeof ll === "number") ? (ll/1000).toFixed(3) : "—";
-            lastKartEl.textContent =
-              `Comp по карту ${kart}: last=${last}s best=${best}s pos=${hit?.Command?.pos ?? "—"} laps=${hit?.Command?.pd?.Laps ?? "—"}`;
-          }
+        state = j.state;
+        frames += 1;
+
+        // store raw frame
+        allFrames.push({
+          ts: j.ts,
+          C: j.C,
+          M: j.M
+        });
+
+        let m = Array.isArray(j.M) ? j.M : [];
+        // optional drop hb in UI only
+        if (dropHb) {
+          m = m.filter(x => !(x?.M === "newCommand" && x?.A?.[0]?.Method === "hb"));
         }
+        msgCount += m.length;
+        updateKpi(j.hasMessages);
 
-        // короткая строка в лог
-        const c = frameObj?.C ? String(frameObj.C).slice(0, 28) : "—";
-        const mlen = Array.isArray(frameObj?.M) ? frameObj.M.length : 0;
-        log(`C=${c} | M=${mlen}`);
-
-        updateCounters();
-        return;
+        // log only when we actually have something, to not spam
+        if (j.hasMessages) {
+          log(`frame#${frames}  M=${j.M.length}  C=${j.C}`);
+        }
+      } catch (e) {
+        log("NEXT exception: " + String(e));
+        stop();
       }
-    };
+    }, intervalMs);
+  }
 
-    ws.onclose = (ev) => {
-      setStatus(false, `closed (${ev.code})`);
-      log(`WS closed code=${ev.code} reason=${ev.reason || ""}`);
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
-      // download остаётся доступным если что-то успели собрать
-      updateCounters();
-    };
+  function stop() {
+    if (timer) clearInterval(timer);
+    timer = null;
+    setRunning(false);
+    updateKpi();
+  }
 
-    ws.onerror = () => {
-      setStatus(false, "ws error");
-      log("WS error");
-    };
-  };
+  function download() {
+    const blob = new Blob([JSON.stringify({
+      raceId,
+      collectedAt: new Date().toISOString(),
+      frames: allFrames
+    }, null, 2)], { type: "application/json" });
 
-  stopBtn.onclick = () => {
-    try { ws?.close(1000, "stop"); } catch {}
-  };
-
-  dlBtn.onclick = () => {
-    const payload = {
-      meta: {
-        savedAt: new Date().toISOString(),
-        raceUrl: raceUrlEl.value.trim(),
-        dropHb: dropHbEl.checked,
-        frames,
-        newCommands,
-      },
-      frames: store,
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `racemann_messages_${Date.now()}.json`;
+    a.download = `racemann_${raceId || "race"}_${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
-  };
+  }
 
-  // по умолчанию — твой формат
-  raceUrlEl.value = "https://miks.racemann.com/Race/id/9020720b-7e01-4cee-ab37-4589a0bf180b#race";
-  updateCounters();
+  function clearAll() {
+    stop();
+    state = null;
+    raceId = null;
+    frames = 0;
+    msgCount = 0;
+    allFrames = [];
+    $("log").textContent = "";
+    updateKpi();
+  }
+
+  $("btnStart").addEventListener("click", start);
+  $("btnStop").addEventListener("click", stop);
+  $("btnDownload").addEventListener("click", download);
+  $("btnClear").addEventListener("click", clearAll);
 })();
 </script>
 </body>

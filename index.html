@@ -3,12 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>RaceMann — генератор кода по ссылке на заезд</title>
+  <title>RaceMann — разбор SignalR newCommand (экран-отладчик)</title>
   <style>
+    :root { color-scheme: dark; }
     body { font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial; margin: 16px; background:#0b0c10; color:#e8e8ea; }
     h2 { margin: 0 0 10px; }
-    .muted { color:#9aa0a6; font-size: 13px; }
-    input, button, textarea { font-size: 15px; padding: 10px; border-radius: 12px; border: 1px solid #2a2f3a; background:#0f1116; color:#e8e8ea; }
+    .muted { color:#9aa0a6; font-size: 13px; line-height: 1.35; }
+    input, button, select, textarea { font-size: 15px; padding: 10px; border-radius: 12px; border: 1px solid #2a2f3a; background:#0f1116; color:#e8e8ea; }
     input, textarea { width: 100%; box-sizing: border-box; }
     button { cursor: pointer; font-weight: 700; background:#1f6feb; border-color:#1f6feb; }
     button.secondary { background:#0f1116; border-color:#2a2f3a; }
@@ -16,99 +17,117 @@
     .row { display:flex; gap:10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
     .card { border:1px solid #2a2f3a; border-radius: 14px; padding: 12px; margin-top: 12px; background:#14161c; }
     .kpi { display:flex; gap:10px; flex-wrap: wrap; }
-    .kpi > div { border:1px solid #2a2f3a; border-radius: 14px; padding: 10px 12px; background:#0f1116; min-width: 180px; }
+    .kpi > div { border:1px solid #2a2f3a; border-radius: 14px; padding: 10px 12px; background:#0f1116; min-width: 210px; }
     label { font-weight: 700; display:block; margin-bottom: 6px; }
-    textarea { min-height: 220px; white-space: pre; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    a { color:#7aa7ff; }
+    pre, textarea { white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    pre { background:#0f1116; border:1px solid #2a2f3a; border-radius: 12px; padding: 10px; max-height: 44vh; overflow: auto; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #242833; padding: 6px 8px; text-align: left; font-size: 13px; }
+    th { color:#9aa0a6; font-weight: 700; }
     .pill { display:inline-block; padding:4px 8px; border:1px solid #2a2f3a; border-radius: 999px; font-size: 12px; color:#9aa0a6; }
   </style>
 </head>
 <body>
-  <h2>RaceMann — форма “вставил ссылку → получил код”</h2>
+  <h2>RaceMann — разбор SignalR <span class="pill">newCommand</span> (через ваш Worker)</h2>
   <div class="muted">
-    Вставь ссылку на заезд (формат <span class="pill">.../Race/id/&lt;GUID&gt;#race</span>).  
-    Система вытащит <b>RaceId</b> и сгенерирует код, который нужно вставить в <b>DevTools → Console</b> на странице RaceMann.
+    Это отладочный экран, который подключается к вашему Cloudflare Worker (<b>/ws</b>) и:
+    <ul>
+      <li>показывает поток кадров,</li>
+      <li>выделяет сообщения <b>RaceHub/newCommand</b>,</li>
+      <li>строит частотник по типу команды (<b>Method/Type/Command/Name</b>),</li>
+      <li>даёт быстрый поиск по сырому JSON.</li>
+    </ul>
+    Важно: Worker должен уже слать кадры в формате, как в твоём коде: <b>{type:"frame", C, M, raw}</b>.
   </div>
 
   <div class="card">
-    <label>Ссылка на заезд (Race URL)</label>
-    <input id="raceUrl" placeholder="https://miks.racemann.com/Race/id/2beb87e3-8e71-48d8-a986-5fe9f50985f#race" />
+    <label>Worker WebSocket URL</label>
+    <input id="workerWs" placeholder="wss://YOUR-WORKER.workers.dev/ws?raceUrl=https%3A%2F%2Fmiks.racemann.com%2FRace%2Fid%2F...%23race&dropHb=1" />
 
     <div class="row">
-      <button id="btnGenerate">Сгенерировать</button>
-      <button id="btnOpen" class="secondary" disabled>Открыть заезд</button>
-      <button id="btnCopy" class="secondary" disabled>Скопировать код</button>
-      <a id="bookmarklet" class="secondary" href="#" style="display:none">Bookmarklet</a>
+      <label style="margin:0">Показывать raw кадров:</label>
+      <select id="rawMode" style="min-width:220px">
+        <option value="none">не показывать</option>
+        <option value="only_has">только когда есть newCommand</option>
+        <option value="all">все кадры</option>
+      </select>
+
+      <label style="margin:0">Макс raw в памяти:</label>
+      <input id="maxKeep" style="width:120px" value="200" />
+
+      <button id="btnConnect">Connect</button>
+      <button id="btnDisconnect" class="secondary" disabled>Disconnect</button>
+      <button id="btnDownload" class="secondary" disabled>Download JSON</button>
+      <button id="btnClear" class="secondary">Clear</button>
+    </div>
+
+    <div class="row">
+      <label style="margin:0">Фильтр по kind (regex):</label>
+      <input id="kindFilter" style="min-width:320px" placeholder="например: lap|position|penalty" />
+      <label style="margin:0">Поиск в raw:</label>
+      <input id="rawSearch" style="min-width:320px" placeholder="например: \"Penalty\" или Kart" />
     </div>
   </div>
 
   <div class="card">
     <div class="kpi">
-      <div><b>RaceId:</b><div id="raceId" class="muted" style="margin-top:6px">—</div></div>
-      <div><b>Origin:</b><div id="origin" class="muted" style="margin-top:6px">—</div></div>
-      <div><b>Статус:</b><div id="status" class="muted" style="margin-top:6px">idle</div></div>
+      <div><b>Status</b><div id="status" class="muted" style="margin-top:6px">idle</div></div>
+      <div><b>Frames</b><div id="frames" class="muted" style="margin-top:6px">0</div></div>
+      <div><b>newCommand</b><div id="newcmd" class="muted" style="margin-top:6px">0</div></div>
+      <div><b>Last C</b><div id="lastC" class="muted" style="margin-top:6px">—</div></div>
     </div>
   </div>
 
   <div class="card">
-    <label>Код для DevTools → Console (вставь на странице RaceMann и обнови F5)</label>
-    <textarea id="code" readonly></textarea>
-    <div class="muted" style="margin-top:8px">
-      Инструкция: 1) нажми <b>Открыть заезд</b> → 2) на вкладке RaceMann F12 → Console → вставь код → Enter → 3) обнови страницу (F5).
-      В консоли появятся <b>WS SEND</b> и <b>WS RECV</b> сообщения — среди SEND будет нужный subscribe/join.
+    <label>Частота команд (kind)</label>
+    <div class="muted">kind вычисляется из <b>cmd.Method / cmd.Type / cmd.Command / cmd.Name</b> (и lower-case).</div>
+    <div style="margin-top:10px; overflow:auto; max-height: 28vh;">
+      <table id="freqTable">
+        <thead>
+          <tr><th style="width:60px">#</th><th>kind</th><th style="width:90px">count</th><th>пример ключей cmd</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
+  </div>
+
+  <div class="card">
+    <label>Лента “интересных” событий (RaceHub/newCommand)</label>
+    <div class="muted">Здесь показываются только команды, которые прошли фильтр kind (если задан).</div>
+    <pre id="events"></pre>
+  </div>
+
+  <div class="card">
+    <label>Raw log (по выбранному режиму)</label>
+    <pre id="raw"></pre>
   </div>
 
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
 
+  // ----- State -----
+  let ws = null;
+  let frames = 0;
+  let newCmdTotal = 0;
+  let lastC = null;
+
+  // keep last N raw frames for download
+  let keepMax = 200;
+  const kept = []; // {ts, frame} minimal
+  const freq = new Map(); // kind -> {count, sampleKeys[]}
+  const lastEvents = []; // strings
+  const lastRawLines = []; // strings
+
+  const MAX_EVENTS_LINES = 800;
+  const MAX_RAW_LINES = 800;
+
   function setStatus(s) { $("status").textContent = s; }
-
-  function extractRaceId(raceUrl) {
-    try {
-      const u = new URL(raceUrl);
-      const m = u.pathname.match(/\/Race\/id\/([0-9a-fA-F-]{36})/);
-      return m ? m[1] : null;
-    } catch { return null; }
-  }
-
-  function buildSnifferCode({ raceUrl, raceId, origin }) {
-    // ВАЖНО: этот код запускается на странице RaceMann (в консоли), а не на вашем домене.
-    // Он перехватывает WebSocket send/recv и логирует SignalR сообщения.
-    return `// === RaceMann / SignalR WS sniffer (generated) ===
-// Race URL: ${raceUrl}
-// RaceId:   ${raceId || "N/A"}
-// Origin:   ${origin}
-// How to use:
-// 1) Paste into DevTools -> Console on the RaceMann page
-// 2) Press Enter
-// 3) Reload page (F5)
-// You will see: [RM-WS SEND] (client->server) and [RM-WS RECV] (server->client)
-// =============================================
-
-(() => {
-  if (window.__RM_WS_SNIFFER_INSTALLED__) {
-    console.warn("[RM-SNIFFER] already installed");
-    return;
-  }
-  window.__RM_WS_SNIFFER_INSTALLED__ = true;
-
-  const TAG = "[RM-WS]";
-  const MAX_LOGS = 3000;
-
-  const store = {
-    logs: [],
-    sockets: new Set(),
-    wsCount: 0,
-    raceId: ${raceId ? JSON.stringify(raceId) : "null"},
-    raceUrl: ${JSON.stringify(raceUrl)},
-  };
-
-  function now() { return new Date().toISOString(); }
-  function push(entry) {
-    store.logs.push(entry);
-    if (store.logs.length > MAX_LOGS) store.logs.splice(0, store.logs.length - MAX_LOGS);
+  function updateKpi() {
+    $("frames").textContent = String(frames);
+    $("newcmd").textContent = String(newCmdTotal);
+    $("lastC").textContent = lastC ?? "—";
+    $("btnDownload").disabled = kept.length === 0;
   }
 
   function safeJsonParse(s) {
@@ -119,164 +138,270 @@
     try { return JSON.parse(t); } catch { return null; }
   }
 
-  // SignalR classic client->server invoke usually includes {H,M,A,I}
-  function isInvoke(obj) {
-    return obj && typeof obj === "object" && ("H" in obj) && ("M" in obj) && ("A" in obj) && ("I" in obj);
+  function detectKind(cmd) {
+    const v =
+      cmd?.Method ?? cmd?.method ??
+      cmd?.Type ?? cmd?.type ??
+      cmd?.Command ?? cmd?.command ??
+      cmd?.Name ?? cmd?.name ??
+      "unknown";
+    return String(v).toLowerCase();
   }
 
-  const NativeWebSocket = window.WebSocket;
-  const nativeSend = NativeWebSocket.prototype.send;
+  function extractCommandsFromWorkerFrame(workerMsg) {
+    // Expected worker frame:
+    // { type:"frame", C, M, raw, ... }
+    // where M is array of SignalR messages: [{H,M,A}, ...]
+    const out = [];
+    const M = Array.isArray(workerMsg?.M) ? workerMsg.M : [];
+    for (const msg of M) {
+      if (!msg) continue;
+      if (msg.H !== "RaceHub") continue;
 
-  // Wrap constructor to tag sockets
-  function WrappedWebSocket(url, protocols) {
-    const ws = protocols ? new NativeWebSocket(url, protocols) : new NativeWebSocket(url);
-
-    ws.__rm_id = ++store.wsCount;
-    ws.__rm_url = url;
-    store.sockets.add(ws);
-
-    const idTag = \`\${TAG}#\${ws.__rm_id}\`;
-
-    console.log(idTag, "OPEN SOCKET", url);
-
-    ws.addEventListener("open", () => console.log(idTag, "OPEN"));
-    ws.addEventListener("close", (e) => console.log(idTag, "CLOSE", { code: e.code, reason: e.reason }));
-    ws.addEventListener("error", (e) => console.log(idTag, "ERROR", e));
-
-    ws.addEventListener("message", (evt) => {
-      const raw = (typeof evt.data === "string") ? evt.data : "";
-      const parsed = safeJsonParse(raw);
-
-      // Print compact + keep full raw
-      if (parsed) {
-        // Server pushes often like {C:"...", M:[...]} or {M:[...]}
-        console.log(idTag, "RECV", parsed);
-        push({ ts: now(), dir: "RECV", url, parsed, raw });
+      if (msg.M === "newCommand") {
+        const cmd = msg.A?.[0] ?? null;
+        const kind = detectKind(cmd);
+        out.push({ kind, cmd, hub: msg.H, method: msg.M });
       } else {
-        console.log(idTag, "RECV_RAW", raw.slice(0, 300));
-        push({ ts: now(), dir: "RECV_RAW", url, raw });
+        out.push({ kind: String(msg.M).toLowerCase(), cmd: msg.A?.[0] ?? null, hub: msg.H, method: msg.M });
       }
+    }
+    return out;
+  }
+
+  function pushLimited(arr, item, max) {
+    arr.push(item);
+    if (arr.length > max) arr.splice(0, arr.length - max);
+  }
+
+  function renderFreqTable() {
+    const tbody = $("freqTable").querySelector("tbody");
+    tbody.innerHTML = "";
+
+    const rows = Array.from(freq.entries())
+      .map(([kind, v]) => ({ kind, count: v.count, keys: v.sampleKeys || [] }))
+      .sort((a,b) => b.count - a.count);
+
+    let i = 1;
+    for (const r of rows) {
+      const tr = document.createElement("tr");
+
+      const tdI = document.createElement("td");
+      tdI.textContent = String(i++);
+
+      const tdK = document.createElement("td");
+      tdK.textContent = r.kind;
+
+      const tdC = document.createElement("td");
+      tdC.textContent = String(r.count);
+
+      const tdKeys = document.createElement("td");
+      tdKeys.textContent = r.keys.slice(0, 20).join(", ");
+
+      tr.appendChild(tdI);
+      tr.appendChild(tdK);
+      tr.appendChild(tdC);
+      tr.appendChild(tdKeys);
+      tbody.appendChild(tr);
+    }
+  }
+
+  function renderEvents() {
+    $("events").textContent = lastEvents.join("\n");
+  }
+
+  function renderRaw() {
+    $("raw").textContent = lastRawLines.join("\n");
+  }
+
+  function clearAll() {
+    frames = 0;
+    newCmdTotal = 0;
+    lastC = null;
+    kept.length = 0;
+    freq.clear();
+    lastEvents.length = 0;
+    lastRawLines.length = 0;
+    renderFreqTable();
+    renderEvents();
+    renderRaw();
+    updateKpi();
+    setStatus("cleared");
+  }
+
+  function downloadJson() {
+    const blob = new Blob([JSON.stringify({
+      collectedAt: new Date().toISOString(),
+      workerWs: $("workerWs").value.trim(),
+      stats: { frames, newCmdTotal, lastC },
+      freq: Array.from(freq.entries()).map(([k,v]) => ({ kind:k, count:v.count, sampleKeys:v.sampleKeys })),
+      kept
+    }, null, 2)], { type:"application/json" });
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `racemann_debug_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function isKindAllowed(kind) {
+    const re = $("kindFilter").value.trim();
+    if (!re) return true;
+    try {
+      return new RegExp(re, "i").test(kind);
+    } catch {
+      return true; // invalid regex: don't block
+    }
+  }
+
+  function rawMatchesSearch(raw) {
+    const q = $("rawSearch").value.trim();
+    if (!q) return true;
+    return String(raw).toLowerCase().includes(q.toLowerCase());
+  }
+
+  function addFreq(kind, cmd) {
+    const entry = freq.get(kind) || { count: 0, sampleKeys: [] };
+    entry.count += 1;
+    if (cmd && typeof cmd === "object") {
+      const keys = Object.keys(cmd);
+      // keep a stable-ish sample of keys
+      if (entry.sampleKeys.length === 0 && keys.length) entry.sampleKeys = keys.slice(0, 30);
+    }
+    freq.set(kind, entry);
+  }
+
+  function connect() {
+    const url = $("workerWs").value.trim();
+    keepMax = Math.max(50, parseInt($("maxKeep").value, 10) || 200);
+
+    if (!url) {
+      alert("Вставь Worker WebSocket URL");
+      return;
+    }
+
+    disconnect();
+
+    try {
+      ws = new WebSocket(url);
+    } catch (e) {
+      alert("Не удалось создать WebSocket: " + e);
+      return;
+    }
+
+    setStatus("connecting...");
+    $("btnConnect").disabled = true;
+    $("btnDisconnect").disabled = false;
+
+    ws.addEventListener("open", () => {
+      setStatus("connected");
     });
 
-    return ws;
-  }
+    ws.addEventListener("close", (e) => {
+      setStatus(`closed (${e.code}) ${e.reason || ""}`.trim());
+      $("btnConnect").disabled = false;
+      $("btnDisconnect").disabled = true;
+      ws = null;
+    });
 
-  // Patch WebSocket constructor (best-effort)
-  window.WebSocket = WrappedWebSocket;
-  window.WebSocket.prototype = NativeWebSocket.prototype;
+    ws.addEventListener("error", () => {
+      setStatus("error");
+    });
 
-  // Patch send to catch client->server
-  NativeWebSocket.prototype.send = function(data) {
-    const id = this.__rm_id || "unknown";
-    const idTag = \`\${TAG}#\${id}\`;
-    const raw = (typeof data === "string") ? data : "";
+    ws.addEventListener("message", (evt) => {
+      const text = typeof evt.data === "string" ? evt.data : "";
+      const msg = safeJsonParse(text);
 
-    const parsed = safeJsonParse(raw);
+      if (!msg) return;
 
-    if (parsed) {
-      // Very important: these are the messages you need (join/subscribe/init)
-      if (isInvoke(parsed)) {
-        console.log(idTag, "SEND(INVOKE)", parsed);
-      } else {
-        console.log(idTag, "SEND", parsed);
+      // Worker sends statuses too
+      if (msg.type && msg.type !== "frame") {
+        pushLimited(lastRawLines, `[${new Date().toLocaleTimeString()}] STATUS ${msg.stage || msg.type}: ${JSON.stringify(msg)}`, MAX_RAW_LINES);
+        renderRaw();
+        return;
       }
-      push({ ts: now(), dir: "SEND", url: this.__rm_url || null, parsed, raw });
-    } else {
-      console.log(idTag, "SEND_RAW", raw.slice(0, 300));
-      push({ ts: now(), dir: "SEND_RAW", url: this.__rm_url || null, raw });
-    }
 
-    return nativeSend.call(this, data);
+      if (msg.type === "frame") {
+        frames += 1;
+        lastC = msg.C ?? lastC;
+
+        // keep minimal
+        pushLimited(kept, { ts: msg.ts || Date.now(), C: msg.C ?? null, M: msg.M ?? null, raw: msg.raw ?? null }, keepMax);
+
+        // Extract commands (RaceHub/newCommand)
+        const cmds = extractCommandsFromWorkerFrame(msg);
+
+        // Update frequency + events
+        for (const it of cmds) {
+          addFreq(it.kind, it.cmd);
+
+          if (!isKindAllowed(it.kind)) continue;
+
+          // Make a compact line to read
+          const keys = it.cmd && typeof it.cmd === "object" ? Object.keys(it.cmd).slice(0, 12).join(",") : "";
+          const line =
+            `[${new Date().toLocaleTimeString()}] kind=${it.kind} keys=[${keys}] ` +
+            (it.cmd ? `cmd=${JSON.stringify(it.cmd).slice(0, 500)}` : "");
+
+          pushLimited(lastEvents, line, MAX_EVENTS_LINES);
+
+          // count only real newCommand
+          if (it.method === "newCommand") newCmdTotal += 1;
+        }
+
+        // Raw log mode
+        const rawMode = $("rawMode").value;
+        const hasInteresting = cmds.some(x => x.method === "newCommand");
+        const shouldShowRaw =
+          rawMode === "all" ||
+          (rawMode === "only_has" && hasInteresting);
+
+        if (shouldShowRaw && rawMatchesSearch(msg.raw ?? "")) {
+          pushLimited(
+            lastRawLines,
+            `[${new Date().toLocaleTimeString()}] frame#${frames} C=${msg.C ?? "—"} raw=${String(msg.raw ?? "").slice(0, 1200)}`,
+            MAX_RAW_LINES
+          );
+        }
+
+        // Render (cheap, but ok for debug)
+        updateKpi();
+        renderFreqTable();
+        renderEvents();
+        renderRaw();
+      }
+    });
+  }
+
+  function disconnect() {
+    if (ws) {
+      try { ws.close(1000, "bye"); } catch {}
+      ws = null;
+    }
+    $("btnConnect").disabled = false;
+    $("btnDisconnect").disabled = true;
+    setStatus("disconnected");
+  }
+
+  $("btnConnect").addEventListener("click", connect);
+  $("btnDisconnect").addEventListener("click", disconnect);
+  $("btnDownload").addEventListener("click", downloadJson);
+  $("btnClear").addEventListener("click", clearAll);
+
+  // Small helpers for quick paste:
+  // Build Worker URL from base + Race URL (optional)
+  // You can ignore, but it's handy.
+  const suggest = () => {
+    const v = $("workerWs").value.trim();
+    if (v) return;
+    // Placeholder hint only; user fills manually
+    $("workerWs").value = "wss://YOUR-WORKER.workers.dev/ws?raceUrl=" +
+      encodeURIComponent("https://miks.racemann.com/Race/id/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx#race") +
+      "&dropHb=1";
   };
-
-  // Expose helper to download logs
-  window.__RM_WS_SNIFFER__ = {
-    getLogs: () => store.logs.slice(),
-    download: () => {
-      const blob = new Blob([JSON.stringify({
-        raceUrl: store.raceUrl,
-        raceId: store.raceId,
-        collectedAt: new Date().toISOString(),
-        logs: store.logs
-      }, null, 2)], { type: "application/json" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = \`racemann_ws_\${store.raceId || "race"}_\${Date.now()}.json\`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    }
-  };
-
-  console.log(TAG, "Installed. Tip: window.__RM_WS_SNIFFER__.download()");
-})();`;
-  }
-
-  function makeBookmarklet(code) {
-    // bookmarklet должен быть максимально коротким; тут просто вставляем "eval" и безопасно кодируем.
-    const min = `(()=>{try{${code.replace(/\\/g, "\\\\").replace(/`/g, "\\`")}}catch(e){alert(e)}})();`;
-    return "javascript:" + encodeURIComponent(min);
-  }
-
-  async function copyToClipboard(text) {
-    await navigator.clipboard.writeText(text);
-  }
-
-  $("btnGenerate").addEventListener("click", async () => {
-    const raceUrl = $("raceUrl").value.trim();
-    const raceId = extractRaceId(raceUrl);
-    if (!raceUrl) {
-      setStatus("Вставь ссылку на заезд");
-      return;
-    }
-    if (!raceId) {
-      setStatus("Ссылка не похожа на /Race/id/<GUID>#race");
-      $("raceId").textContent = "—";
-      $("origin").textContent = "—";
-      $("code").value = "";
-      $("btnOpen").disabled = true;
-      $("btnCopy").disabled = true;
-      $("bookmarklet").style.display = "none";
-      return;
-    }
-
-    const origin = (() => { try { return new URL(raceUrl).origin; } catch { return "https://miks.racemann.com"; } })();
-
-    $("raceId").textContent = raceId;
-    $("origin").textContent = origin;
-
-    const code = buildSnifferCode({ raceUrl, raceId, origin });
-    $("code").value = code;
-
-    $("btnOpen").disabled = false;
-    $("btnCopy").disabled = false;
-
-    // bookmarklet (опционально)
-    const b = $("bookmarklet");
-    b.style.display = "inline";
-    b.textContent = "Bookmarklet (на RaceMann)";
-    b.href = makeBookmarklet(code);
-
-    setStatus("Готово: открой заезд → вставь код в Console → F5");
-  });
-
-  $("btnOpen").addEventListener("click", () => {
-    const raceUrl = $("raceUrl").value.trim();
-    if (!raceUrl) return;
-    window.open(raceUrl, "_blank", "noopener,noreferrer");
-    setStatus("Открыл заезд в новой вкладке");
-  });
-
-  $("btnCopy").addEventListener("click", async () => {
-    const code = $("code").value;
-    if (!code) return;
-    try {
-      await copyToClipboard(code);
-      setStatus("Код скопирован в буфер обмена");
-    } catch (e) {
-      setStatus("Не удалось скопировать (попробуй вручную выделить и Ctrl+C)");
-    }
-  });
-
+  suggest();
+  updateKpi();
 })();
 </script>
 </body>

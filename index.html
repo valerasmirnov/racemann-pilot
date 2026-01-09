@@ -3,131 +3,196 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>RaceMann — разбор SignalR newCommand (экран-отладчик)</title>
+  <title>RaceMann Pilot — RN экран (позиция / отставание / круги)</title>
   <style>
     :root { color-scheme: dark; }
-    body { font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial; margin: 16px; background:#0b0c10; color:#e8e8ea; }
-    h2 { margin: 0 0 10px; }
+    body {
+      margin: 0;
+      font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif;
+      background:#0b0c10; color:#e8e8ea;
+    }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 14px; }
+    h1 { font-size: 18px; margin: 0 0 10px; font-weight: 800; }
     .muted { color:#9aa0a6; font-size: 13px; line-height: 1.35; }
-    input, button, select, textarea { font-size: 15px; padding: 10px; border-radius: 12px; border: 1px solid #2a2f3a; background:#0f1116; color:#e8e8ea; }
-    input, textarea { width: 100%; box-sizing: border-box; }
-    button { cursor: pointer; font-weight: 700; background:#1f6feb; border-color:#1f6feb; }
+    .card {
+      border:1px solid #2a2f3a; border-radius: 16px; padding: 12px;
+      background:#14161c; margin-top: 12px;
+    }
+    label { display:block; font-weight: 800; margin-bottom: 6px; font-size: 13px; color:#cfd3da; }
+    input, select, button {
+      font-size: 15px; padding: 10px 12px;
+      border-radius: 14px; border: 1px solid #2a2f3a;
+      background:#0f1116; color:#e8e8ea;
+      box-sizing: border-box;
+    }
+    input { width: 100%; }
+    button { cursor:pointer; font-weight: 900; background:#1f6feb; border-color:#1f6feb; }
     button.secondary { background:#0f1116; border-color:#2a2f3a; }
     button:disabled { opacity:.55; cursor:not-allowed; }
-    .row { display:flex; gap:10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
-    .card { border:1px solid #2a2f3a; border-radius: 14px; padding: 12px; margin-top: 12px; background:#14161c; }
-    .kpi { display:flex; gap:10px; flex-wrap: wrap; }
-    .kpi > div { border:1px solid #2a2f3a; border-radius: 14px; padding: 10px 12px; background:#0f1116; min-width: 210px; }
-    label { font-weight: 700; display:block; margin-bottom: 6px; }
-    pre, textarea { white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    pre { background:#0f1116; border:1px solid #2a2f3a; border-radius: 12px; padding: 10px; max-height: 44vh; overflow: auto; }
-    table { width:100%; border-collapse: collapse; }
-    th, td { border-bottom: 1px solid #242833; padding: 6px 8px; text-align: left; font-size: 13px; }
-    th { color:#9aa0a6; font-weight: 700; }
-    .pill { display:inline-block; padding:4px 8px; border:1px solid #2a2f3a; border-radius: 999px; font-size: 12px; color:#9aa0a6; }
+
+    .row { display:flex; gap:10px; flex-wrap: wrap; align-items: end; }
+    .row > * { flex: 1 1 240px; }
+
+    .kpis {
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    @media (min-width: 720px) {
+      .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+    .kpi {
+      border:1px solid #2a2f3a; border-radius: 16px;
+      background:#0f1116; padding: 12px;
+    }
+    .kpi .t { color:#9aa0a6; font-size: 12px; font-weight: 800; margin-bottom: 6px; }
+    .kpi .v { font-size: 26px; font-weight: 900; letter-spacing: -0.02em; }
+    .kpi .s { margin-top: 6px; color:#9aa0a6; font-size: 12px; }
+
+    .bigline {
+      display:flex; gap:10px; flex-wrap: wrap; align-items: center;
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 16px;
+      border:1px solid #2a2f3a;
+      background:#0f1116;
+    }
+    .pill {
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 8px 10px; border-radius: 999px;
+      border:1px solid #2a2f3a; color:#9aa0a6; font-size: 12px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 999px; background:#666; display:inline-block; }
+    .dot.ok { background:#26a269; }
+    .dot.bad { background:#d13212; }
+    pre {
+      margin: 0; white-space: pre-wrap; word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      background:#0f1116; border:1px solid #2a2f3a; border-radius: 14px; padding: 10px;
+      max-height: 28vh; overflow:auto;
+    }
+    .hint { margin-top: 8px; }
   </style>
 </head>
 <body>
-  <h2>RaceMann — разбор SignalR <span class="pill">newCommand</span> (через ваш Worker)</h2>
-  <div class="muted">
-    Это отладочный экран, который подключается к вашему Cloudflare Worker (<b>/ws</b>) и:
-    <ul>
-      <li>показывает поток кадров,</li>
-      <li>выделяет сообщения <b>RaceHub/newCommand</b>,</li>
-      <li>строит частотник по типу команды (<b>Method/Type/Command/Name</b>),</li>
-      <li>даёт быстрый поиск по сырому JSON.</li>
-    </ul>
-    Важно: Worker должен уже слать кадры в формате, как в твоём коде: <b>{type:"frame", C, M, raw}</b>.
-  </div>
-
-  <div class="card">
-    <label>Worker WebSocket URL</label>
-    <input id="workerWs" placeholder="wss://YOUR-WORKER.workers.dev/ws?raceUrl=https%3A%2F%2Fmiks.racemann.com%2FRace%2Fid%2F...%23race&dropHb=1" />
-
-    <div class="row">
-      <label style="margin:0">Показывать raw кадров:</label>
-      <select id="rawMode" style="min-width:220px">
-        <option value="none">не показывать</option>
-        <option value="only_has">только когда есть newCommand</option>
-        <option value="all">все кадры</option>
-      </select>
-
-      <label style="margin:0">Макс raw в памяти:</label>
-      <input id="maxKeep" style="width:120px" value="200" />
-
-      <button id="btnConnect">Connect</button>
-      <button id="btnDisconnect" class="secondary" disabled>Disconnect</button>
-      <button id="btnDownload" class="secondary" disabled>Download JSON</button>
-      <button id="btnClear" class="secondary">Clear</button>
+  <div class="wrap">
+    <h1>RaceMann Pilot — экран по RN</h1>
+    <div class="muted">
+      Подключается к твоему Worker по WebSocket (<b>/ws</b>), слушает SignalR кадры и строит KPI по <b>RN</b>:
+      <b>позиция</b>, <b>отставание от предшествующего</b>, <b>последний/лучший круг</b>.
     </div>
 
-    <div class="row">
-      <label style="margin:0">Фильтр по kind (regex):</label>
-      <input id="kindFilter" style="min-width:320px" placeholder="например: lap|position|penalty" />
-      <label style="margin:0">Поиск в raw:</label>
-      <input id="rawSearch" style="min-width:320px" placeholder="например: \"Penalty\" или Kart" />
+    <div class="card">
+      <div class="row">
+        <div style="flex: 3 1 420px;">
+          <label>Worker WebSocket URL</label>
+          <input id="workerWs" placeholder="wss://racemann-api.vsmirnoff.workers.dev/ws?raceUrl=...%23race&dropHb=1" />
+          <div class="muted hint">Важно: в URL не должно быть “#”. Внутри raceUrl должно быть <b>%23race</b>.</div>
+        </div>
+        <div style="flex: 1 1 180px;">
+          <label>RN (номер участника)</label>
+          <input id="rn" inputmode="numeric" placeholder="например 1" />
+        </div>
+        <div style="flex: 1 1 180px;">
+          <label>Показывать debug</label>
+          <select id="debugMode">
+            <option value="off">выкл</option>
+            <option value="on">вкл</option>
+          </select>
+        </div>
+        <div style="flex: 1 1 180px;">
+          <label>&nbsp;</label>
+          <div style="display:flex; gap:10px;">
+            <button id="btnConnect">Connect</button>
+            <button id="btnDisconnect" class="secondary" disabled>Disconnect</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="bigline">
+        <span class="pill"><span id="dot" class="dot bad"></span><b id="status">disconnected</b></span>
+        <span class="pill">Frames: <b id="frames">0</b></span>
+        <span class="pill">comp: <b id="compCount">0</b></span>
+        <span class="pill">Last update: <b id="lastUpd">—</b></span>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi">
+          <div class="t">Позиция</div>
+          <div id="kPos" class="v">—</div>
+          <div class="s">pos</div>
+        </div>
+        <div class="kpi">
+          <div class="t">Отставание до предшествующего</div>
+          <div id="kGap" class="v">—</div>
+          <div class="s">pld (abs)</div>
+        </div>
+        <div class="kpi">
+          <div class="t">Последний круг</div>
+          <div id="kLast" class="v">—</div>
+          <div class="s">ll</div>
+        </div>
+        <div class="kpi">
+          <div class="t">Лучший круг</div>
+          <div id="kBest" class="v">—</div>
+          <div class="s">bl</div>
+        </div>
+        <div class="kpi">
+          <div class="t">Кругов / счётчик</div>
+          <div id="kLc" class="v">—</div>
+          <div class="s">lc</div>
+        </div>
+        <div class="kpi">
+          <div class="t">RN</div>
+          <div id="kRn" class="v">—</div>
+          <div class="s">rn</div>
+        </div>
+        <div class="kpi">
+          <div class="t">Карт</div>
+          <div id="kCar" class="v">—</div>
+          <div class="s">Car</div>
+        </div>
+        <div class="kpi">
+          <div class="t">Пилот</div>
+          <div id="kDrv" class="v" style="font-size:18px; line-height:1.15;">—</div>
+          <div class="s">drv</div>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <div class="card">
-    <div class="kpi">
-      <div><b>Status</b><div id="status" class="muted" style="margin-top:6px">idle</div></div>
-      <div><b>Frames</b><div id="frames" class="muted" style="margin-top:6px">0</div></div>
-      <div><b>newCommand</b><div id="newcmd" class="muted" style="margin-top:6px">0</div></div>
-      <div><b>Last C</b><div id="lastC" class="muted" style="margin-top:6px">—</div></div>
+    <div id="debugCard" class="card" style="display:none;">
+      <label>Debug (последний comp для выбранного RN)</label>
+      <pre id="debug"></pre>
     </div>
-  </div>
-
-  <div class="card">
-    <label>Частота команд (kind)</label>
-    <div class="muted">kind вычисляется из <b>cmd.Method / cmd.Type / cmd.Command / cmd.Name</b> (и lower-case).</div>
-    <div style="margin-top:10px; overflow:auto; max-height: 28vh;">
-      <table id="freqTable">
-        <thead>
-          <tr><th style="width:60px">#</th><th>kind</th><th style="width:90px">count</th><th>пример ключей cmd</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="card">
-    <label>Лента “интересных” событий (RaceHub/newCommand)</label>
-    <div class="muted">Здесь показываются только команды, которые прошли фильтр kind (если задан).</div>
-    <pre id="events"></pre>
-  </div>
-
-  <div class="card">
-    <label>Raw log (по выбранному режиму)</label>
-    <pre id="raw"></pre>
   </div>
 
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
 
-  // ----- State -----
+  // ---------------- State ----------------
   let ws = null;
   let frames = 0;
-  let newCmdTotal = 0;
-  let lastC = null;
+  let compCount = 0;
 
-  // keep last N raw frames for download
-  let keepMax = 200;
-  const kept = []; // {ts, frame} minimal
-  const freq = new Map(); // kind -> {count, sampleKeys[]}
-  const lastEvents = []; // strings
-  const lastRawLines = []; // strings
+  const state = {
+    byRn: new Map(), // rn -> pilotState
+    lastFrameAt: null
+  };
 
-  const MAX_EVENTS_LINES = 800;
-  const MAX_RAW_LINES = 800;
+  // ---------------- Helpers ----------------
+  function setStatus(text, ok) {
+    $("status").textContent = text;
+    $("dot").classList.toggle("ok", !!ok);
+    $("dot").classList.toggle("bad", !ok);
+  }
 
-  function setStatus(s) { $("status").textContent = s; }
-  function updateKpi() {
+  function updateHeader() {
     $("frames").textContent = String(frames);
-    $("newcmd").textContent = String(newCmdTotal);
-    $("lastC").textContent = lastC ?? "—";
-    $("btnDownload").disabled = kept.length === 0;
+    $("compCount").textContent = String(compCount);
+    $("lastUpd").textContent = state.lastFrameAt ? new Date(state.lastFrameAt).toLocaleTimeString() : "—";
   }
 
   function safeJsonParse(s) {
@@ -138,148 +203,148 @@
     try { return JSON.parse(t); } catch { return null; }
   }
 
-  function detectKind(cmd) {
-    const v =
-      cmd?.Method ?? cmd?.method ??
-      cmd?.Type ?? cmd?.type ??
-      cmd?.Command ?? cmd?.command ??
-      cmd?.Name ?? cmd?.name ??
-      "unknown";
-    return String(v).toLowerCase();
+  function msToLap(ms) {
+    if (ms == null) return "—";
+    const n = Number(ms);
+    if (!Number.isFinite(n) || n <= 0) return "—";
+    const totalMs = Math.round(n);
+    const sec = Math.floor(totalMs / 1000);
+    const msPart = String(totalMs % 1000).padStart(3, "0");
+    const min = Math.floor(sec / 60);
+    const secPart = String(sec % 60).padStart(2, "0");
+    return `${min}:${secPart}.${msPart}`;
   }
 
-  function extractCommandsFromWorkerFrame(workerMsg) {
-    // Expected worker frame:
-    // { type:"frame", C, M, raw, ... }
-    // where M is array of SignalR messages: [{H,M,A}, ...]
+  function msToGap(ms) {
+    if (ms == null) return "—";
+    const n = Number(ms);
+    if (!Number.isFinite(n)) return "—";
+    const abs = Math.abs(n);
+
+    if (abs < 60000) return `+${(abs / 1000).toFixed(3)}s`;
+
+    const totalMs = Math.round(abs);
+    const sec = Math.floor(totalMs / 1000);
+    const msPart = String(totalMs % 1000).padStart(3, "0");
+    const min = Math.floor(sec / 60);
+    const secPart = String(sec % 60).padStart(2, "0");
+    return `+${min}:${secPart}.${msPart}`;
+  }
+
+  function renderSelected() {
+    const rn = String($("rn").value.trim());
+    $("kRn").textContent = rn || "—";
+
+    if (!rn) {
+      $("kPos").textContent = "—";
+      $("kGap").textContent = "—";
+      $("kLast").textContent = "—";
+      $("kBest").textContent = "—";
+      $("kLc").textContent = "—";
+      $("kCar").textContent = "—";
+      $("kDrv").textContent = "—";
+      $("debug").textContent = "";
+      return;
+    }
+
+    const p = state.byRn.get(rn);
+    if (!p) {
+      $("kPos").textContent = "—";
+      $("kGap").textContent = "—";
+      $("kLast").textContent = "—";
+      $("kBest").textContent = "—";
+      $("kLc").textContent = "—";
+      $("kCar").textContent = "—";
+      $("kDrv").textContent = "—";
+      $("debug").textContent = "";
+      return;
+    }
+
+    $("kPos").textContent = (p.position ?? "—");
+    $("kGap").textContent = msToGap(p.gapPrevMs);
+    $("kLast").textContent = msToLap(p.lastLapMs);
+    $("kBest").textContent = msToLap(p.bestLapMs);
+    $("kLc").textContent = (p.lapCount ?? "—");
+    $("kCar").textContent = (p.car || "—");
+    $("kDrv").textContent = (p.driver || "—");
+
+    if ($("debugMode").value === "on") {
+      $("debug").textContent = JSON.stringify(p.raw ?? {}, null, 2);
+    } else {
+      $("debug").textContent = "";
+    }
+  }
+
+  function handleComp(cmd) {
+    // cmd: { Time, Method:"Comp", Command:{...}, IsWideSpread }
+    const method = (cmd?.Method || cmd?.method || "").toLowerCase();
+    if (method !== "comp") return;
+
+    const c = cmd.Command;
+    if (!c || typeof c !== "object") return;
+
+    const rn = String(c.rn ?? c.RN ?? "").trim();
+    if (!rn) return;
+
+    const prev = state.byRn.get(rn) || {};
+
+    // gap to previous place:
+    // primary: pld
+    // fallback: pd.Time (если вдруг pld не будет)
+    const gapPrevMs =
+      (Number.isFinite(+c.pld) ? +c.pld : null) ??
+      (Number.isFinite(+c.pd?.Time) ? +c.pd.Time : null) ??
+      prev.gapPrevMs ?? null;
+
+    const next = {
+      rn,
+      car: String(c.Car ?? prev.car ?? ""),
+      driver: String(c.drv ?? prev.driver ?? ""),
+      team: String(c.fn ?? prev.team ?? ""),
+
+      position: Number.isFinite(+c.pos) ? +c.pos : (prev.position ?? null),
+      lapCount: Number.isFinite(+c.lc) ? +c.lc : (prev.lapCount ?? null),
+
+      lastLapMs: Number.isFinite(+c.ll) ? +c.ll : (prev.lastLapMs ?? null),
+      bestLapMs: Number.isFinite(+c.bl) ? +c.bl : (prev.bestLapMs ?? null),
+
+      gapPrevMs,
+      updatedAt: Date.now(),
+      raw: c
+    };
+
+    state.byRn.set(rn, next);
+  }
+
+  function extractRaceHubCommandsFromWorkerFrame(workerFrame) {
+    // workerFrame: {type:"frame", C, M:[{H,M,A}, ...], raw}
     const out = [];
-    const M = Array.isArray(workerMsg?.M) ? workerMsg.M : [];
-    for (const msg of M) {
+    const arr = Array.isArray(workerFrame?.M) ? workerFrame.M : [];
+    for (const msg of arr) {
       if (!msg) continue;
       if (msg.H !== "RaceHub") continue;
+      if (msg.M !== "newCommand") continue;
 
-      if (msg.M === "newCommand") {
-        const cmd = msg.A?.[0] ?? null;
-        const kind = detectKind(cmd);
-        out.push({ kind, cmd, hub: msg.H, method: msg.M });
-      } else {
-        out.push({ kind: String(msg.M).toLowerCase(), cmd: msg.A?.[0] ?? null, hub: msg.H, method: msg.M });
-      }
+      const a0 = msg.A?.[0];
+      if (!a0) continue;
+
+      // a0 looks like: {Time, Method:"Comp", Command:{...}, IsWideSpread}
+      out.push(a0);
     }
     return out;
   }
 
-  function pushLimited(arr, item, max) {
-    arr.push(item);
-    if (arr.length > max) arr.splice(0, arr.length - max);
-  }
-
-  function renderFreqTable() {
-    const tbody = $("freqTable").querySelector("tbody");
-    tbody.innerHTML = "";
-
-    const rows = Array.from(freq.entries())
-      .map(([kind, v]) => ({ kind, count: v.count, keys: v.sampleKeys || [] }))
-      .sort((a,b) => b.count - a.count);
-
-    let i = 1;
-    for (const r of rows) {
-      const tr = document.createElement("tr");
-
-      const tdI = document.createElement("td");
-      tdI.textContent = String(i++);
-
-      const tdK = document.createElement("td");
-      tdK.textContent = r.kind;
-
-      const tdC = document.createElement("td");
-      tdC.textContent = String(r.count);
-
-      const tdKeys = document.createElement("td");
-      tdKeys.textContent = r.keys.slice(0, 20).join(", ");
-
-      tr.appendChild(tdI);
-      tr.appendChild(tdK);
-      tr.appendChild(tdC);
-      tr.appendChild(tdKeys);
-      tbody.appendChild(tr);
-    }
-  }
-
-  function renderEvents() {
-    $("events").textContent = lastEvents.join("\n");
-  }
-
-  function renderRaw() {
-    $("raw").textContent = lastRawLines.join("\n");
-  }
-
-  function clearAll() {
-    frames = 0;
-    newCmdTotal = 0;
-    lastC = null;
-    kept.length = 0;
-    freq.clear();
-    lastEvents.length = 0;
-    lastRawLines.length = 0;
-    renderFreqTable();
-    renderEvents();
-    renderRaw();
-    updateKpi();
-    setStatus("cleared");
-  }
-
-  function downloadJson() {
-    const blob = new Blob([JSON.stringify({
-      collectedAt: new Date().toISOString(),
-      workerWs: $("workerWs").value.trim(),
-      stats: { frames, newCmdTotal, lastC },
-      freq: Array.from(freq.entries()).map(([k,v]) => ({ kind:k, count:v.count, sampleKeys:v.sampleKeys })),
-      kept
-    }, null, 2)], { type:"application/json" });
-
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `racemann_debug_${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
-
-  function isKindAllowed(kind) {
-    const re = $("kindFilter").value.trim();
-    if (!re) return true;
-    try {
-      return new RegExp(re, "i").test(kind);
-    } catch {
-      return true; // invalid regex: don't block
-    }
-  }
-
-  function rawMatchesSearch(raw) {
-    const q = $("rawSearch").value.trim();
-    if (!q) return true;
-    return String(raw).toLowerCase().includes(q.toLowerCase());
-  }
-
-  function addFreq(kind, cmd) {
-    const entry = freq.get(kind) || { count: 0, sampleKeys: [] };
-    entry.count += 1;
-    if (cmd && typeof cmd === "object") {
-      const keys = Object.keys(cmd);
-      // keep a stable-ish sample of keys
-      if (entry.sampleKeys.length === 0 && keys.length) entry.sampleKeys = keys.slice(0, 30);
-    }
-    freq.set(kind, entry);
-  }
-
+  // ---------------- Connection ----------------
   function connect() {
     const url = $("workerWs").value.trim();
-    keepMax = Math.max(50, parseInt($("maxKeep").value, 10) || 200);
+    if (!url) { alert("Вставь Worker WebSocket URL"); return; }
 
-    if (!url) {
-      alert("Вставь Worker WebSocket URL");
-      return;
-    }
+    // reset counters, keep state (можно и сбрасывать state.byRn при желании)
+    frames = 0;
+    compCount = 0;
+    state.lastFrameAt = null;
+    updateHeader();
+    renderSelected();
 
     disconnect();
 
@@ -290,86 +355,50 @@
       return;
     }
 
-    setStatus("connecting...");
     $("btnConnect").disabled = true;
     $("btnDisconnect").disabled = false;
+    setStatus("connecting…", false);
 
     ws.addEventListener("open", () => {
-      setStatus("connected");
+      setStatus("connected", true);
     });
 
     ws.addEventListener("close", (e) => {
-      setStatus(`closed (${e.code}) ${e.reason || ""}`.trim());
+      setStatus(`closed (${e.code})`, false);
       $("btnConnect").disabled = false;
       $("btnDisconnect").disabled = true;
       ws = null;
     });
 
     ws.addEventListener("error", () => {
-      setStatus("error");
+      setStatus("error", false);
     });
 
     ws.addEventListener("message", (evt) => {
       const text = typeof evt.data === "string" ? evt.data : "";
       const msg = safeJsonParse(text);
-
       if (!msg) return;
 
-      // Worker sends statuses too
       if (msg.type && msg.type !== "frame") {
-        pushLimited(lastRawLines, `[${new Date().toLocaleTimeString()}] STATUS ${msg.stage || msg.type}: ${JSON.stringify(msg)}`, MAX_RAW_LINES);
-        renderRaw();
+        // status frames from worker ignored for UI KPI
         return;
       }
 
       if (msg.type === "frame") {
         frames += 1;
-        lastC = msg.C ?? lastC;
+        state.lastFrameAt = Date.now();
 
-        // keep minimal
-        pushLimited(kept, { ts: msg.ts || Date.now(), C: msg.C ?? null, M: msg.M ?? null, raw: msg.raw ?? null }, keepMax);
-
-        // Extract commands (RaceHub/newCommand)
-        const cmds = extractCommandsFromWorkerFrame(msg);
-
-        // Update frequency + events
-        for (const it of cmds) {
-          addFreq(it.kind, it.cmd);
-
-          if (!isKindAllowed(it.kind)) continue;
-
-          // Make a compact line to read
-          const keys = it.cmd && typeof it.cmd === "object" ? Object.keys(it.cmd).slice(0, 12).join(",") : "";
-          const line =
-            `[${new Date().toLocaleTimeString()}] kind=${it.kind} keys=[${keys}] ` +
-            (it.cmd ? `cmd=${JSON.stringify(it.cmd).slice(0, 500)}` : "");
-
-          pushLimited(lastEvents, line, MAX_EVENTS_LINES);
-
-          // count only real newCommand
-          if (it.method === "newCommand") newCmdTotal += 1;
+        const cmds = extractRaceHubCommandsFromWorkerFrame(msg);
+        for (const cmd of cmds) {
+          // We care about Comp for pilot KPI
+          if ((cmd?.Method || "").toLowerCase() === "comp") {
+            compCount += 1;
+            handleComp(cmd);
+          }
         }
 
-        // Raw log mode
-        const rawMode = $("rawMode").value;
-        const hasInteresting = cmds.some(x => x.method === "newCommand");
-        const shouldShowRaw =
-          rawMode === "all" ||
-          (rawMode === "only_has" && hasInteresting);
-
-        if (shouldShowRaw && rawMatchesSearch(msg.raw ?? "")) {
-          pushLimited(
-            lastRawLines,
-            `[${new Date().toLocaleTimeString()}] frame#${frames} C=${msg.C ?? "—"} raw=${String(msg.raw ?? "").slice(0, 1200)}`,
-            MAX_RAW_LINES
-          );
-        }
-
-        // Render (cheap, but ok for debug)
-        updateKpi();
-        renderFreqTable();
-        renderEvents();
-        renderRaw();
+        updateHeader();
+        renderSelected();
       }
     });
   }
@@ -381,27 +410,30 @@
     }
     $("btnConnect").disabled = false;
     $("btnDisconnect").disabled = true;
-    setStatus("disconnected");
+    setStatus("disconnected", false);
   }
 
+  // ---------------- UI wiring ----------------
   $("btnConnect").addEventListener("click", connect);
   $("btnDisconnect").addEventListener("click", disconnect);
-  $("btnDownload").addEventListener("click", downloadJson);
-  $("btnClear").addEventListener("click", clearAll);
 
-  // Small helpers for quick paste:
-  // Build Worker URL from base + Race URL (optional)
-  // You can ignore, but it's handy.
-  const suggest = () => {
-    const v = $("workerWs").value.trim();
-    if (v) return;
-    // Placeholder hint only; user fills manually
-    $("workerWs").value = "wss://YOUR-WORKER.workers.dev/ws?raceUrl=" +
-      encodeURIComponent("https://miks.racemann.com/Race/id/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx#race") +
+  $("rn").addEventListener("input", renderSelected);
+  $("debugMode").addEventListener("change", () => {
+    $("debugCard").style.display = ($("debugMode").value === "on") ? "" : "none";
+    renderSelected();
+  });
+
+  // Prefill (your worker base)
+  if (!$("workerWs").value.trim()) {
+    $("workerWs").value =
+      "wss://racemann-api.vsmirnoff.workers.dev/ws?raceUrl=" +
+      encodeURIComponent("https://miks.racemann.com/Race/id/f0bc4940-fa61-4bab-be0b-d9ee576238e2#race") +
       "&dropHb=1";
-  };
-  suggest();
-  updateKpi();
+  }
+
+  setStatus("disconnected", false);
+  updateHeader();
+  renderSelected();
 })();
 </script>
 </body>

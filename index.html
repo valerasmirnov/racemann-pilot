@@ -2,107 +2,123 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>RaceMann Pilot — RN экран (позиция / отставание / круги)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>RaceMann Pilot — табло RN</title>
   <style>
     :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif;
-      background:#0b0c10; color:#e8e8ea;
+      background:#07080c; color:#eef0f4;
     }
-    .wrap { max-width: 980px; margin: 0 auto; padding: 14px; }
-    h1 { font-size: 18px; margin: 0 0 10px; font-weight: 800; }
-    .muted { color:#9aa0a6; font-size: 13px; line-height: 1.35; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 14px; padding-bottom: 24px; }
+
     .card {
-      border:1px solid #2a2f3a; border-radius: 16px; padding: 12px;
-      background:#14161c; margin-top: 12px;
+      border:1px solid #262b35;
+      border-radius: 18px;
+      padding: 12px;
+      background:#10131a;
+      margin-top: 12px;
     }
-    label { display:block; font-weight: 800; margin-bottom: 6px; font-size: 13px; color:#cfd3da; }
-    input, select, button {
-      font-size: 15px; padding: 10px 12px;
-      border-radius: 14px; border: 1px solid #2a2f3a;
-      background:#0f1116; color:#e8e8ea;
-      box-sizing: border-box;
+    h1 { font-size: 16px; margin: 0; font-weight: 900; letter-spacing: -0.02em; }
+    .muted { color:#9aa3ad; font-size: 13px; line-height: 1.35; }
+
+    label { display:block; font-weight: 900; margin-bottom: 6px; font-size: 12px; color:#cdd3dc; }
+    input, button, select {
+      font-size: 16px; padding: 12px 12px;
+      border-radius: 14px; border: 1px solid #262b35;
+      background:#0b0e14; color:#eef0f4;
+      width: 100%;
     }
-    input { width: 100%; }
-    button { cursor:pointer; font-weight: 900; background:#1f6feb; border-color:#1f6feb; }
-    button.secondary { background:#0f1116; border-color:#2a2f3a; }
-    button:disabled { opacity:.55; cursor:not-allowed; }
+    input::placeholder { color:#6f7782; }
+    button {
+      cursor:pointer; font-weight: 900;
+      background:#1f6feb; border-color:#1f6feb;
+    }
+    button.secondary { background:#0b0e14; border-color:#262b35; }
+    button:disabled { opacity:.6; cursor:not-allowed; }
 
     .row { display:flex; gap:10px; flex-wrap: wrap; align-items: end; }
-    .row > * { flex: 1 1 240px; }
+    .row > * { flex: 1 1 260px; }
 
-    .kpis {
-      display:grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+    .statusline {
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border:1px solid #262b35;
+      background:#0b0e14;
       margin-top: 10px;
-    }
-    @media (min-width: 720px) {
-      .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    }
-    .kpi {
-      border:1px solid #2a2f3a; border-radius: 16px;
-      background:#0f1116; padding: 12px;
-    }
-    .kpi .t { color:#9aa0a6; font-size: 12px; font-weight: 800; margin-bottom: 6px; }
-    .kpi .v { font-size: 26px; font-weight: 900; letter-spacing: -0.02em; }
-    .kpi .s { margin-top: 6px; color:#9aa0a6; font-size: 12px; }
-
-    .bigline {
-      display:flex; gap:10px; flex-wrap: wrap; align-items: center;
-      margin-top: 10px;
-      padding: 12px;
-      border-radius: 16px;
-      border:1px solid #2a2f3a;
-      background:#0f1116;
     }
     .pill {
       display:inline-flex; align-items:center; gap:8px;
-      padding: 8px 10px; border-radius: 999px;
-      border:1px solid #2a2f3a; color:#9aa0a6; font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid #262b35;
+      color:#9aa3ad;
+      font-size: 12px;
     }
     .dot { width: 10px; height: 10px; border-radius: 999px; background:#666; display:inline-block; }
     .dot.ok { background:#26a269; }
     .dot.bad { background:#d13212; }
-    pre {
-      margin: 0; white-space: pre-wrap; word-break: break-word;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 12px;
-      background:#0f1116; border:1px solid #2a2f3a; border-radius: 14px; padding: 10px;
-      max-height: 28vh; overflow:auto;
+
+    /* Phone scoreboard */
+    .scoreboard {
+      padding: 14px;
+      border-radius: 22px;
+      border: 1px solid #262b35;
+      background: linear-gradient(180deg, #0b0e14, #07080c);
+      margin-top: 12px;
     }
-    .hint { margin-top: 8px; }
+    .grid {
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 720px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+    }
+    .big {
+      border:1px solid #262b35;
+      border-radius: 22px;
+      background:#0b0e14;
+      padding: 14px;
+    }
+    .big .t { color:#9aa3ad; font-size: 12px; font-weight: 900; letter-spacing:.02em; }
+    .big .v { font-size: 56px; font-weight: 1000; letter-spacing: -0.03em; margin-top: 6px; line-height: 1; }
+    .big .s { color:#9aa3ad; font-size: 12px; margin-top: 6px; }
+
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .smallnote { margin-top: 10px; color:#9aa3ad; font-size: 12px; }
+
+    .hidden { display:none !important; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>RaceMann Pilot — экран по RN</h1>
-    <div class="muted">
-      Подключается к твоему Worker по WebSocket (<b>/ws</b>), слушает SignalR кадры и строит KPI по <b>RN</b>:
-      <b>позиция</b>, <b>отставание от предшествующего</b>, <b>последний/лучший круг</b>.
-    </div>
-
     <div class="card">
-      <div class="row">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+        <h1>RaceMann Pilot — табло RN</h1>
+        <span class="pill"><span id="dot" class="dot bad"></span><b id="status">disconnected</b></span>
+      </div>
+      <div class="muted" style="margin-top:8px">
+        Введи <b>ссылку на заезд</b> (как в браузере) и <b>RN</b>. Worker уже “зашит”.
+      </div>
+
+      <div class="row" style="margin-top:12px">
         <div style="flex: 3 1 420px;">
-          <label>Worker WebSocket URL</label>
-          <input id="workerWs" placeholder="wss://racemann-api.vsmirnoff.workers.dev/ws?raceUrl=...%23race&dropHb=1" />
-          <div class="muted hint">Важно: в URL не должно быть “#”. Внутри raceUrl должно быть <b>%23race</b>.</div>
+          <label>Ссылка на заезд RaceMann</label>
+          <input id="raceUrl" placeholder="https://miks.racemann.com/Race/id/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx#race" />
+          <div class="smallnote">Можно вставлять с <span class="mono">#race</span> — мы сами корректно закодируем.</div>
         </div>
+
         <div style="flex: 1 1 180px;">
-          <label>RN (номер участника)</label>
+          <label>RN</label>
           <input id="rn" inputmode="numeric" placeholder="например 1" />
+          <div class="smallnote">Номер участника (RN) как в табло.</div>
         </div>
-        <div style="flex: 1 1 180px;">
-          <label>Показывать debug</label>
-          <select id="debugMode">
-            <option value="off">выкл</option>
-            <option value="on">вкл</option>
-          </select>
-        </div>
-        <div style="flex: 1 1 180px;">
+
+        <div style="flex: 1 1 200px;">
           <label>&nbsp;</label>
           <div style="display:flex; gap:10px;">
             <button id="btnConnect">Connect</button>
@@ -111,78 +127,83 @@
         </div>
       </div>
 
-      <div class="bigline">
-        <span class="pill"><span id="dot" class="dot bad"></span><b id="status">disconnected</b></span>
+      <div class="statusline">
         <span class="pill">Frames: <b id="frames">0</b></span>
         <span class="pill">comp: <b id="compCount">0</b></span>
         <span class="pill">Last update: <b id="lastUpd">—</b></span>
+        <span class="pill">WakeLock: <b id="wake">off</b></span>
       </div>
+    </div>
 
-      <div class="kpis">
-        <div class="kpi">
+    <!-- Scoreboard -->
+    <div class="scoreboard">
+      <div class="grid">
+        <div class="big">
           <div class="t">Позиция</div>
           <div id="kPos" class="v">—</div>
           <div class="s">pos</div>
         </div>
-        <div class="kpi">
-          <div class="t">Отставание до предшествующего</div>
-          <div id="kGap" class="v">—</div>
-          <div class="s">pld (abs)</div>
+
+        <div class="big">
+          <div class="t">Отставание от предшествующего</div>
+          <div id="kGap" class="v" style="font-size:52px;">—</div>
+          <div class="s">pd.Laps + pd.Time (как в табло)</div>
         </div>
-        <div class="kpi">
+
+        <div class="big">
           <div class="t">Последний круг</div>
           <div id="kLast" class="v">—</div>
           <div class="s">ll</div>
         </div>
-        <div class="kpi">
+
+        <div class="big">
           <div class="t">Лучший круг</div>
           <div id="kBest" class="v">—</div>
           <div class="s">bl</div>
         </div>
-        <div class="kpi">
-          <div class="t">Кругов / счётчик</div>
-          <div id="kLc" class="v">—</div>
-          <div class="s">lc</div>
-        </div>
-        <div class="kpi">
-          <div class="t">RN</div>
-          <div id="kRn" class="v">—</div>
-          <div class="s">rn</div>
-        </div>
-        <div class="kpi">
-          <div class="t">Карт</div>
-          <div id="kCar" class="v">—</div>
-          <div class="s">Car</div>
-        </div>
-        <div class="kpi">
-          <div class="t">Пилот</div>
-          <div id="kDrv" class="v" style="font-size:18px; line-height:1.15;">—</div>
-          <div class="s">drv</div>
-        </div>
       </div>
-    </div>
 
-    <div id="debugCard" class="card" style="display:none;">
-      <label>Debug (последний comp для выбранного RN)</label>
-      <pre id="debug"></pre>
+      <div class="smallnote">
+        Если значение “зависло” — проверь, что заезд live и RN существует в этом заезде.
+      </div>
     </div>
   </div>
 
 <script>
 (() => {
+  // 1) Remember worker at code level
+  const WORKER_HOST = "racemann-api.vsmirnoff.workers.dev";
+
   const $ = (id) => document.getElementById(id);
 
-  // ---------------- State ----------------
   let ws = null;
   let frames = 0;
   let compCount = 0;
 
   const state = {
-    byRn: new Map(), // rn -> pilotState
+    byRn: new Map(), // rn -> {pos, ll, bl, pd:{Laps,Time}, updatedAt, raw}
     lastFrameAt: null
   };
 
-  // ---------------- Helpers ----------------
+  // Wake Lock (optional)
+  let wakeLock = null;
+  async function enableWakeLock() {
+    try {
+      if (!("wakeLock" in navigator)) return false;
+      wakeLock = await navigator.wakeLock.request("screen");
+      $("wake").textContent = "on";
+      wakeLock.addEventListener("release", () => { $("wake").textContent = "off"; });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  async function disableWakeLock() {
+    try { await wakeLock?.release?.(); } catch {}
+    wakeLock = null;
+    $("wake").textContent = "off";
+  }
+
   function setStatus(text, ok) {
     $("status").textContent = text;
     $("dot").classList.toggle("ok", !!ok);
@@ -215,68 +236,44 @@
     return `${min}:${secPart}.${msPart}`;
   }
 
-  function msToGap(ms) {
-    if (ms == null) return "—";
-    const n = Number(ms);
-    if (!Number.isFinite(n)) return "—";
-    const abs = Math.abs(n);
+  // 2) Correct gap: use pd.Laps + pd.Time (tablo-like), NOT pld
+  function formatGapPrev(pd) {
+    const laps = Number.isFinite(+pd?.Laps) ? +pd.Laps : 0;
+    const timeMs = Number.isFinite(+pd?.Time) ? +pd.Time : null;
 
-    if (abs < 60000) return `+${(abs / 1000).toFixed(3)}s`;
+    if (laps === 0 && (timeMs == null || timeMs === 0)) return "—";
 
-    const totalMs = Math.round(abs);
-    const sec = Math.floor(totalMs / 1000);
+    const absMs = timeMs == null ? 0 : Math.abs(timeMs);
+    const sec = absMs / 1000;
+
+    if (laps > 0) {
+      // Your example: "+1L 8.5"
+      return `+${laps}L ${sec.toFixed(1)}`;
+    }
+
+    // No laps behind:
+    if (absMs < 60000) return `+${sec.toFixed(3)}`;
+
+    // fallback minutes format
+    const totalMs = Math.round(absMs);
+    const sInt = Math.floor(totalMs / 1000);
     const msPart = String(totalMs % 1000).padStart(3, "0");
-    const min = Math.floor(sec / 60);
-    const secPart = String(sec % 60).padStart(2, "0");
+    const min = Math.floor(sInt / 60);
+    const secPart = String(sInt % 60).padStart(2, "0");
     return `+${min}:${secPart}.${msPart}`;
   }
 
   function renderSelected() {
     const rn = String($("rn").value.trim());
-    $("kRn").textContent = rn || "—";
+    const p = rn ? state.byRn.get(rn) : null;
 
-    if (!rn) {
-      $("kPos").textContent = "—";
-      $("kGap").textContent = "—";
-      $("kLast").textContent = "—";
-      $("kBest").textContent = "—";
-      $("kLc").textContent = "—";
-      $("kCar").textContent = "—";
-      $("kDrv").textContent = "—";
-      $("debug").textContent = "";
-      return;
-    }
-
-    const p = state.byRn.get(rn);
-    if (!p) {
-      $("kPos").textContent = "—";
-      $("kGap").textContent = "—";
-      $("kLast").textContent = "—";
-      $("kBest").textContent = "—";
-      $("kLc").textContent = "—";
-      $("kCar").textContent = "—";
-      $("kDrv").textContent = "—";
-      $("debug").textContent = "";
-      return;
-    }
-
-    $("kPos").textContent = (p.position ?? "—");
-    $("kGap").textContent = msToGap(p.gapPrevMs);
-    $("kLast").textContent = msToLap(p.lastLapMs);
-    $("kBest").textContent = msToLap(p.bestLapMs);
-    $("kLc").textContent = (p.lapCount ?? "—");
-    $("kCar").textContent = (p.car || "—");
-    $("kDrv").textContent = (p.driver || "—");
-
-    if ($("debugMode").value === "on") {
-      $("debug").textContent = JSON.stringify(p.raw ?? {}, null, 2);
-    } else {
-      $("debug").textContent = "";
-    }
+    $("kPos").textContent = p?.position ?? "—";
+    $("kGap").textContent = p ? formatGapPrev(p.pd) : "—";
+    $("kLast").textContent = p ? msToLap(p.lastLapMs) : "—";
+    $("kBest").textContent = p ? msToLap(p.bestLapMs) : "—";
   }
 
   function handleComp(cmd) {
-    // cmd: { Time, Method:"Comp", Command:{...}, IsWideSpread }
     const method = (cmd?.Method || cmd?.method || "").toLowerCase();
     if (method !== "comp") return;
 
@@ -288,27 +285,15 @@
 
     const prev = state.byRn.get(rn) || {};
 
-    // gap to previous place:
-    // primary: pld
-    // fallback: pd.Time (если вдруг pld не будет)
-    const gapPrevMs =
-      (Number.isFinite(+c.pld) ? +c.pld : null) ??
-      (Number.isFinite(+c.pd?.Time) ? +c.pd.Time : null) ??
-      prev.gapPrevMs ?? null;
-
     const next = {
       rn,
-      car: String(c.Car ?? prev.car ?? ""),
-      driver: String(c.drv ?? prev.driver ?? ""),
-      team: String(c.fn ?? prev.team ?? ""),
-
       position: Number.isFinite(+c.pos) ? +c.pos : (prev.position ?? null),
-      lapCount: Number.isFinite(+c.lc) ? +c.lc : (prev.lapCount ?? null),
-
       lastLapMs: Number.isFinite(+c.ll) ? +c.ll : (prev.lastLapMs ?? null),
       bestLapMs: Number.isFinite(+c.bl) ? +c.bl : (prev.bestLapMs ?? null),
 
-      gapPrevMs,
+      // ✅ correct gap source
+      pd: (c.pd && typeof c.pd === "object") ? c.pd : (prev.pd ?? null),
+
       updatedAt: Date.now(),
       raw: c
     };
@@ -317,39 +302,56 @@
   }
 
   function extractRaceHubCommandsFromWorkerFrame(workerFrame) {
-    // workerFrame: {type:"frame", C, M:[{H,M,A}, ...], raw}
+    // workerFrame: {type:"frame", M:[{H,M,A}, ...], ...}
     const out = [];
     const arr = Array.isArray(workerFrame?.M) ? workerFrame.M : [];
     for (const msg of arr) {
       if (!msg) continue;
       if (msg.H !== "RaceHub") continue;
       if (msg.M !== "newCommand") continue;
-
       const a0 = msg.A?.[0];
-      if (!a0) continue;
-
-      // a0 looks like: {Time, Method:"Comp", Command:{...}, IsWideSpread}
-      out.push(a0);
+      if (a0) out.push(a0);
     }
     return out;
   }
 
-  // ---------------- Connection ----------------
-  function connect() {
-    const url = $("workerWs").value.trim();
-    if (!url) { alert("Вставь Worker WebSocket URL"); return; }
+  function buildWorkerWsUrl(raceUrlRaw) {
+    // Accept with or without #race; WebSocket URL must not contain '#'
+    const cleaned = raceUrlRaw.trim();
+    if (!cleaned) throw new Error("raceUrl empty");
 
-    // reset counters, keep state (можно и сбрасывать state.byRn при желании)
+    // Encode full race url including #race
+    const encoded = encodeURIComponent(cleaned);
+
+    return `wss://${WORKER_HOST}/ws?raceUrl=${encoded}&dropHb=1`;
+  }
+
+  function connect() {
+    const raceUrl = $("raceUrl").value.trim();
+    const rn = $("rn").value.trim();
+
+    if (!raceUrl) { alert("Вставь ссылку на заезд RaceMann"); return; }
+    if (!rn) { alert("Введи RN"); return; }
+
+    let wsUrl;
+    try {
+      wsUrl = buildWorkerWsUrl(raceUrl);
+    } catch (e) {
+      alert("Некорректная ссылка на заезд: " + e);
+      return;
+    }
+
+    disconnect();
+
+    // reset counters (state keep: you may keep it; ok)
     frames = 0;
     compCount = 0;
     state.lastFrameAt = null;
     updateHeader();
     renderSelected();
 
-    disconnect();
-
     try {
-      ws = new WebSocket(url);
+      ws = new WebSocket(wsUrl);
     } catch (e) {
       alert("Не удалось создать WebSocket: " + e);
       return;
@@ -359,15 +361,18 @@
     $("btnDisconnect").disabled = false;
     setStatus("connecting…", false);
 
-    ws.addEventListener("open", () => {
+    ws.addEventListener("open", async () => {
       setStatus("connected", true);
+      // best-effort wakelock for phone usage
+      await enableWakeLock();
     });
 
-    ws.addEventListener("close", (e) => {
+    ws.addEventListener("close", async (e) => {
       setStatus(`closed (${e.code})`, false);
       $("btnConnect").disabled = false;
       $("btnDisconnect").disabled = true;
       ws = null;
+      await disableWakeLock();
     });
 
     ws.addEventListener("error", () => {
@@ -379,10 +384,7 @@
       const msg = safeJsonParse(text);
       if (!msg) return;
 
-      if (msg.type && msg.type !== "frame") {
-        // status frames from worker ignored for UI KPI
-        return;
-      }
+      if (msg.type && msg.type !== "frame") return;
 
       if (msg.type === "frame") {
         frames += 1;
@@ -390,7 +392,6 @@
 
         const cmds = extractRaceHubCommandsFromWorkerFrame(msg);
         for (const cmd of cmds) {
-          // We care about Comp for pilot KPI
           if ((cmd?.Method || "").toLowerCase() === "comp") {
             compCount += 1;
             handleComp(cmd);
@@ -411,29 +412,42 @@
     $("btnConnect").disabled = false;
     $("btnDisconnect").disabled = true;
     setStatus("disconnected", false);
+    disableWakeLock();
   }
 
-  // ---------------- UI wiring ----------------
+  // UI events
   $("btnConnect").addEventListener("click", connect);
   $("btnDisconnect").addEventListener("click", disconnect);
-
   $("rn").addEventListener("input", renderSelected);
-  $("debugMode").addEventListener("change", () => {
-    $("debugCard").style.display = ($("debugMode").value === "on") ? "" : "none";
-    renderSelected();
+
+  // Convenience: prefill last used (localStorage) for user comfort
+  const LS_RACE = "rm_pilot_raceUrl";
+  const LS_RN = "rm_pilot_rn";
+  try {
+    const savedRace = localStorage.getItem(LS_RACE);
+    const savedRn = localStorage.getItem(LS_RN);
+    if (savedRace) $("raceUrl").value = savedRace;
+    if (savedRn) $("rn").value = savedRn;
+  } catch {}
+
+  $("raceUrl").addEventListener("change", () => {
+    try { localStorage.setItem(LS_RACE, $("raceUrl").value.trim()); } catch {}
+  });
+  $("rn").addEventListener("change", () => {
+    try { localStorage.setItem(LS_RN, $("rn").value.trim()); } catch {}
   });
 
-  // Prefill (your worker base)
-  if (!$("workerWs").value.trim()) {
-    $("workerWs").value =
-      "wss://racemann-api.vsmirnoff.workers.dev/ws?raceUrl=" +
-      encodeURIComponent("https://miks.racemann.com/Race/id/f0bc4940-fa61-4bab-be0b-d9ee576238e2#race") +
-      "&dropHb=1";
-  }
-
+  // Initial
   setStatus("disconnected", false);
   updateHeader();
   renderSelected();
+
+  // Keep wake lock on visibility changes (optional)
+  document.addEventListener("visibilitychange", async () => {
+    if (document.visibilityState === "visible" && ws) {
+      await enableWakeLock();
+    }
+  });
 })();
 </script>
 </body>

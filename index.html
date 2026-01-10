@@ -13,6 +13,7 @@
       background:#07080c; color:#eef0f4;
     }
 
+    /* ===== Setup screen ===== */
     .wrap { max-width: 980px; margin: 0 auto; padding: 14px; padding-bottom: 24px; }
     .card {
       border:1px solid #262b35;
@@ -25,7 +26,7 @@
     .muted { color:#9aa3ad; font-size: 13px; line-height: 1.35; }
 
     label { display:block; font-weight: 900; margin-bottom: 6px; font-size: 12px; color:#cdd3dc; }
-    input, button, textarea {
+    input, button {
       font-size: 16px; padding: 12px 12px;
       border-radius: 14px; border: 1px solid #262b35;
       background:#0b0e14; color:#eef0f4;
@@ -37,7 +38,7 @@
       background:#1f6feb; border-color:#1f6feb;
     }
     button.secondary { background:#0b0e14; border-color:#262b35; }
-    button:disabled { opacity:.55; cursor:not-allowed; }
+    button:disabled { opacity:.6; cursor:not-allowed; }
     .row { display:flex; gap:10px; flex-wrap: wrap; align-items: end; }
     .row > * { flex: 1 1 260px; }
     .smallnote { margin-top: 8px; color:#9aa3ad; font-size: 12px; }
@@ -55,28 +56,6 @@
     .dot { width: 10px; height: 10px; border-radius: 999px; background:#666; display:inline-block; }
     .dot.ok { background:#26a269; }
     .dot.bad { background:#d13212; }
-
-    .logBox {
-      margin-top: 12px;
-      border:1px solid #262b35;
-      border-radius: 14px;
-      background:#0b0e14;
-      padding: 10px;
-    }
-    .logBoxHeader {
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      margin-bottom: 8px;
-    }
-    .logBoxHeader b { font-size: 12px; color:#cdd3dc; }
-    .log {
-      width: 100%;
-      height: 180px;
-      resize: vertical;
-      font-size: 12px;
-      line-height: 1.35;
-      white-space: pre;
-      overflow: auto;
-    }
 
     /* ===== Pilot screen ===== */
     .pilot {
@@ -120,6 +99,7 @@
       will-change: transform, filter, opacity;
     }
 
+    /* Top row BIG: POS + LAST LAP */
     .bigRow {
       display:grid;
       grid-template-columns: 1fr 1fr;
@@ -127,6 +107,7 @@
     }
     .tile.big .v { font-size: 72px; }
 
+    /* Bottom row smaller: BEST PILOT + BEST RACE */
     .smallRow {
       display:grid;
       grid-template-columns: 1fr 1fr;
@@ -134,9 +115,11 @@
     }
     .tile.small .v { font-size: 46px; }
 
+    /* Colors */
     .green  { color: #26a269; }
     .purple { color: #bb6bff; }
 
+    /* Value change animation */
     @keyframes pop {
       0%   { transform: scale(1);    filter: brightness(1);    opacity: 1; }
       30%  { transform: scale(1.06); filter: brightness(1.25); opacity: 1; }
@@ -161,44 +144,29 @@
       </div>
 
       <div class="muted" style="margin-top:8px">
-        Мы берём актуальный <b>raceId</b> автоматически из SignalR страницы
-        <span class="mono">https://miks.racemann.com/home/last#race</span>.
-        Введи только <b>RN</b>.
+        Введи ссылку на заезд и RN, нажми <b>Открыть экран пилота</b>.
       </div>
 
       <div class="row" style="margin-top:12px">
-        <div style="flex: 1 1 220px;">
-          <label>RN</label>
-          <input id="rn" inputmode="numeric" placeholder="например 1" />
-          <div class="smallnote">Номер карта / RN.</div>
+        <div style="flex: 3 1 420px;">
+          <label>Ссылка на заезд RaceMann</label>
+          <input id="raceUrl" placeholder="https://miks.racemann.com/Race/id/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx#race" />
+          <div class="smallnote">Можно вставлять с <span class="mono">#race</span> — мы сами закодируем.</div>
         </div>
 
-        <div style="flex: 2 1 520px;">
-          <label>Актуальный raceId</label>
-          <input id="raceIdBox" class="mono" readonly value="—" />
-          <div class="smallnote">Источник: <span class="mono">/home/last</span></div>
+        <div style="flex: 1 1 180px;">
+          <label>RN</label>
+          <input id="rn" inputmode="numeric" placeholder="например 1" />
         </div>
 
         <div style="flex: 1 1 260px;">
           <label>&nbsp;</label>
-          <button id="btnOpen" disabled>Открыть экран пилота</button>
-          <div class="smallnote" id="raceLinkLine" style="margin-top:8px"></div>
-        </div>
-      </div>
-
-      <div class="logBox">
-        <div class="logBoxHeader">
-          <b>Debug: lastRaceId watcher</b>
-          <button id="btnClearLog" class="secondary">Очистить</button>
-        </div>
-        <textarea id="log" class="log mono" readonly></textarea>
-        <div class="smallnote" style="margin-top:8px">
-          Если raceId не подтягивается — пришли сюда 10–20 строк из лога.
+          <button id="btnOpen">Открыть экран пилота</button>
         </div>
       </div>
 
       <div class="smallnote" style="margin-top:12px">
-        Worker: <span class="mono">racemann-api.vsmirnoff.workers.dev</span>
+        Worker “зашит” в коде: <span class="mono">racemann-api.vsmirnoff.workers.dev</span>
       </div>
     </div>
   </div>
@@ -221,6 +189,7 @@
     </div>
 
     <div class="board">
+      <!-- Top row BIG -->
       <div class="bigRow">
         <div class="tile big">
           <div class="t">Позиция</div>
@@ -233,6 +202,7 @@
         </div>
       </div>
 
+      <!-- Bottom row smaller -->
       <div class="smallRow">
         <div class="tile small">
           <div class="t">Лучший круг пилота</div>
@@ -250,39 +220,36 @@
 <script>
 (() => {
   const WORKER_HOST = "racemann-api.vsmirnoff.workers.dev";
-  const HOME_LAST_URL = "https://miks.racemann.com/home/last#race";
-  const LS_RN = "rm_pilot_rn";
   const $ = (id) => document.getElementById(id);
 
-  let wsPilot = null;
-  let wsLast = null;
+  const LS_RACE = "rm_pilot_raceUrl";
+  const LS_RN   = "rm_pilot_rn";
+
+  let ws = null;
 
   const state = {
-    raceId: null,
-    raceIdUpdatedAt: null,
-    raceIdWsConnected: false,
-
     byRn: new Map(),
     bestRaceMs: null,
-
+    bestRaceRn: null,
     lastFrameAt: null,
     frames: 0,
     compCount: 0,
-
-    pilotConnected: false,
   };
 
-  // ===== logging =====
-  const logLines = [];
-  function log(line) {
-    const ts = new Date().toLocaleTimeString();
-    logLines.push(`[${ts}] ${line}`);
-    while (logLines.length > 200) logLines.shift();
-    $("log").value = logLines.slice(-40).join("\n");
-    $("log").scrollTop = $("log").scrollHeight;
+  // Wake Lock
+  let wakeLock = null;
+  async function enableWakeLock() {
+    try {
+      if (!("wakeLock" in navigator)) return false;
+      wakeLock = await navigator.wakeLock.request("screen");
+      return true;
+    } catch { return false; }
+  }
+  async function disableWakeLock() {
+    try { await wakeLock?.release?.(); } catch {}
+    wakeLock = null;
   }
 
-  // ===== UI helpers =====
   function setDot(where, ok) {
     const dot = where === "setup" ? $("dotSetup") : $("dotPilot");
     dot.classList.toggle("ok", !!ok);
@@ -291,6 +258,14 @@
   function setStatus(where, text, ok) {
     (where === "setup" ? $("statusSetup") : $("statusPilot")).textContent = text;
     setDot(where, ok);
+  }
+
+  function safeJsonParse(s) {
+    if (typeof s !== "string") return null;
+    const t = s.trim();
+    if (!t) return null;
+    if (!(t.startsWith("{") || t.startsWith("["))) return null;
+    try { return JSON.parse(t); } catch { return null; }
   }
 
   function msToLap(ms) {
@@ -305,203 +280,34 @@
     return `${min}:${secPart}.${msPart}`;
   }
 
+  // animate + set only on change
   function setValue(id, nextText) {
     const el = $(id);
-    if (el.textContent === nextText) return;
+    const prev = el.textContent;
+    if (prev === nextText) return;
+
     el.textContent = nextText;
     el.classList.remove("pop");
     void el.offsetWidth;
     el.classList.add("pop");
   }
 
-  function buildWorkerWsUrl(pageUrl) {
-    const encoded = encodeURIComponent(pageUrl.trim());
-    return `wss://${WORKER_HOST}/ws?raceUrl=${encoded}&dropHb=1`;
-  }
-
-  function buildRaceUrlFromId(raceId) {
-    return `https://miks.racemann.com/Race/id/${raceId}#race`;
-  }
-
-  // ===== KEY FIX: parse SignalR messages separated by \x1e =====
-  function parseSignalRMessages(text) {
-    if (typeof text !== "string") return [];
-    // SignalR JSON protocol uses record separator 0x1e
-    const parts = text.split("\x1e").map(s => s.trim()).filter(Boolean);
+  function extractRaceHubNewCommands(workerFrame) {
     const out = [];
-    for (const p of parts) {
-      try { out.push(JSON.parse(p)); } catch {}
+    const arr = Array.isArray(workerFrame?.M) ? workerFrame.M : [];
+    for (const msg of arr) {
+      if (!msg) continue;
+      if (msg.H !== "RaceHub") continue;
+      if (msg.M !== "newCommand") continue;
+      const a0 = msg.A?.[0];
+      if (a0) out.push(a0);
     }
     return out;
   }
 
-  // ===== Extractors (both formats) =====
-  // A) "old" worker-normalized format: {M:[{H,M,A}]}
-  function normalizeOldFrame(obj) {
-    if (!obj) return null;
-    if (obj.type === "frame") return obj;
-    if (Array.isArray(obj.M)) return obj;
-    if (Array.isArray(obj)) return { M: obj };
-    return null;
-  }
-
-  function extractLastRaceIdFromOldFrame(frame) {
-    const arr = Array.isArray(frame?.M) ? frame.M : [];
-    for (const m of arr) {
-      if (!m) continue;
-      if (m.H !== "RaceHub") continue;
-      if (m.M !== "lastRaceId") continue;
-      const a0 = m.A?.[0];
-      const id = (typeof a0 === "string") ? a0 : (a0?.id ?? a0?.Id ?? a0?.raceId ?? a0?.RaceId);
-      if (typeof id === "string" && id.trim()) return id.trim();
-    }
-    return null;
-  }
-
-  // B) "pure SignalR" format: {type:1,target:"lastRaceId",arguments:[{id:"..."}]}
-  function extractLastRaceIdFromSignalR(obj) {
-    const target = obj?.target || obj?.Target;
-    if (target !== "lastRaceId") return null;
-    const a0 = obj?.arguments?.[0] || obj?.Arguments?.[0];
-    const id = a0?.id ?? a0?.Id ?? a0?.raceId ?? a0?.RaceId;
-    if (typeof id === "string" && id.trim()) return id.trim();
-    return null;
-  }
-
-  function updateRaceIdUI() {
-    $("raceIdBox").value = state.raceId || "—";
-    const ok = !!state.raceId && state.raceIdWsConnected;
-    const statusText = ok ? "raceId live" : (state.raceIdWsConnected ? "waiting raceId…" : "connecting…");
-    setStatus("setup", statusText, ok);
-
-    $("btnOpen").disabled = !(state.raceId && $("rn").value.trim());
-
-    const line = $("raceLinkLine");
-    if (state.raceId) {
-      line.innerHTML = `Текущий заезд: <span class="mono">${buildRaceUrlFromId(state.raceId)}</span>`;
-    } else {
-      line.textContent = "";
-    }
-  }
-
-  // ===== lastRace watcher =====
-  let lastReconnectTimer = null;
-  let lastReconnectDelayMs = 1200;
-
-  function scheduleLastReconnect() {
-    if (lastReconnectTimer) return;
-    const delay = Math.min(lastReconnectDelayMs, 12000);
-    lastReconnectDelayMs = Math.min(lastReconnectDelayMs * 1.6, 12000);
-    log(`last-ws: reconnect in ${delay}ms`);
-    lastReconnectTimer = setTimeout(() => {
-      lastReconnectTimer = null;
-      connectLastRaceWatcher();
-    }, delay);
-  }
-
-  function applyRaceId(id) {
-    if (!id || id === state.raceId) return;
-    const prev = state.raceId;
-    state.raceId = id;
-    state.raceIdUpdatedAt = Date.now();
-    log(`last-ws: GOT raceId=${id} (prev=${prev || "—"})`);
-    updateRaceIdUI();
-
-    // if pilot screen is open -> reconnect to new race automatically
-    const pilotVisible = !$("pilotScreen").classList.contains("hidden");
-    if (pilotVisible && state.pilotConnected) connectPilotToRaceId(id);
-  }
-
-  function connectLastRaceWatcher() {
-    if (wsLast) { try { wsLast.close(1000, "reconnect"); } catch {} wsLast = null; }
-
-    const wsUrl = buildWorkerWsUrl(HOME_LAST_URL);
-    state.raceIdWsConnected = false;
-    updateRaceIdUI();
-    log(`last-ws: connect -> ${wsUrl}`);
-
-    try { wsLast = new WebSocket(wsUrl); }
-    catch (e) {
-      log(`last-ws: ctor failed: ${String(e)}`);
-      scheduleLastReconnect();
-      return;
-    }
-
-    wsLast.addEventListener("open", () => {
-      state.raceIdWsConnected = true;
-      lastReconnectDelayMs = 1200;
-      log("last-ws: open");
-      updateRaceIdUI();
-    });
-
-    wsLast.addEventListener("close", (e) => {
-      state.raceIdWsConnected = false;
-      log(`last-ws: close code=${e.code}`);
-      updateRaceIdUI();
-      scheduleLastReconnect();
-    });
-
-    wsLast.addEventListener("error", () => {
-      state.raceIdWsConnected = false;
-      log("last-ws: error");
-      updateRaceIdUI();
-    });
-
-    wsLast.addEventListener("message", (evt) => {
-      const text = typeof evt.data === "string" ? evt.data : "";
-      const msgs = parseSignalRMessages(text);
-
-      if (!msgs.length) {
-        log(`last-ws: non-json/bad msg (len=${text.length})`);
-        return;
-      }
-
-      // try both formats per message
-      for (const obj of msgs) {
-        // pure SignalR
-        const idSig = extractLastRaceIdFromSignalR(obj);
-        if (idSig) { applyRaceId(idSig); continue; }
-
-        // old normalized frame
-        const frame = normalizeOldFrame(obj);
-        if (frame) {
-          const idOld = extractLastRaceIdFromOldFrame(frame);
-          if (idOld) applyRaceId(idOld);
-        }
-      }
-    });
-  }
-
-  // watchdog
-  setInterval(() => {
-    const age = state.raceIdUpdatedAt ? (Date.now() - state.raceIdUpdatedAt) : Infinity;
-    if (!wsLast) return connectLastRaceWatcher();
-    if (age > 45000) {
-      log("last-ws: watchdog reconnect (>45s w/o updates)");
-      connectLastRaceWatcher();
-    }
-  }, 15000);
-
-  // ===== Pilot =====
-  function resetPilotState() {
-    state.byRn.clear();
-    state.bestRaceMs = null;
-    state.frames = 0;
-    state.compCount = 0;
-    state.lastFrameAt = null;
-
-    setValue("kPos", "—");
-    setValue("kLast", "—");
-    setValue("kBestPilot", "—");
-    setValue("kBestRace", "—");
-
-    const bestPilotEl = $("kBestPilot");
-    bestPilotEl.classList.remove("purple");
-    bestPilotEl.classList.add("green");
-  }
-
-  function handleCompOld(cmd) {
+  function handleComp(cmd) {
     if ((cmd?.Method || "").toLowerCase() !== "comp") return;
+
     const c = cmd.Command;
     if (!c || typeof c !== "object") return;
 
@@ -511,17 +317,30 @@
     const prev = state.byRn.get(rn) || {};
     const bestLapMs = Number.isFinite(+c.bl) ? +c.bl : (prev.bestLapMs ?? null);
 
-    state.byRn.set(rn, {
+    const next = {
       rn,
       position: Number.isFinite(+c.pos) ? +c.pos : (prev.position ?? null),
       lastLapMs: Number.isFinite(+c.ll) ? +c.ll : (prev.lastLapMs ?? null),
       bestLapMs,
       updatedAt: Date.now(),
-    });
+    };
 
-    if (Number.isFinite(bestLapMs) && bestLapMs > 0) {
-      if (state.bestRaceMs == null || bestLapMs < state.bestRaceMs) state.bestRaceMs = bestLapMs;
+    state.byRn.set(rn, next);
+
+    // overall best lap in race
+    if (Number.isFinite(+bestLapMs) && +bestLapMs > 0) {
+      if (state.bestRaceMs == null || +bestLapMs < state.bestRaceMs) {
+        state.bestRaceMs = +bestLapMs;
+        state.bestRaceRn = rn;
+      }
     }
+  }
+
+  function buildWorkerWsUrl(raceUrlRaw) {
+    const cleaned = raceUrlRaw.trim();
+    if (!cleaned) throw new Error("raceUrl empty");
+    const encoded = encodeURIComponent(cleaned);
+    return `wss://${WORKER_HOST}/ws?raceUrl=${encoded}&dropHb=1`;
   }
 
   function renderPilot() {
@@ -535,22 +354,25 @@
     setValue("kBestPilot", p ? msToLap(p.bestLapMs) : "—");
     setValue("kBestRace", msToLap(state.bestRaceMs));
 
+    // Variant 2: pilot best turns purple if equals overall best
     const bestPilotMs = (p && Number.isFinite(+p.bestLapMs)) ? +p.bestLapMs : null;
-    const bestRaceMs = (state.bestRaceMs != null && Number.isFinite(+state.bestRaceMs)) ? +state.bestRaceMs : null;
+    const bestRaceMs  = (state.bestRaceMs != null && Number.isFinite(+state.bestRaceMs)) ? +state.bestRaceMs : null;
     const isPilotOverallBest = (bestPilotMs != null && bestRaceMs != null && bestPilotMs === bestRaceMs);
 
     const bestPilotEl = $("kBestPilot");
     bestPilotEl.classList.toggle("purple", isPilotOverallBest);
     bestPilotEl.classList.toggle("green", !isPilotOverallBest);
 
+    const frames = state.frames;
+    const comp = state.compCount;
     const last = state.lastFrameAt ? new Date(state.lastFrameAt).toLocaleTimeString() : "—";
-    const raceIdShort = state.raceId ? state.raceId.slice(0, 8) : "—";
-    $("metaLine").textContent = `raceId: ${raceIdShort} • Frames: ${state.frames} • comp: ${state.compCount} • last: ${last}`;
+    $("metaLine").textContent = `Frames: ${frames} • comp: ${comp} • last: ${last}`;
   }
 
   function showSetup() {
     $("pilotScreen").classList.add("hidden");
     $("setupScreen").classList.remove("hidden");
+    setStatus("setup", "idle", false);
   }
 
   function showPilotConnecting() {
@@ -559,101 +381,107 @@
     setStatus("pilot", "connecting…", false);
   }
 
-  async function disconnectPilot(goToSetup = true) {
-    state.pilotConnected = false;
-    if (wsPilot) {
-      try { wsPilot.close(1000, "bye"); } catch {}
-      wsPilot = null;
-    }
-    $("btnDisconnect").disabled = true;
-    setStatus("pilot", "disconnected", false);
-    if (goToSetup) showSetup();
-  }
-
-  function connectPilotToRaceId(raceId) {
-    if (!raceId) { alert("raceId ещё не получен"); return; }
+  async function connect() {
+    const raceUrl = $("raceUrl").value.trim();
     const rn = $("rn").value.trim();
-    if (!rn) { alert("Введи RN"); return; }
-    try { localStorage.setItem(LS_RN, rn); } catch {}
 
-    const raceUrl = buildRaceUrlFromId(raceId);
-    const wsUrl = buildWorkerWsUrl(raceUrl);
+    if (!raceUrl) { alert("Вставь ссылку на заезд RaceMann"); return; }
+    if (!rn) { alert("Введи RN"); return; }
+
+    try {
+      localStorage.setItem(LS_RACE, raceUrl);
+      localStorage.setItem(LS_RN, rn);
+    } catch {}
+
+    let wsUrl;
+    try { wsUrl = buildWorkerWsUrl(raceUrl); }
+    catch (e) { alert("Некорректная ссылка: " + e); return; }
+
+    // reset state
+    state.frames = 0;
+    state.compCount = 0;
+    state.lastFrameAt = null;
+    state.bestRaceMs = null;
+    state.bestRaceRn = null;
+    state.byRn.clear();
 
     showPilotConnecting();
-    resetPilotState();
-    disconnectPilot(false);
+    disconnect(false);
 
-    try { wsPilot = new WebSocket(wsUrl); }
+    try { ws = new WebSocket(wsUrl); }
     catch (e) { alert("Не удалось создать WebSocket: " + e); showSetup(); return; }
 
     $("btnDisconnect").disabled = false;
 
-    wsPilot.addEventListener("open", () => {
-      state.pilotConnected = true;
+    ws.addEventListener("open", async () => {
       setStatus("pilot", "connected", true);
-      renderPilot();
+      await enableWakeLock();
     });
 
-    wsPilot.addEventListener("close", (e) => {
-      state.pilotConnected = false;
+    ws.addEventListener("close", async (e) => {
       setStatus("pilot", `closed (${e.code})`, false);
       $("btnDisconnect").disabled = true;
-      wsPilot = null;
+      ws = null;
+      await disableWakeLock();
     });
 
-    wsPilot.addEventListener("error", () => {
+    ws.addEventListener("error", () => {
       setStatus("pilot", "error", false);
     });
 
-    wsPilot.addEventListener("message", (evt) => {
+    ws.addEventListener("message", (evt) => {
       const text = typeof evt.data === "string" ? evt.data : "";
-      const msgs = parseSignalRMessages(text);
-      if (!msgs.length) return;
+      const msg = safeJsonParse(text);
+      if (!msg) return;
 
-      for (const obj of msgs) {
-        const frame = normalizeOldFrame(obj);
-        if (!frame) continue;
+      if (msg.type && msg.type !== "frame") return;
 
+      if (msg.type === "frame" || Array.isArray(msg.M)) {
         state.frames += 1;
         state.lastFrameAt = Date.now();
 
-        const arr = Array.isArray(frame?.M) ? frame.M : [];
-        for (const m of arr) {
-          if (m?.H === "RaceHub" && m?.M === "newCommand") {
-            const cmd = m?.A?.[0];
-            if (cmd && (cmd?.Method || "").toLowerCase() === "comp") {
-              state.compCount += 1;
-              handleCompOld(cmd);
-            }
+        const cmds = extractRaceHubNewCommands(msg);
+        for (const cmd of cmds) {
+          if ((cmd?.Method || "").toLowerCase() === "comp") {
+            state.compCount += 1;
+            handleComp(cmd);
           }
         }
+        renderPilot();
       }
-      renderPilot();
     });
 
     renderPilot();
   }
 
-  // ===== Events & init =====
-  $("btnOpen").addEventListener("click", () => connectPilotToRaceId(state.raceId));
-  $("btnDisconnect").addEventListener("click", () => disconnectPilot(true));
-  $("btnBack").addEventListener("click", () => disconnectPilot(true));
+  async function disconnect(goToSetup = true) {
+    if (ws) {
+      try { ws.close(1000, "bye"); } catch {}
+      ws = null;
+    }
+    $("btnDisconnect").disabled = true;
+    await disableWakeLock();
+    setStatus("pilot", "disconnected", false);
+    if (goToSetup) showSetup();
+  }
 
-  $("btnClearLog").addEventListener("click", () => {
-    logLines.length = 0;
-    $("log").value = "";
-  });
-
-  $("rn").addEventListener("input", updateRaceIdUI);
+  $("btnOpen").addEventListener("click", connect);
+  $("btnDisconnect").addEventListener("click", () => disconnect(true));
+  $("btnBack").addEventListener("click", () => disconnect(true));
+  $("rn").addEventListener("input", renderPilot);
 
   try {
+    const savedRace = localStorage.getItem(LS_RACE);
     const savedRn = localStorage.getItem(LS_RN);
+    if (savedRace) $("raceUrl").value = savedRace;
     if (savedRn) $("rn").value = savedRn;
   } catch {}
 
   showSetup();
-  connectLastRaceWatcher();
-  updateRaceIdUI();
+
+  document.addEventListener("visibilitychange", async () => {
+    if (document.visibilityState === "visible" && ws) await enableWakeLock();
+  });
 })();
 </script>
 </body>

@@ -26,7 +26,7 @@
     .muted { color:#9aa3ad; font-size: 13px; line-height: 1.35; }
 
     label { display:block; font-weight: 900; margin-bottom: 6px; font-size: 12px; color:#cdd3dc; }
-    input, button, select {
+    input, button {
       font-size: 16px; padding: 12px 12px;
       border-radius: 14px; border: 1px solid #262b35;
       background:#0b0e14; color:#eef0f4;
@@ -57,7 +57,7 @@
     .dot.ok { background:#26a269; }
     .dot.bad { background:#d13212; }
 
-    /* ===== Pilot screen (phone-first) ===== */
+    /* ===== Pilot screen ===== */
     .pilot {
       min-height: 100svh;
       padding: 14px;
@@ -81,14 +81,9 @@
     .pilotTitle b { font-size: 13px; color:#cdd3dc; }
     .pilotMeta { color:#9aa3ad; font-size: 12px; }
 
-    .board {
-      flex: 1;
-      display:flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+    .board { flex: 1; display:flex; flex-direction: column; gap: 12px; }
 
-    /* Row 1: POS + CURRENT LAP big */
+    /* Top row BIG: POS + CURRENT LAP */
     .bigRow {
       display:grid;
       grid-template-columns: 1fr 1fr;
@@ -99,23 +94,25 @@
       border-radius: 22px;
       background:#0b0e14;
       padding: 14px;
-      position: relative;
-      overflow: hidden;
     }
     .tile .t { color:#9aa3ad; font-size: 12px; font-weight: 900; letter-spacing:.02em; }
     .tile .v { font-weight: 1000; letter-spacing: -0.03em; margin-top: 6px; line-height: 1; }
     .tile.big .v { font-size: 72px; }
+    .tile.mid .v { font-size: 56px; }
     .tile.small .v { font-size: 46px; }
     .tile .s { color:#9aa3ad; font-size: 12px; margin-top: 8px; }
 
-    /* Row 2: GAP + BEST smaller */
+    /* Middle: LAST LAP (returned) */
+    .midRow { display:grid; grid-template-columns: 1fr; }
+    .purple { color: #bb6bff; }
+
+    /* Bottom row smaller: GAP + BEST */
     .smallRow {
       display:grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
 
-    .purple { color: #bb6bff; } /* best lap */
     .btnRow { display:flex; gap:10px; flex-wrap: wrap; }
     .btnRow button { width:auto; padding: 10px 12px; }
 
@@ -124,7 +121,7 @@
 </head>
 <body>
 
-  <!-- ===== SETUP SCREEN ===== -->
+  <!-- ===== SETUP ===== -->
   <div id="setupScreen" class="wrap">
     <div class="card">
       <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
@@ -139,7 +136,7 @@
         <div style="flex: 3 1 420px;">
           <label>Ссылка на заезд RaceMann</label>
           <input id="raceUrl" placeholder="https://miks.racemann.com/Race/id/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx#race" />
-          <div class="smallnote">Можно вставлять с <span class="mono">#race</span> — мы сами корректно закодируем.</div>
+          <div class="smallnote">Можно вставлять с <span class="mono">#race</span> — мы сами закодируем.</div>
         </div>
 
         <div style="flex: 1 1 180px;">
@@ -188,7 +185,16 @@
         <div class="tile big">
           <div class="t">Текущее время круга</div>
           <div id="kCurLap" class="v">—</div>
-          <div class="s">оценка: (Time - pt), если доступно</div>
+          <div class="s">best-effort</div>
+        </div>
+      </div>
+
+      <!-- Middle row: LAST LAP (returned) -->
+      <div class="midRow">
+        <div class="tile mid">
+          <div class="t">Последний круг</div>
+          <div id="kLast" class="v">—</div>
+          <div class="s">ll</div>
         </div>
       </div>
 
@@ -206,36 +212,27 @@
           <div class="s">bl</div>
         </div>
       </div>
-
-      <div class="smallnote">
-        Если “Текущее время круга” показывает “—”, значит в потоке нет стабильной пары <span class="mono">Time</span> и <span class="mono">pt</span> для вычисления (тогда можем переключить на “Последний круг”).
-      </div>
     </div>
   </div>
 
 <script>
 (() => {
-  // ===== 1) Worker is remembered in code =====
   const WORKER_HOST = "racemann-api.vsmirnoff.workers.dev";
-
   const $ = (id) => document.getElementById(id);
 
-  // Local storage keys
   const LS_RACE = "rm_pilot_raceUrl";
   const LS_RN = "rm_pilot_rn";
 
-  // WebSocket
   let ws = null;
 
-  // State by RN
   const state = {
-    byRn: new Map(), // rn -> pilotState
+    byRn: new Map(),
     lastFrameAt: null,
     frames: 0,
     compCount: 0,
   };
 
-  // Wake Lock (optional)
+  // Wake Lock
   let wakeLock = null;
   async function enableWakeLock() {
     try {
@@ -279,7 +276,6 @@
     return `${min}:${secPart}.${msPart}`;
   }
 
-  // ===== 2) Gap to previous is correct: pd.Laps + pd.Time =====
   function formatGapPrev(pd) {
     const laps = Number.isFinite(+pd?.Laps) ? +pd.Laps : 0;
     const timeMs = Number.isFinite(+pd?.Time) ? +pd.Time : null;
@@ -289,7 +285,7 @@
     const absMs = timeMs == null ? 0 : Math.abs(timeMs);
     const sec = absMs / 1000;
 
-    if (laps > 0) return `+${laps}L ${sec.toFixed(1)}`; // "+1L 8.5"
+    if (laps > 0) return `+${laps}L ${sec.toFixed(1)}`;
 
     if (absMs < 60000) return `+${sec.toFixed(3)}`;
 
@@ -301,15 +297,13 @@
     return `+${min}:${secPart}.${msPart}`;
   }
 
-  // ===== Current lap time (best-effort) =====
-  // We try to compute: currentLap = cmd.Time - c.pt (both in ms of session clock)
-  // If it looks sane (0..180000), show it as lap time.
-  function computeCurrentLapMs(cmdTime, passTime) {
-    if (!Number.isFinite(+cmdTime) || !Number.isFinite(+passTime)) return null;
-    const d = (+cmdTime) - (+passTime);
+  // Best-effort "current lap": cmd.Time - pt (if sane)
+  function computeCurrentLapMs(cmdTimeMs, passTimeMs) {
+    if (!Number.isFinite(+cmdTimeMs) || !Number.isFinite(+passTimeMs)) return null;
+    const d = (+cmdTimeMs) - (+passTimeMs);
     if (!Number.isFinite(d)) return null;
     if (d < 0) return null;
-    if (d > 180000) return null; // >3 min => likely wrong semantics
+    if (d > 180000) return null; // >3 min => likely wrong
     return d;
   }
 
@@ -327,7 +321,6 @@
   }
 
   function handleComp(cmd) {
-    // cmd: { Time, Method:"Comp", Command:{...}, IsWideSpread }
     if ((cmd?.Method || "").toLowerCase() !== "comp") return;
 
     const c = cmd.Command;
@@ -342,12 +335,14 @@
       rn,
       position: Number.isFinite(+c.pos) ? +c.pos : (prev.position ?? null),
 
+      // returned "last lap"
+      lastLapMs: Number.isFinite(+c.ll) ? +c.ll : (prev.lastLapMs ?? null),
+
       bestLapMs: Number.isFinite(+c.bl) ? +c.bl : (prev.bestLapMs ?? null),
 
-      // correct gap
       pd: (c.pd && typeof c.pd === "object") ? c.pd : (prev.pd ?? null),
 
-      // current lap (best-effort)
+      // for current lap estimation
       cmdTimeMs: Number.isFinite(+cmd.Time) ? +cmd.Time : (prev.cmdTimeMs ?? null),
       passTimeMs: Number.isFinite(+c.pt) ? +c.pt : (prev.passTimeMs ?? null),
 
@@ -360,7 +355,7 @@
   function buildWorkerWsUrl(raceUrlRaw) {
     const cleaned = raceUrlRaw.trim();
     if (!cleaned) throw new Error("raceUrl empty");
-    const encoded = encodeURIComponent(cleaned); // includes #race safely as %23race
+    const encoded = encodeURIComponent(cleaned);
     return `wss://${WORKER_HOST}/ws?raceUrl=${encoded}&dropHb=1`;
   }
 
@@ -370,14 +365,14 @@
 
     const p = rn ? state.byRn.get(rn) : null;
 
-    $("kPos").textContent = p?.position ?? "—";
-    $("kGap").textContent = p ? formatGapPrev(p.pd) : "—";
+    $("kPos").textContent  = p?.position ?? "—";
+    $("kLast").textContent = p ? msToLap(p.lastLapMs) : "—";
+    $("kGap").textContent  = p ? formatGapPrev(p.pd) : "—";
     $("kBest").textContent = p ? msToLap(p.bestLapMs) : "—";
 
     const curLapMs = p ? computeCurrentLapMs(p.cmdTimeMs, p.passTimeMs) : null;
     $("kCurLap").textContent = curLapMs != null ? msToLap(curLapMs) : "—";
 
-    // meta line
     const frames = state.frames;
     const comp = state.compCount;
     const last = state.lastFrameAt ? new Date(state.lastFrameAt).toLocaleTimeString() : "—";
@@ -403,7 +398,6 @@
     if (!raceUrl) { alert("Вставь ссылку на заезд RaceMann"); return; }
     if (!rn) { alert("Введи RN"); return; }
 
-    // persist user inputs
     try {
       localStorage.setItem(LS_RACE, raceUrl);
       localStorage.setItem(LS_RN, rn);
@@ -413,15 +407,12 @@
     try { wsUrl = buildWorkerWsUrl(raceUrl); }
     catch (e) { alert("Некорректная ссылка: " + e); return; }
 
-    // reset counters (keep map, ok)
     state.frames = 0;
     state.compCount = 0;
     state.lastFrameAt = null;
 
-    // switch to pilot screen
     showPilotConnecting();
 
-    // close previous
     disconnect(false);
 
     try { ws = new WebSocket(wsUrl); }
@@ -481,15 +472,11 @@
     if (goToSetup) showSetup();
   }
 
-  // UI wiring
   $("btnOpen").addEventListener("click", connect);
   $("btnDisconnect").addEventListener("click", () => disconnect(true));
   $("btnBack").addEventListener("click", () => disconnect(true));
-
-  // RN change should update pilot view instantly (if already connected)
   $("rn").addEventListener("input", renderPilot);
 
-  // restore last inputs
   try {
     const savedRace = localStorage.getItem(LS_RACE);
     const savedRn = localStorage.getItem(LS_RN);
@@ -497,10 +484,8 @@
     if (savedRn) $("rn").value = savedRn;
   } catch {}
 
-  // init
   showSetup();
 
-  // keep wake lock if user switches away/back
   document.addEventListener("visibilitychange", async () => {
     if (document.visibilityState === "visible" && ws) await enableWakeLock();
   });

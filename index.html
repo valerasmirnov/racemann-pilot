@@ -38,7 +38,7 @@
       background:#1f6feb; border-color:#1f6feb;
     }
     button.secondary { background:#0b0e14; border-color:#262b35; }
-    button:disabled { opacity:.6; cursor:not-allowed; }
+    button:disabled { opacity:.55; cursor:not-allowed; }
     .row { display:flex; gap:10px; flex-wrap: wrap; align-items: end; }
     .row > * { flex: 1 1 260px; }
     .smallnote { margin-top: 8px; color:#9aa3ad; font-size: 12px; }
@@ -121,9 +121,9 @@
 
     /* Value change animation */
     @keyframes pop {
-      0%   { transform: scale(1);   filter: brightness(1); opacity: 1; }
-      30%  { transform: scale(1.06);filter: brightness(1.25); opacity: 1; }
-      100% { transform: scale(1);   filter: brightness(1); opacity: 1; }
+      0%   { transform: scale(1);    filter: brightness(1);    opacity: 1; }
+      30%  { transform: scale(1.06); filter: brightness(1.25); opacity: 1; }
+      100% { transform: scale(1);    filter: brightness(1);    opacity: 1; }
     }
     .pop { animation: pop 240ms ease-out; }
 
@@ -142,25 +142,31 @@
         <h1>RaceMann Pilot — RN табло</h1>
         <span class="pill"><span id="dotSetup" class="dot bad"></span><b id="statusSetup">idle</b></span>
       </div>
+
       <div class="muted" style="margin-top:8px">
-        Введи ссылку на заезд и RN, нажми <b>Открыть экран пилота</b>.
+        Ссылка на заезд не нужна — мы берём актуальный <b>raceId</b> автоматически со страницы <span class="mono">/home/last</span>.
+        Введи только <b>RN</b> и нажми <b>Открыть экран пилота</b>.
       </div>
 
       <div class="row" style="margin-top:12px">
-        <div style="flex: 3 1 420px;">
-          <label>Ссылка на заезд RaceMann</label>
-          <input id="raceUrl" placeholder="https://miks.racemann.com/Race/id/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx#race" />
-          <div class="smallnote">Можно вставлять с <span class="mono">#race</span> — мы сами закодируем.</div>
-        </div>
-
-        <div style="flex: 1 1 180px;">
+        <div style="flex: 1 1 220px;">
           <label>RN</label>
           <input id="rn" inputmode="numeric" placeholder="например 1" />
+          <div class="smallnote">Номер карта / RN.</div>
+        </div>
+
+        <div style="flex: 2 1 520px;">
+          <label>Актуальный raceId</label>
+          <input id="raceIdBox" class="mono" readonly value="—" />
+          <div class="smallnote">
+            Источник: <span class="mono">https://miks.racemann.com/home/last#race</span>
+          </div>
         </div>
 
         <div style="flex: 1 1 260px;">
           <label>&nbsp;</label>
-          <button id="btnOpen">Открыть экран пилота</button>
+          <button id="btnOpen" disabled>Открыть экран пилота</button>
+          <div class="smallnote" id="raceLinkLine" style="margin-top:8px"></div>
         </div>
       </div>
 
@@ -219,23 +225,34 @@
 <script>
 (() => {
   const WORKER_HOST = "racemann-api.vsmirnoff.workers.dev";
+  const HOME_LAST_URL = "https://miks.racemann.com/home/last#race";
+
   const $ = (id) => document.getElementById(id);
 
-  const LS_RACE = "rm_pilot_raceUrl";
   const LS_RN = "rm_pilot_rn";
 
-  let ws = null;
+  let wsPilot = null;
+  let wsLast = null;
 
   const state = {
+    // last-race watcher
+    raceId: null,
+    raceIdUpdatedAt: null,
+    raceIdWsConnected: false,
+
+    // pilot data
     byRn: new Map(),
-    bestRaceMs: null,    // общий лучший круг (минимальный bl)
+    bestRaceMs: null,
     bestRaceRn: null,
+
     lastFrameAt: null,
     frames: 0,
     compCount: 0,
+
+    pilotConnected: false,
   };
 
-  // Wake Lock
+  // ===== Wake Lock =====
   let wakeLock = null;
   async function enableWakeLock() {
     try {
@@ -249,6 +266,7 @@
     wakeLock = null;
   }
 
+  // ===== UI helpers =====
   function setDot(where, ok) {
     const dot = where === "setup" ? $("dotSetup") : $("dotPilot");
     dot.classList.toggle("ok", !!ok);
@@ -279,9 +297,45 @@
     return `${min}:${secPart}.${msPart}`;
   }
 
-  function extractRaceHubNewCommands(workerFrame) {
+  function setValue(id, nextText) {
+    const el = $(id);
+    const prev = el.textContent;
+    if (prev === nextText) return;
+
+    el.textContent = nextText;
+
+    el.classList.remove("pop");
+    void el.offsetWidth; // restart animation reliably
+    el.classList.add("pop");
+  }
+
+  function buildWorkerWsUrl(raceUrlRaw) {
+    const cleaned = (raceUrlRaw || "").trim();
+    if (!cleaned) throw new Error("raceUrl empty");
+    const encoded = encodeURIComponent(cleaned);
+    return `wss://${WORKER_HOST}/ws?raceUrl=${encoded}&dropHb=1`;
+  }
+
+  function buildRaceUrlFromId(raceId) {
+    return `https://miks.racemann.com/Race/id/${raceId}#race`;
+  }
+
+  // ===== Frame parsing =====
+  function extractRaceHubLastRaceId(frame) {
+    const arr = Array.isArray(frame?.M) ? frame.M : [];
+    for (const msg of arr) {
+      if (!msg) continue;
+      if (msg.H !== "RaceHub") continue;
+      if (msg.M !== "lastRaceId") continue;
+      const id = msg.A?.[0]?.id;
+      if (typeof id === "string" && id.trim()) return id.trim();
+    }
+    return null;
+  }
+
+  function extractRaceHubNewCommands(frame) {
     const out = [];
-    const arr = Array.isArray(workerFrame?.M) ? workerFrame.M : [];
+    const arr = Array.isArray(frame?.M) ? frame.M : [];
     for (const msg of arr) {
       if (!msg) continue;
       if (msg.H !== "RaceHub") continue;
@@ -290,6 +344,134 @@
       if (a0) out.push(a0);
     }
     return out;
+  }
+
+  // ===== last-race watcher =====
+  function updateRaceIdUI() {
+    $("raceIdBox").value = state.raceId || "—";
+
+    const ok = !!state.raceId && state.raceIdWsConnected;
+    const statusText = ok ? "raceId live" : (state.raceIdWsConnected ? "waiting raceId…" : "connecting…");
+    setStatus("setup", statusText, ok);
+
+    const btn = $("btnOpen");
+    btn.disabled = !(state.raceId && $("rn").value.trim());
+
+    const line = $("raceLinkLine");
+    if (state.raceId) {
+      const url = buildRaceUrlFromId(state.raceId);
+      line.innerHTML = `Текущий заезд: <span class="mono">${url}</span>`;
+    } else {
+      line.textContent = "";
+    }
+  }
+
+  function connectLastRaceWatcher() {
+    // close existing
+    if (wsLast) { try { wsLast.close(1000, "reconnect"); } catch {} wsLast = null; }
+
+    let wsUrl;
+    try { wsUrl = buildWorkerWsUrl(HOME_LAST_URL); }
+    catch (e) {
+      state.raceIdWsConnected = false;
+      setStatus("setup", "bad last URL", false);
+      return;
+    }
+
+    state.raceIdWsConnected = false;
+    updateRaceIdUI();
+
+    try { wsLast = new WebSocket(wsUrl); }
+    catch {
+      state.raceIdWsConnected = false;
+      updateRaceIdUI();
+      scheduleLastReconnect();
+      return;
+    }
+
+    wsLast.addEventListener("open", () => {
+      state.raceIdWsConnected = true;
+      updateRaceIdUI();
+    });
+
+    wsLast.addEventListener("close", () => {
+      state.raceIdWsConnected = false;
+      updateRaceIdUI();
+      scheduleLastReconnect();
+    });
+
+    wsLast.addEventListener("error", () => {
+      state.raceIdWsConnected = false;
+      updateRaceIdUI();
+    });
+
+    wsLast.addEventListener("message", (evt) => {
+      const text = typeof evt.data === "string" ? evt.data : "";
+      const msg = safeJsonParse(text);
+      if (!msg) return;
+      if (msg.type && msg.type !== "frame") return;
+      if (msg.type !== "frame") return;
+
+      const id = extractRaceHubLastRaceId(msg);
+      if (id && id !== state.raceId) {
+        const prev = state.raceId;
+        state.raceId = id;
+        state.raceIdUpdatedAt = Date.now();
+        updateRaceIdUI();
+
+        // if pilot is open -> switch race automatically
+        if (state.pilotConnected) {
+          // avoid thrashing: only act if really changed
+          switchPilotToNewRace(prev, id);
+        }
+      }
+    });
+  }
+
+  let lastReconnectTimer = null;
+  let lastReconnectDelayMs = 1200;
+
+  function scheduleLastReconnect() {
+    if (lastReconnectTimer) return;
+
+    // capped backoff
+    const delay = Math.min(lastReconnectDelayMs, 12000);
+    lastReconnectDelayMs = Math.min(lastReconnectDelayMs * 1.6, 12000);
+
+    lastReconnectTimer = setTimeout(() => {
+      lastReconnectTimer = null;
+      connectLastRaceWatcher();
+    }, delay);
+  }
+
+  // watchdog: even if ws "подвис", переподключаем раз в 45 секунд
+  setInterval(() => {
+    if (!wsLast) return connectLastRaceWatcher();
+    const age = state.raceIdUpdatedAt ? (Date.now() - state.raceIdUpdatedAt) : Infinity;
+    if (age > 45000) {
+      connectLastRaceWatcher();
+    }
+  }, 15000);
+
+  // ===== Pilot connection =====
+  function resetPilotState() {
+    state.byRn.clear();
+    state.bestRaceMs = null;
+    state.bestRaceRn = null;
+    state.frames = 0;
+    state.compCount = 0;
+    state.lastFrameAt = null;
+
+    // clear UI values (so видно, что это новый заезд)
+    setValue("kPos", "—");
+    setValue("kLast", "—");
+    setValue("kBestPilot", "—");
+    setValue("kBestRace", "—");
+
+    // reset color (pilot best -> green by default)
+    const bestPilotEl = $("kBestPilot");
+    bestPilotEl.classList.remove("purple");
+    bestPilotEl.classList.add("green");
   }
 
   function handleComp(cmd) {
@@ -302,7 +484,6 @@
     if (!rn) return;
 
     const prev = state.byRn.get(rn) || {};
-
     const bestLapMs = Number.isFinite(+c.bl) ? +c.bl : (prev.bestLapMs ?? null);
 
     const next = {
@@ -324,35 +505,12 @@
     }
   }
 
-  function buildWorkerWsUrl(raceUrlRaw) {
-    const cleaned = raceUrlRaw.trim();
-    if (!cleaned) throw new Error("raceUrl empty");
-    const encoded = encodeURIComponent(cleaned);
-    return `wss://${WORKER_HOST}/ws?raceUrl=${encoded}&dropHb=1`;
-  }
-
-  // Animate + set text only when changed
-  function setValue(id, nextText) {
-    const el = $(id);
-    const prev = el.textContent;
-    if (prev === nextText) return;
-
-    el.textContent = nextText;
-
-    // restart animation
-    el.classList.remove("pop");
-    // force reflow to restart animation reliably
-    void el.offsetWidth;
-    el.classList.add("pop");
-  }
-
   function renderPilot() {
     const rn = String($("rn").value.trim());
     $("rnShow").textContent = rn || "—";
 
     const p = rn ? state.byRn.get(rn) : null;
 
-    // texts
     const posText = (p?.position ?? "—") + "";
     const lastText = p ? msToLap(p.lastLapMs) : "—";
     const bestPilotText = p ? msToLap(p.bestLapMs) : "—";
@@ -367,24 +525,24 @@
     // If pilot's best equals overall best of race -> pilot best turns PURPLE (overrides green)
     const bestPilotMs = (p && Number.isFinite(+p.bestLapMs)) ? +p.bestLapMs : null;
     const bestRaceMs = (state.bestRaceMs != null && Number.isFinite(+state.bestRaceMs)) ? +state.bestRaceMs : null;
-
     const isPilotOverallBest = (bestPilotMs != null && bestRaceMs != null && bestPilotMs === bestRaceMs);
 
     const bestPilotEl = $("kBestPilot");
     bestPilotEl.classList.toggle("purple", isPilotOverallBest);
     bestPilotEl.classList.toggle("green", !isPilotOverallBest);
 
-    // Meta (оставил как отладку; если захочешь — уберём)
+    // Meta
     const frames = state.frames;
     const comp = state.compCount;
     const last = state.lastFrameAt ? new Date(state.lastFrameAt).toLocaleTimeString() : "—";
-    $("metaLine").textContent = `Frames: ${frames} • comp: ${comp} • last: ${last}`;
+    const raceIdShort = state.raceId ? state.raceId.slice(0, 8) : "—";
+    $("metaLine").textContent = `raceId: ${raceIdShort} • Frames: ${frames} • comp: ${comp} • last: ${last}`;
   }
 
   function showSetup() {
     $("pilotScreen").classList.add("hidden");
     $("setupScreen").classList.remove("hidden");
-    setStatus("setup", "idle", false);
+    // setup status is controlled by watcher UI
   }
 
   function showPilotConnecting() {
@@ -393,55 +551,61 @@
     setStatus("pilot", "connecting…", false);
   }
 
-  async function connect() {
-    const raceUrl = $("raceUrl").value.trim();
-    const rn = $("rn").value.trim();
+  async function disconnectPilot(goToSetup = true) {
+    state.pilotConnected = false;
+    if (wsPilot) {
+      try { wsPilot.close(1000, "bye"); } catch {}
+      wsPilot = null;
+    }
+    $("btnDisconnect").disabled = true;
+    await disableWakeLock();
+    setStatus("pilot", "disconnected", false);
+    if (goToSetup) showSetup();
+  }
 
-    if (!raceUrl) { alert("Вставь ссылку на заезд RaceMann"); return; }
+  function connectPilotToRaceId(raceId) {
+    if (!raceId) { alert("raceId ещё не получен"); return; }
+
+    const rn = $("rn").value.trim();
     if (!rn) { alert("Введи RN"); return; }
 
-    try {
-      localStorage.setItem(LS_RACE, raceUrl);
-      localStorage.setItem(LS_RN, rn);
-    } catch {}
+    // save RN
+    try { localStorage.setItem(LS_RN, rn); } catch {}
 
+    const raceUrl = buildRaceUrlFromId(raceId);
     let wsUrl;
     try { wsUrl = buildWorkerWsUrl(raceUrl); }
-    catch (e) { alert("Некорректная ссылка: " + e); return; }
-
-    // reset state for new connect
-    state.frames = 0;
-    state.compCount = 0;
-    state.lastFrameAt = null;
-    state.bestRaceMs = null;
-    state.bestRaceRn = null;
-    state.byRn.clear();
+    catch (e) { alert("Некорректный raceUrl: " + e); return; }
 
     showPilotConnecting();
-    disconnect(false);
+    resetPilotState();
+    disconnectPilot(false);
 
-    try { ws = new WebSocket(wsUrl); }
+    try { wsPilot = new WebSocket(wsUrl); }
     catch (e) { alert("Не удалось создать WebSocket: " + e); showSetup(); return; }
 
     $("btnDisconnect").disabled = false;
 
-    ws.addEventListener("open", async () => {
+    wsPilot.addEventListener("open", async () => {
+      state.pilotConnected = true;
       setStatus("pilot", "connected", true);
       await enableWakeLock();
+      renderPilot();
     });
 
-    ws.addEventListener("close", async (e) => {
+    wsPilot.addEventListener("close", async (e) => {
+      state.pilotConnected = false;
       setStatus("pilot", `closed (${e.code})`, false);
       $("btnDisconnect").disabled = true;
-      ws = null;
+      wsPilot = null;
       await disableWakeLock();
     });
 
-    ws.addEventListener("error", () => {
+    wsPilot.addEventListener("error", () => {
       setStatus("pilot", "error", false);
     });
 
-    ws.addEventListener("message", (evt) => {
+    wsPilot.addEventListener("message", (evt) => {
       const text = typeof evt.data === "string" ? evt.data : "";
       const msg = safeJsonParse(text);
       if (!msg) return;
@@ -466,33 +630,49 @@
     renderPilot();
   }
 
-  async function disconnect(goToSetup = true) {
-    if (ws) {
-      try { ws.close(1000, "bye"); } catch {}
-      ws = null;
-    }
-    $("btnDisconnect").disabled = true;
-    await disableWakeLock();
-    setStatus("pilot", "disconnected", false);
-    if (goToSetup) showSetup();
+  // when raceId changes while pilot open -> reconnect seamlessly
+  let switching = false;
+  function switchPilotToNewRace(prevId, nextId) {
+    if (switching) return;
+    switching = true;
+
+    // small debounce, if raceId “скачет” при загрузке
+    setTimeout(() => {
+      switching = false;
+
+      // only if still pilot connected or pilot screen visible
+      const pilotVisible = !$("pilotScreen").classList.contains("hidden");
+      if (!pilotVisible) return;
+
+      // reconnect to new race
+      connectPilotToRaceId(nextId);
+    }, 500);
   }
 
-  $("btnOpen").addEventListener("click", connect);
-  $("btnDisconnect").addEventListener("click", () => disconnect(true));
-  $("btnBack").addEventListener("click", () => disconnect(true));
-  $("rn").addEventListener("input", renderPilot);
+  // ===== Events =====
+  $("btnOpen").addEventListener("click", () => connectPilotToRaceId(state.raceId));
+  $("btnDisconnect").addEventListener("click", () => disconnectPilot(true));
+  $("btnBack").addEventListener("click", () => disconnectPilot(true));
 
+  $("rn").addEventListener("input", () => {
+    updateRaceIdUI();
+    renderPilot();
+  });
+
+  // ===== init =====
   try {
-    const savedRace = localStorage.getItem(LS_RACE);
     const savedRn = localStorage.getItem(LS_RN);
-    if (savedRace) $("raceUrl").value = savedRace;
     if (savedRn) $("rn").value = savedRn;
   } catch {}
 
+  // start last-race watcher immediately
+  lastReconnectDelayMs = 1200;
+  connectLastRaceWatcher();
+  updateRaceIdUI();
   showSetup();
 
   document.addEventListener("visibilitychange", async () => {
-    if (document.visibilityState === "visible" && ws) await enableWakeLock();
+    if (document.visibilityState === "visible" && wsPilot) await enableWakeLock();
   });
 })();
 </script>

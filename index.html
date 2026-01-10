@@ -83,12 +83,6 @@
 
     .board { flex: 1; display:flex; flex-direction: column; gap: 12px; }
 
-    /* Top row BIG: POS + CURRENT LAP */
-    .bigRow {
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
     .tile {
       border:1px solid #262b35;
       border-radius: 22px;
@@ -97,11 +91,24 @@
     }
     .tile .t { color:#9aa3ad; font-size: 12px; font-weight: 900; letter-spacing:.02em; }
     .tile .v { font-weight: 1000; letter-spacing: -0.03em; margin-top: 6px; line-height: 1; }
-    .tile.big .v { font-size: 72px; }
-    .tile.mid .v { font-size: 56px; }
 
-    /* Middle: LAST LAP */
-    .midRow { display:grid; grid-template-columns: 1fr; }
+    /* Top row BIG: POS + LAST LAP */
+    .bigRow {
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .tile.big .v { font-size: 72px; }
+
+    /* Bottom row smaller: BEST PILOT + BEST RACE */
+    .smallRow {
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .tile.small .v { font-size: 46px; }
+
+    .purple { color: #bb6bff; }
 
     .btnRow { display:flex; gap:10px; flex-wrap: wrap; }
     .btnRow button { width:auto; padding: 10px 12px; }
@@ -172,16 +179,21 @@
         </div>
 
         <div class="tile big">
-          <div class="t">Текущее время круга</div>
-          <div id="kCurLap" class="v">—</div>
+          <div class="t">Последний круг</div>
+          <div id="kLast" class="v">—</div>
         </div>
       </div>
 
-      <!-- Middle row: LAST LAP -->
-      <div class="midRow">
-        <div class="tile mid">
-          <div class="t">Последний круг</div>
-          <div id="kLast" class="v">—</div>
+      <!-- Bottom row smaller -->
+      <div class="smallRow">
+        <div class="tile small">
+          <div class="t">Лучший круг пилота</div>
+          <div id="kBestPilot" class="v purple">—</div>
+        </div>
+
+        <div class="tile small">
+          <div class="t">Лучший круг заезда</div>
+          <div id="kBestRace" class="v">—</div>
         </div>
       </div>
     </div>
@@ -199,6 +211,8 @@
 
   const state = {
     byRn: new Map(),
+    bestRaceMs: null,        // минимальный bl по всем пришедшим участникам
+    bestRaceRn: null,        // RN, кто показал bestRace (для отладки/будущего)
     lastFrameAt: null,
     frames: 0,
     compCount: 0,
@@ -248,16 +262,6 @@
     return `${min}:${secPart}.${msPart}`;
   }
 
-  // Best-effort "current lap": cmd.Time - pt (if sane)
-  function computeCurrentLapMs(cmdTimeMs, passTimeMs) {
-    if (!Number.isFinite(+cmdTimeMs) || !Number.isFinite(+passTimeMs)) return null;
-    const d = (+cmdTimeMs) - (+passTimeMs);
-    if (!Number.isFinite(d)) return null;
-    if (d < 0) return null;
-    if (d > 180000) return null; // >3 min => likely wrong
-    return d;
-  }
-
   function extractRaceHubNewCommands(workerFrame) {
     const out = [];
     const arr = Array.isArray(workerFrame?.M) ? workerFrame.M : [];
@@ -282,6 +286,8 @@
 
     const prev = state.byRn.get(rn) || {};
 
+    const bestLapMs = Number.isFinite(+c.bl) ? +c.bl : (prev.bestLapMs ?? null);
+
     const next = {
       rn,
       position: Number.isFinite(+c.pos) ? +c.pos : (prev.position ?? null),
@@ -289,14 +295,21 @@
       // last lap (returned)
       lastLapMs: Number.isFinite(+c.ll) ? +c.ll : (prev.lastLapMs ?? null),
 
-      // for current lap estimation
-      cmdTimeMs: Number.isFinite(+cmd.Time) ? +cmd.Time : (prev.cmdTimeMs ?? null),
-      passTimeMs: Number.isFinite(+c.pt) ? +c.pt : (prev.passTimeMs ?? null),
+      // pilot best lap
+      bestLapMs,
 
       updatedAt: Date.now(),
     };
 
     state.byRn.set(rn, next);
+
+    // update overall best of race
+    if (Number.isFinite(+bestLapMs) && +bestLapMs > 0) {
+      if (state.bestRaceMs == null || +bestLapMs < state.bestRaceMs) {
+        state.bestRaceMs = +bestLapMs;
+        state.bestRaceRn = rn;
+      }
+    }
   }
 
   function buildWorkerWsUrl(raceUrlRaw) {
@@ -312,11 +325,10 @@
 
     const p = rn ? state.byRn.get(rn) : null;
 
-    $("kPos").textContent    = p?.position ?? "—";
-    $("kLast").textContent   = p ? msToLap(p.lastLapMs) : "—";
-
-    const curLapMs = p ? computeCurrentLapMs(p.cmdTimeMs, p.passTimeMs) : null;
-    $("kCurLap").textContent = curLapMs != null ? msToLap(curLapMs) : "—";
+    $("kPos").textContent       = p?.position ?? "—";
+    $("kLast").textContent      = p ? msToLap(p.lastLapMs) : "—";
+    $("kBestPilot").textContent = p ? msToLap(p.bestLapMs) : "—";
+    $("kBestRace").textContent  = msToLap(state.bestRaceMs);
 
     const frames = state.frames;
     const comp = state.compCount;
@@ -352,9 +364,13 @@
     try { wsUrl = buildWorkerWsUrl(raceUrl); }
     catch (e) { alert("Некорректная ссылка: " + e); return; }
 
+    // reset frame counters + best race for new connect
     state.frames = 0;
     state.compCount = 0;
     state.lastFrameAt = null;
+    state.bestRaceMs = null;
+    state.bestRaceRn = null;
+    state.byRn.clear();
 
     showPilotConnecting();
 

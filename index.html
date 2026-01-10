@@ -121,9 +121,9 @@
 
     /* Value change animation */
     @keyframes pop {
-      0%   { transform: scale(1);    filter: brightness(1);    opacity: 1; }
-      30%  { transform: scale(1.06); filter: brightness(1.25); opacity: 1; }
-      100% { transform: scale(1);    filter: brightness(1);    opacity: 1; }
+      0%   { transform: scale(1);   filter: brightness(1); opacity: 1; }
+      30%  { transform: scale(1.06);filter: brightness(1.25); opacity: 1; }
+      100% { transform: scale(1);   filter: brightness(1); opacity: 1; }
     }
     .pop { animation: pop 240ms ease-out; }
 
@@ -142,7 +142,6 @@
         <h1>RaceMann Pilot — RN табло</h1>
         <span class="pill"><span id="dotSetup" class="dot bad"></span><b id="statusSetup">idle</b></span>
       </div>
-
       <div class="muted" style="margin-top:8px">
         Введи ссылку на заезд и RN, нажми <b>Открыть экран пилота</b>.
       </div>
@@ -223,13 +222,13 @@
   const $ = (id) => document.getElementById(id);
 
   const LS_RACE = "rm_pilot_raceUrl";
-  const LS_RN   = "rm_pilot_rn";
+  const LS_RN = "rm_pilot_rn";
 
   let ws = null;
 
   const state = {
     byRn: new Map(),
-    bestRaceMs: null,
+    bestRaceMs: null,    // общий лучший круг (минимальный bl)
     bestRaceRn: null,
     lastFrameAt: null,
     frames: 0,
@@ -280,18 +279,6 @@
     return `${min}:${secPart}.${msPart}`;
   }
 
-  // animate + set only on change
-  function setValue(id, nextText) {
-    const el = $(id);
-    const prev = el.textContent;
-    if (prev === nextText) return;
-
-    el.textContent = nextText;
-    el.classList.remove("pop");
-    void el.offsetWidth;
-    el.classList.add("pop");
-  }
-
   function extractRaceHubNewCommands(workerFrame) {
     const out = [];
     const arr = Array.isArray(workerFrame?.M) ? workerFrame.M : [];
@@ -315,6 +302,7 @@
     if (!rn) return;
 
     const prev = state.byRn.get(rn) || {};
+
     const bestLapMs = Number.isFinite(+c.bl) ? +c.bl : (prev.bestLapMs ?? null);
 
     const next = {
@@ -327,7 +315,7 @@
 
     state.byRn.set(rn, next);
 
-    // overall best lap in race
+    // update overall best of race
     if (Number.isFinite(+bestLapMs) && +bestLapMs > 0) {
       if (state.bestRaceMs == null || +bestLapMs < state.bestRaceMs) {
         state.bestRaceMs = +bestLapMs;
@@ -343,26 +331,50 @@
     return `wss://${WORKER_HOST}/ws?raceUrl=${encoded}&dropHb=1`;
   }
 
+  // Animate + set text only when changed
+  function setValue(id, nextText) {
+    const el = $(id);
+    const prev = el.textContent;
+    if (prev === nextText) return;
+
+    el.textContent = nextText;
+
+    // restart animation
+    el.classList.remove("pop");
+    // force reflow to restart animation reliably
+    void el.offsetWidth;
+    el.classList.add("pop");
+  }
+
   function renderPilot() {
     const rn = String($("rn").value.trim());
     $("rnShow").textContent = rn || "—";
 
     const p = rn ? state.byRn.get(rn) : null;
 
-    setValue("kPos", (p?.position ?? "—") + "");
-    setValue("kLast", p ? msToLap(p.lastLapMs) : "—");
-    setValue("kBestPilot", p ? msToLap(p.bestLapMs) : "—");
-    setValue("kBestRace", msToLap(state.bestRaceMs));
+    // texts
+    const posText = (p?.position ?? "—") + "";
+    const lastText = p ? msToLap(p.lastLapMs) : "—";
+    const bestPilotText = p ? msToLap(p.bestLapMs) : "—";
+    const bestRaceText = msToLap(state.bestRaceMs);
 
-    // Variant 2: pilot best turns purple if equals overall best
+    setValue("kPos", posText);
+    setValue("kLast", lastText);
+    setValue("kBestPilot", bestPilotText);
+    setValue("kBestRace", bestRaceText);
+
+    // Variant 2:
+    // If pilot's best equals overall best of race -> pilot best turns PURPLE (overrides green)
     const bestPilotMs = (p && Number.isFinite(+p.bestLapMs)) ? +p.bestLapMs : null;
-    const bestRaceMs  = (state.bestRaceMs != null && Number.isFinite(+state.bestRaceMs)) ? +state.bestRaceMs : null;
+    const bestRaceMs = (state.bestRaceMs != null && Number.isFinite(+state.bestRaceMs)) ? +state.bestRaceMs : null;
+
     const isPilotOverallBest = (bestPilotMs != null && bestRaceMs != null && bestPilotMs === bestRaceMs);
 
     const bestPilotEl = $("kBestPilot");
     bestPilotEl.classList.toggle("purple", isPilotOverallBest);
     bestPilotEl.classList.toggle("green", !isPilotOverallBest);
 
+    // Meta (оставил как отладку; если захочешь — уберём)
     const frames = state.frames;
     const comp = state.compCount;
     const last = state.lastFrameAt ? new Date(state.lastFrameAt).toLocaleTimeString() : "—";
@@ -397,7 +409,7 @@
     try { wsUrl = buildWorkerWsUrl(raceUrl); }
     catch (e) { alert("Некорректная ссылка: " + e); return; }
 
-    // reset state
+    // reset state for new connect
     state.frames = 0;
     state.compCount = 0;
     state.lastFrameAt = null;
@@ -436,7 +448,7 @@
 
       if (msg.type && msg.type !== "frame") return;
 
-      if (msg.type === "frame" || Array.isArray(msg.M)) {
+      if (msg.type === "frame") {
         state.frames += 1;
         state.lastFrameAt = Date.now();
 

@@ -162,8 +162,6 @@
       padding: 10px;
     }
 
-    /* ===== PILOT SCREEN ===== */
-
     .pilot {
       min-height: 100svh;
       padding: 10px;
@@ -186,16 +184,6 @@
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
-    }
-
-    .pilotTitle b {
-      font-size: 14px;
-      color: #eef0f4;
-    }
-
-    .pilotMeta {
-      color: #9aa3ad;
-      font-size: 12px;
     }
 
     .board {
@@ -289,22 +277,6 @@
       font-size: 13px;
       font-weight: 900;
     }
-
-    .setupOnly {
-      display: block;
-    }
-
-    .pilotOnly {
-      display: none;
-    }
-
-    body.pilotMode .setupOnly {
-      display: none !important;
-    }
-
-    body.pilotMode .pilotOnly {
-      display: block !important;
-    }
   </style>
 </head>
 <body>
@@ -312,23 +284,13 @@
   <div id="setupScreen" class="wrap">
     <div class="card">
       <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-        <h1>RaceMann Pilot — RN табло</h1>
+        <h1>RaceMann Pilot</h1>
         <span class="pill"><span id="dotSetup" class="dot bad"></span><b id="statusSetup">idle</b></span>
       </div>
 
-      <div class="muted" style="margin-top:8px">
-        Введи домен/ссылку MIKS и RN, нажми <b>Открыть экран пилота</b>.
-      </div>
-
       <div class="row" style="margin-top:12px">
-        <div style="flex: 3 1 420px;">
-          <label>Домен / ссылка</label>
-          <input id="raceInput" placeholder="https://miks.racemann.com" />
-          <div class="smallnote">Рабочие варианты: <span class="mono">miks.racemann.com</span>, <span class="mono">.../home/last#race</span>, <span class="mono">.../Race/id/&lt;GUID&gt;#race</span></div>
-        </div>
-
         <div style="flex: 1 1 180px;">
-          <label>RN</label>
+          <label>RN / карта</label>
           <input id="rn" inputmode="numeric" placeholder="например 11" />
         </div>
 
@@ -339,10 +301,14 @@
       </div>
 
       <div class="smallnote" style="margin-top:12px">
+        MIKS включён по умолчанию
+      </div>
+
+      <div class="smallnote" style="margin-top:6px">
         Worker: <span class="mono" id="workerLabel">—</span>
       </div>
 
-      <div id="setupLog" class="log setupOnly">log…</div>
+      <div id="setupLog" class="log hidden">log…</div>
     </div>
   </div>
 
@@ -388,7 +354,7 @@
       </div>
     </div>
 
-    <div id="pilotLog" class="log pilotOnly">log…</div>
+    <div id="pilotLog" class="log hidden">log…</div>
   </div>
 
 <script>
@@ -398,7 +364,8 @@
   const DEBUG = qs.get("debug") === "1";
   const AUTO_RESOLVE_INTERVAL_MS = 12000;
 
-  const LS_INP = "rm_pilot_input";
+  const DEFAULT_INPUT = "https://miks.racemann.com";
+
   const LS_RN  = "rm_pilot_rn";
 
   const $ = (id) => document.getElementById(id);
@@ -421,7 +388,7 @@
   };
 
   function log(where, ...args) {
-    if (!DEBUG && where !== "setup") return;
+    if (!DEBUG) return;
     const el = where === "setup" ? $("setupLog") : $("pilotLog");
     if (!el) return;
     const s = args.map(a => (typeof a === "string" ? a : JSON.stringify(a, null, 2))).join(" ");
@@ -528,7 +495,6 @@
 
   function toOriginFromInput(s) {
     const t = (s || "").trim();
-    if (!t) return "";
     const u = new URL(t.startsWith("http") ? t : "https://" + t);
     return u.origin;
   }
@@ -572,14 +538,12 @@
   }
 
   function showSetup() {
-    document.body.classList.remove("pilotMode");
     $("pilotScreen").classList.add("hidden");
     $("setupScreen").classList.remove("hidden");
     setStatus("setup", "idle", false);
   }
 
   function showPilot() {
-    document.body.classList.add("pilotMode");
     $("setupScreen").classList.add("hidden");
     $("pilotScreen").classList.remove("hidden");
   }
@@ -619,7 +583,6 @@
       try {
         const j = await resolveRaceUrlFromOrigin(currentOrigin);
         if (j.raceId && j.raceId !== currentRaceId) {
-          log("pilot", "AUTO: race changed!", { from: currentRaceId, to: j.raceId });
           await reconnectToNewRace(j.raceUrl, j.raceId);
         }
       } catch (e) {
@@ -655,7 +618,6 @@
     try {
       wsUrl = buildWorkerWsUrl(raceUrl);
     } catch (e) {
-      log("pilot", "WS url build error:", String(e));
       setStatus("pilot", "ws url error", false);
       return;
     }
@@ -667,7 +629,6 @@
     try {
       ws = new WebSocket(wsUrl);
     } catch (e) {
-      log("pilot", "WebSocket ctor error:", String(e));
       setStatus("pilot", "ws ctor error", false);
       return;
     }
@@ -682,7 +643,6 @@
 
     ws.addEventListener("close", async (e) => {
       const hint = (e.code === 1006) ? " — жми RELOAD" : "";
-      log("pilot", "WS closed:", { code: e.code, reason: e.reason });
       $("btnDisconnect").disabled = true;
       ws = null;
       await disableWakeLock();
@@ -696,8 +656,7 @@
       }
     });
 
-    ws.addEventListener("error", (e) => {
-      log("pilot", "WS error:", String(e?.message || e));
+    ws.addEventListener("error", () => {
       setStatus("pilot", "error", false);
     });
 
@@ -706,10 +665,7 @@
       const msg = safeJsonParse(text);
       if (!msg) return;
 
-      if (msg.type && msg.type !== "frame") {
-        log("pilot", "Status:", msg);
-        return;
-      }
+      if (msg.type && msg.type !== "frame") return;
 
       if (msg.type === "frame") {
         state.frames += 1;
@@ -729,22 +685,17 @@
 
   async function connect() {
     const rn = $("rn").value.trim();
-    const input = $("raceInput").value.trim() || "https://miks.racemann.com";
+    const input = DEFAULT_INPUT;
 
     if (!rn) {
       alert("Введи RN");
       return;
     }
 
-    $("setupLog").textContent = "";
-    $("pilotLog").textContent = "";
-    log("setup", "WORKER_HOST =", WORKER_HOST);
-    log("setup", "Input =", input);
-
     try {
       currentOrigin = toOriginFromInput(input);
     } catch {
-      alert("Некорректный домен/ссылка");
+      alert("Некорректная ссылка MIKS");
       return;
     }
 
@@ -755,20 +706,16 @@
       j = await resolveRaceUrlFromOrigin(currentOrigin);
     } catch (e) {
       setStatus("setup", "resolve failed", false);
-      log("setup", "Resolve failed:", String(e?.message || e));
       alert("Не удалось определить текущий заезд: " + (e?.message || e));
       return;
     }
 
     currentRaceId = j.raceId;
     currentRaceUrl = j.raceUrl;
-
-    log("setup", "Resolved:", { currentOrigin, currentRaceId, currentRaceUrl, method: j.method });
     setStatus("setup", "resolved", true);
 
     try {
       localStorage.setItem(LS_RN, rn);
-      localStorage.setItem(LS_INP, input);
     } catch {}
 
     resetRaceState();
@@ -803,7 +750,6 @@
 
   async function reloadNow() {
     if (!currentRaceUrl) return;
-    log("pilot", "RELOAD: reconnect to currentRaceUrl");
     resetRaceState();
     await disconnect(false);
     await connectWsOnly(currentRaceUrl);
@@ -821,17 +767,11 @@
   try {
     const savedRn = localStorage.getItem(LS_RN);
     if (savedRn) $("rn").value = savedRn;
-    const savedInp = localStorage.getItem(LS_INP);
-    if (savedInp) $("raceInput").value = savedInp;
-    else $("raceInput").value = "https://miks.racemann.com";
-  } catch {
-    $("raceInput").value = "https://miks.racemann.com";
-  }
+  } catch {}
 
-  if (!DEBUG) {
-    $("setupLog").classList.add("hidden");
-    $("pilotLog").classList.add("hidden");
-  } else {
+  if (DEBUG) {
+    $("setupLog").classList.remove("hidden");
+    $("pilotLog").classList.remove("hidden");
     $("setupLog").textContent = "";
     log("setup", "Ready. Worker =", WORKER_HOST);
   }

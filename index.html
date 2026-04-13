@@ -466,16 +466,16 @@
   }
 
   function msToLap(ms) {
-    if (ms == null) return "—";
-    const n = Number(ms);
-    if (!Number.isFinite(n) || n <= 0) return "—";
-    const totalMs = Math.round(n);
-    const sec = Math.floor(totalMs / 1000);
-    const msPart = String(totalMs % 1000).padStart(3, "0");
-    const min = Math.floor(sec / 60);
-    const secPart = String(sec % 60).padStart(2, "0");
-    return `${min}:${secPart}.${msPart}`;
-  }
+  if (ms == null) return "—";
+  const n = Number(ms);
+  if (!Number.isFinite(n) || n <= 0) return "—";
+
+  const totalMs = Math.round(n);
+  const secPart = String(Math.floor(totalMs / 1000)).padStart(2, "0");
+  const msPart = String(totalMs % 1000).padStart(3, "0");
+
+  return `${secPart}.${msPart}`;
+}
 
   function extractRaceHubNewCommands(workerFrame) {
     const out = [];

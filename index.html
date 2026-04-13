@@ -22,22 +22,6 @@
       background: #07080c;
     }
 
-    @media (orientation: portrait) {
-      body::before {
-        content: "Поверни телефон";
-        position: fixed;
-        inset: 0;
-        background: #000;
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        font-weight: 900;
-        z-index: 9999;
-      }
-    }
-
     .wrap {
       max-width: 980px;
       margin: 0 auto;
@@ -164,7 +148,11 @@
 
     .pilot {
       min-height: 100svh;
-      padding: 10px;
+      padding:
+        max(10px, env(safe-area-inset-top))
+        max(10px, env(safe-area-inset-right))
+        max(10px, env(safe-area-inset-bottom))
+        max(10px, env(safe-area-inset-left));
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -177,6 +165,7 @@
       justify-content: space-between;
       gap: 8px;
       min-height: 36px;
+      flex-shrink: 0;
     }
 
     .pilotTitle {
@@ -212,6 +201,9 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
+      align-items: center;
+      text-align: center;
+      overflow: hidden;
     }
 
     .tile .t {
@@ -219,6 +211,8 @@
       font-size: 12px;
       font-weight: 900;
       letter-spacing: .02em;
+      width: 100%;
+      text-align: center;
     }
 
     .tile .v {
@@ -232,6 +226,8 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: clip;
+      width: 100%;
+      text-align: center;
     }
 
     .tile.big .v {
@@ -276,6 +272,43 @@
       background: #0b0e14;
       font-size: 13px;
       font-weight: 900;
+    }
+
+    @media (orientation: portrait) {
+      .pilotTopBar {
+        min-height: 32px;
+      }
+
+      .board {
+        grid-template-rows: 1fr 1fr;
+      }
+
+      .bigRow,
+      .smallRow {
+        gap: 8px;
+      }
+
+      .tile.big .v {
+        font-size: clamp(42px, 12vw, 72px);
+      }
+
+      .tile.small .v {
+        font-size: clamp(28px, 8vw, 46px);
+      }
+
+      .tile {
+        padding: 8px;
+      }
+
+      .tile .t {
+        font-size: 11px;
+      }
+
+      .btnRow button {
+        min-width: 62px;
+        font-size: 11px;
+        padding: 6px 7px;
+      }
     }
   </style>
 </head>
@@ -365,7 +398,6 @@
   const AUTO_RESOLVE_INTERVAL_MS = 12000;
 
   const DEFAULT_INPUT = "https://miks.racemann.com";
-
   const LS_RN  = "rm_pilot_rn";
 
   const $ = (id) => document.getElementById(id);
@@ -406,6 +438,7 @@
       return true;
     } catch { return false; }
   }
+
   async function disableWakeLock() {
     try { await wakeLock?.release?.(); } catch {}
     wakeLock = null;
@@ -617,7 +650,7 @@
     let wsUrl;
     try {
       wsUrl = buildWorkerWsUrl(raceUrl);
-    } catch (e) {
+    } catch {
       setStatus("pilot", "ws url error", false);
       return;
     }
@@ -628,7 +661,7 @@
 
     try {
       ws = new WebSocket(wsUrl);
-    } catch (e) {
+    } catch {
       setStatus("pilot", "ws ctor error", false);
       return;
     }
@@ -664,7 +697,6 @@
       const text = typeof evt.data === "string" ? evt.data : "";
       const msg = safeJsonParse(text);
       if (!msg) return;
-
       if (msg.type && msg.type !== "frame") return;
 
       if (msg.type === "frame") {

@@ -2,69 +2,309 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>RaceMann Pilot — RN табло</title>
   <style>
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
-    body { margin:0; font-family:-apple-system,system-ui,Segoe UI,Roboto,Arial,sans-serif; background:#07080c; color:#eef0f4; }
 
-    .wrap { max-width: 980px; margin: 0 auto; padding: 14px; padding-bottom: 24px; }
-    .card { border:1px solid #262b35; border-radius:18px; padding:12px; background:#10131a; margin-top:12px; }
-    h1 { font-size:16px; margin:0; font-weight:900; letter-spacing:-0.02em; }
-    .muted { color:#9aa3ad; font-size:13px; line-height:1.35; }
-
-    label { display:block; font-weight:900; margin-bottom:6px; font-size:12px; color:#cdd3dc; }
-    input, button {
-      font-size:16px; padding:12px 12px;
-      border-radius:14px; border:1px solid #262b35;
-      background:#0b0e14; color:#eef0f4; width:100%;
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif;
+      background: #07080c;
+      color: #eef0f4;
     }
-    input::placeholder { color:#6f7782; }
-    button { cursor:pointer; font-weight:900; background:#1f6feb; border-color:#1f6feb; }
-    button.secondary { background:#0b0e14; border-color:#262b35; }
-    button:disabled { opacity:.6; cursor:not-allowed; }
 
-    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+    body {
+      background: #07080c;
+    }
+
+    @media (orientation: portrait) {
+      body::before {
+        content: "Поверни телефон";
+        position: fixed;
+        inset: 0;
+        background: #000;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 900;
+        z-index: 9999;
+      }
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 14px;
+      padding-bottom: 24px;
+    }
+
+    .card {
+      border: 1px solid #262b35;
+      border-radius: 18px;
+      padding: 12px;
+      background: #10131a;
+      margin-top: 12px;
+    }
+
+    h1 {
+      font-size: 16px;
+      margin: 0;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .muted {
+      color: #9aa3ad;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    label {
+      display: block;
+      font-weight: 900;
+      margin-bottom: 6px;
+      font-size: 12px;
+      color: #cdd3dc;
+    }
+
+    input, button {
+      font-size: 16px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid #262b35;
+      background: #0b0e14;
+      color: #eef0f4;
+      width: 100%;
+    }
+
+    input::placeholder { color: #6f7782; }
+
+    button {
+      cursor: pointer;
+      font-weight: 900;
+      background: #1f6feb;
+      border-color: #1f6feb;
+    }
+
+    button.secondary {
+      background: #0b0e14;
+      border-color: #262b35;
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: end;
+    }
+
     .row > * { flex: 1 1 260px; }
-    .smallnote { margin-top:8px; color:#9aa3ad; font-size:12px; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 
-    .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid #262b35; color:#9aa3ad; font-size:12px; background:#0b0e14; }
-    .dot { width:10px; height:10px; border-radius:999px; background:#666; display:inline-block; }
-    .dot.ok { background:#26a269; }
-    .dot.bad { background:#d13212; }
+    .smallnote {
+      margin-top: 8px;
+      color: #9aa3ad;
+      font-size: 12px;
+    }
 
-    .pilot { min-height:100svh; padding:14px; padding-bottom:18px; display:flex; flex-direction:column; gap:12px; }
-    .pilotTopBar { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-    .pilotTitle { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-    .pilotTitle b { font-size:13px; color:#cdd3dc; }
-    .pilotMeta { color:#9aa3ad; font-size:12px; }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
 
-    .board { flex:1; display:flex; flex-direction:column; gap:12px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #262b35;
+      color: #9aa3ad;
+      font-size: 12px;
+      background: #0b0e14;
+    }
 
-    .tile { border:1px solid #262b35; border-radius:22px; background:#0b0e14; padding:14px; }
-    .tile .t { color:#9aa3ad; font-size:12px; font-weight:900; letter-spacing:.02em; }
-    .tile .v { font-weight:1000; letter-spacing:-0.03em; margin-top:6px; line-height:1; transform-origin:50% 65%; will-change:transform,filter,opacity; }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #666;
+      display: inline-block;
+    }
 
-    .bigRow { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    .tile.big .v { font-size:72px; }
+    .dot.ok { background: #26a269; }
+    .dot.bad { background: #d13212; }
 
-    .smallRow { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    .tile.small .v { font-size:46px; }
+    .hidden { display: none !important; }
 
-    .green { color:#26a269; }
-    .purple { color:#bb6bff; }
+    .log {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #cdd3dc;
+      line-height: 1.35;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 210px;
+      overflow: auto;
+      background: #0b0e14;
+      border: 1px solid #262b35;
+      border-radius: 14px;
+      padding: 10px;
+    }
 
-    @keyframes pop { 0%{transform:scale(1);filter:brightness(1);opacity:1;} 30%{transform:scale(1.06);filter:brightness(1.25);opacity:1;} 100%{transform:scale(1);filter:brightness(1);opacity:1;} }
+    /* ===== PILOT SCREEN ===== */
+
+    .pilot {
+      min-height: 100svh;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    .pilotTopBar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 36px;
+    }
+
+    .pilotTitle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pilotTitle b {
+      font-size: 14px;
+      color: #eef0f4;
+    }
+
+    .pilotMeta {
+      color: #9aa3ad;
+      font-size: 12px;
+    }
+
+    .board {
+      flex: 1;
+      display: grid;
+      grid-template-rows: 60fr 40fr;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    .bigRow,
+    .smallRow {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    .tile {
+      border: 1px solid #1a1f28;
+      border-radius: 18px;
+      background: #05070a;
+      padding: 10px;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .tile .t {
+      color: #9aa3ad;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .02em;
+    }
+
+    .tile .v {
+      font-weight: 1000;
+      letter-spacing: -0.03em;
+      margin-top: 6px;
+      line-height: 1;
+      transform-origin: 50% 65%;
+      will-change: transform, filter, opacity;
+      text-shadow: 0 0 12px rgba(255,255,255,0.1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
+    }
+
+    .tile.big .v {
+      font-size: clamp(54px, 12vw, 96px);
+    }
+
+    .tile.small .v {
+      font-size: clamp(34px, 7vw, 58px);
+    }
+
+    .green { color: #26a269; }
+    .purple { color: #bb6bff; }
+
+    @keyframes pop {
+      0%   { transform: scale(1);    filter: brightness(1);    opacity: 1; }
+      30%  { transform: scale(1.06); filter: brightness(1.25); opacity: 1; }
+      100% { transform: scale(1);    filter: brightness(1);    opacity: 1; }
+    }
+
     .pop { animation: pop 240ms ease-out; }
 
-    .btnRow { display:flex; gap:10px; flex-wrap:wrap; }
-    .btnRow button { width:auto; padding:10px 12px; }
+    .btnRow {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
 
-    .hidden { display:none !important; }
+    .btnRow button {
+      width: auto;
+      padding: 6px 8px;
+      font-size: 12px;
+      min-width: 74px;
+    }
 
-    .log { margin-top:10px; font-size:12px; color:#cdd3dc; line-height:1.35; white-space:pre-wrap; word-break:break-word; max-height:210px; overflow:auto; background:#0b0e14; border:1px solid #262b35; border-radius:14px; padding:10px; }
+    .statusMinimal {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #262b35;
+      background: #0b0e14;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .setupOnly {
+      display: block;
+    }
+
+    .pilotOnly {
+      display: none;
+    }
+
+    body.pilotMode .setupOnly {
+      display: none !important;
+    }
+
+    body.pilotMode .pilotOnly {
+      display: block !important;
+    }
   </style>
 </head>
 <body>
@@ -77,18 +317,14 @@
       </div>
 
       <div class="muted" style="margin-top:8px">
-        Введи домен/ссылку MIKS, RN, нажми <b>Открыть экран пилота</b>.
-        <br/>Рабочие варианты:
-        <span class="mono">miks.racemann.com</span>,
-        <span class="mono">https://miks.racemann.com/home/last#race</span>,
-        <span class="mono">https://miks.racemann.com/Race/id/&lt;GUID&gt;#race</span>
+        Введи домен/ссылку MIKS и RN, нажми <b>Открыть экран пилота</b>.
       </div>
 
       <div class="row" style="margin-top:12px">
         <div style="flex: 3 1 420px;">
           <label>Домен / ссылка</label>
           <input id="raceInput" placeholder="https://miks.racemann.com" />
-          <div class="smallnote">По умолчанию: MIKS Karting</div>
+          <div class="smallnote">Рабочие варианты: <span class="mono">miks.racemann.com</span>, <span class="mono">.../home/last#race</span>, <span class="mono">.../Race/id/&lt;GUID&gt;#race</span></div>
         </div>
 
         <div style="flex: 1 1 180px;">
@@ -106,18 +342,17 @@
         Worker: <span class="mono" id="workerLabel">—</span>
       </div>
 
-      <div id="setupLog" class="log">log…</div>
+      <div id="setupLog" class="log setupOnly">log…</div>
     </div>
   </div>
 
   <div id="pilotScreen" class="pilot hidden">
     <div class="pilotTopBar">
       <div class="pilotTitle">
-        <span class="pill"><span id="dotPilot" class="dot bad"></span><b id="statusPilot">disconnected</b></span>
-        <div>
-          <div><b>RN:</b> <span id="rnShow">—</span></div>
-          <div class="pilotMeta" id="metaLine">—</div>
-        </div>
+        <span class="statusMinimal">
+          <span id="dotPilot" class="dot bad"></span>
+          <span>RN: <span id="rnShow">—</span></span>
+        </span>
       </div>
 
       <div class="btnRow">
@@ -153,13 +388,14 @@
       </div>
     </div>
 
-    <div id="pilotLog" class="log">log…</div>
+    <div id="pilotLog" class="log pilotOnly">log…</div>
   </div>
 
 <script>
 (() => {
   const qs = new URLSearchParams(location.search);
   const WORKER_HOST = (qs.get("worker") || "racemann-bridge-test.vsmirnoff.workers.dev").trim();
+  const DEBUG = qs.get("debug") === "1";
   const AUTO_RESOLVE_INTERVAL_MS = 12000;
 
   const LS_INP = "rm_pilot_input";
@@ -173,6 +409,7 @@
   let currentRaceUrl = null;
   let autoTimer = null;
   let autoResolving = false;
+  let reconnectTimer = null;
 
   const state = {
     byRn: new Map(),
@@ -184,7 +421,9 @@
   };
 
   function log(where, ...args) {
+    if (!DEBUG && where !== "setup") return;
     const el = where === "setup" ? $("setupLog") : $("pilotLog");
+    if (!el) return;
     const s = args.map(a => (typeof a === "string" ? a : JSON.stringify(a, null, 2))).join(" ");
     const line = `[${new Date().toLocaleTimeString()}] ${s}`;
     el.textContent = (el.textContent ? el.textContent + "\n" : "") + line;
@@ -210,8 +449,11 @@
     dot.classList.toggle("ok", !!ok);
     dot.classList.toggle("bad", !ok);
   }
+
   function setStatus(where, text, ok) {
-    (where === "setup" ? $("statusSetup") : $("statusPilot")).textContent = text;
+    if (where === "setup") {
+      $("statusSetup").textContent = text;
+    }
     setDot(where, ok);
   }
 
@@ -327,21 +569,17 @@
     const bestPilotEl = $("kBestPilot");
     bestPilotEl.classList.toggle("purple", isPilotOverallBest);
     bestPilotEl.classList.toggle("green", !isPilotOverallBest);
-
-    const frames = state.frames;
-    const comp = state.compCount;
-    const last = state.lastFrameAt ? new Date(state.lastFrameAt).toLocaleTimeString() : "—";
-    const rid = currentRaceId ? currentRaceId.slice(0, 8) : "—";
-    $("metaLine").textContent = `Track: ${currentOrigin?.replace("https://","") || "—"} • Race: ${rid} • Frames: ${frames} • comp: ${comp} • last: ${last}`;
   }
 
   function showSetup() {
+    document.body.classList.remove("pilotMode");
     $("pilotScreen").classList.add("hidden");
     $("setupScreen").classList.remove("hidden");
     setStatus("setup", "idle", false);
   }
 
   function showPilot() {
+    document.body.classList.add("pilotMode");
     $("setupScreen").classList.add("hidden");
     $("pilotScreen").classList.remove("hidden");
   }
@@ -360,6 +598,13 @@
     if (autoTimer) clearInterval(autoTimer);
     autoTimer = null;
     autoResolving = false;
+  }
+
+  function clearReconnectTimer() {
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
   }
 
   function startAutoSwitch() {
@@ -383,8 +628,6 @@
         autoResolving = false;
       }
     }, AUTO_RESOLVE_INTERVAL_MS);
-
-    log("pilot", `AUTO: enabled (${Math.round(AUTO_RESOLVE_INTERVAL_MS/1000)}s) for ${currentOrigin}`);
   }
 
   async function reconnectToNewRace(newRaceUrl, newRaceId) {
@@ -397,12 +640,21 @@
     startAutoSwitch();
   }
 
+  function requestFullscreenSafe() {
+    const el = document.documentElement;
+    if (!document.fullscreenElement && el.requestFullscreen) {
+      el.requestFullscreen().catch(() => {});
+    }
+  }
+
   async function connectWsOnly(raceUrl) {
     $("btnReload").disabled = false;
+    clearReconnectTimer();
 
     let wsUrl;
-    try { wsUrl = buildWorkerWsUrl(raceUrl); }
-    catch (e) {
+    try {
+      wsUrl = buildWorkerWsUrl(raceUrl);
+    } catch (e) {
       log("pilot", "WS url build error:", String(e));
       setStatus("pilot", "ws url error", false);
       return;
@@ -410,10 +662,11 @@
 
     showPilot();
     setStatus("pilot", "connecting…", false);
-    log("pilot", "Connecting WS:", wsUrl);
+    requestFullscreenSafe();
 
-    try { ws = new WebSocket(wsUrl); }
-    catch (e) {
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch (e) {
       log("pilot", "WebSocket ctor error:", String(e));
       setStatus("pilot", "ws ctor error", false);
       return;
@@ -423,23 +676,29 @@
 
     ws.addEventListener("open", async () => {
       setStatus("pilot", "connected", true);
-      log("pilot", "WS open");
       await enableWakeLock();
       renderPilot();
     });
 
     ws.addEventListener("close", async (e) => {
       const hint = (e.code === 1006) ? " — жми RELOAD" : "";
-      setStatus("pilot", `closed (${e.code})${hint}`, false);
       log("pilot", "WS closed:", { code: e.code, reason: e.reason });
       $("btnDisconnect").disabled = true;
       ws = null;
       await disableWakeLock();
+      setStatus("pilot", `closed (${e.code})${hint}`, false);
+
+      if (e.code === 1006 && currentRaceUrl) {
+        clearReconnectTimer();
+        reconnectTimer = setTimeout(() => {
+          reloadNow();
+        }, 1000);
+      }
     });
 
     ws.addEventListener("error", (e) => {
-      setStatus("pilot", "error", false);
       log("pilot", "WS error:", String(e?.message || e));
+      setStatus("pilot", "error", false);
     });
 
     ws.addEventListener("message", (evt) => {
@@ -472,7 +731,10 @@
     const rn = $("rn").value.trim();
     const input = $("raceInput").value.trim() || "https://miks.racemann.com";
 
-    if (!rn) { alert("Введи RN"); return; }
+    if (!rn) {
+      alert("Введи RN");
+      return;
+    }
 
     $("setupLog").textContent = "";
     $("pilotLog").textContent = "";
@@ -517,11 +779,13 @@
 
   async function disconnect(goToSetup = true) {
     stopAutoSwitch();
+    clearReconnectTimer();
 
     if (ws) {
       try { ws.close(1000, "bye"); } catch {}
       ws = null;
     }
+
     $("btnDisconnect").disabled = true;
     await disableWakeLock();
     setStatus("pilot", "disconnected", false);
@@ -564,8 +828,14 @@
     $("raceInput").value = "https://miks.racemann.com";
   }
 
-  $("setupLog").textContent = "";
-  log("setup", "Ready. Worker =", WORKER_HOST);
+  if (!DEBUG) {
+    $("setupLog").classList.add("hidden");
+    $("pilotLog").classList.add("hidden");
+  } else {
+    $("setupLog").textContent = "";
+    log("setup", "Ready. Worker =", WORKER_HOST);
+  }
+
   showSetup();
 
   document.addEventListener("visibilitychange", async () => {

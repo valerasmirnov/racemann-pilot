@@ -7,155 +7,93 @@
   <style>
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif;
-      background:#07080c; color:#eef0f4;
-    }
+    body { margin:0; font-family:-apple-system,system-ui,Segoe UI,Roboto,Arial,sans-serif; background:#07080c; color:#eef0f4; }
 
-    /* ===== Setup screen ===== */
     .wrap { max-width: 980px; margin: 0 auto; padding: 14px; padding-bottom: 24px; }
-    .card {
-      border:1px solid #262b35;
-      border-radius: 18px;
-      padding: 12px;
-      background:#10131a;
-      margin-top: 12px;
-    }
-    h1 { font-size: 16px; margin: 0; font-weight: 900; letter-spacing: -0.02em; }
-    .muted { color:#9aa3ad; font-size: 13px; line-height: 1.35; }
+    .card { border:1px solid #262b35; border-radius:18px; padding:12px; background:#10131a; margin-top:12px; }
+    h1 { font-size:16px; margin:0; font-weight:900; letter-spacing:-0.02em; }
+    .muted { color:#9aa3ad; font-size:13px; line-height:1.35; }
 
-    label { display:block; font-weight: 900; margin-bottom: 6px; font-size: 12px; color:#cdd3dc; }
+    label { display:block; font-weight:900; margin-bottom:6px; font-size:12px; color:#cdd3dc; }
     input, button {
-      font-size: 16px; padding: 12px 12px;
-      border-radius: 14px; border: 1px solid #262b35;
-      background:#0b0e14; color:#eef0f4;
-      width: 100%;
+      font-size:16px; padding:12px 12px;
+      border-radius:14px; border:1px solid #262b35;
+      background:#0b0e14; color:#eef0f4; width:100%;
     }
     input::placeholder { color:#6f7782; }
-    button {
-      cursor:pointer; font-weight: 900;
-      background:#1f6feb; border-color:#1f6feb;
-    }
+    button { cursor:pointer; font-weight:900; background:#1f6feb; border-color:#1f6feb; }
     button.secondary { background:#0b0e14; border-color:#262b35; }
     button:disabled { opacity:.6; cursor:not-allowed; }
-    .row { display:flex; gap:10px; flex-wrap: wrap; align-items: end; }
+
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
     .row > * { flex: 1 1 260px; }
-    .smallnote { margin-top: 8px; color:#9aa3ad; font-size: 12px; }
+    .smallnote { margin-top:8px; color:#9aa3ad; font-size:12px; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 
-    .pill {
-      display:inline-flex; align-items:center; gap:8px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border:1px solid #262b35;
-      color:#9aa3ad;
-      font-size: 12px;
-      background:#0b0e14;
-    }
-    .dot { width: 10px; height: 10px; border-radius: 999px; background:#666; display:inline-block; }
+    .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid #262b35; color:#9aa3ad; font-size:12px; background:#0b0e14; }
+    .dot { width:10px; height:10px; border-radius:999px; background:#666; display:inline-block; }
     .dot.ok { background:#26a269; }
     .dot.bad { background:#d13212; }
 
-    /* ===== Pilot screen ===== */
-    .pilot {
-      min-height: 100svh;
-      padding: 14px;
-      padding-bottom: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .pilotTopBar {
-      display:flex;
-      align-items:center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-    .pilotTitle {
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex-wrap: wrap;
-    }
-    .pilotTitle b { font-size: 13px; color:#cdd3dc; }
-    .pilotMeta { color:#9aa3ad; font-size: 12px; }
+    .pilot { min-height:100svh; padding:14px; padding-bottom:18px; display:flex; flex-direction:column; gap:12px; }
+    .pilotTopBar { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .pilotTitle { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .pilotTitle b { font-size:13px; color:#cdd3dc; }
+    .pilotMeta { color:#9aa3ad; font-size:12px; }
 
-    .board { flex: 1; display:flex; flex-direction: column; gap: 12px; }
+    .board { flex:1; display:flex; flex-direction:column; gap:12px; }
 
-    .tile {
-      border:1px solid #262b35;
-      border-radius: 22px;
-      background:#0b0e14;
-      padding: 14px;
-    }
-    .tile .t { color:#9aa3ad; font-size: 12px; font-weight: 900; letter-spacing:.02em; }
-    .tile .v {
-      font-weight: 1000;
-      letter-spacing: -0.03em;
-      margin-top: 6px;
-      line-height: 1;
-      transform-origin: 50% 65%;
-      will-change: transform, filter, opacity;
-    }
+    .tile { border:1px solid #262b35; border-radius:22px; background:#0b0e14; padding:14px; }
+    .tile .t { color:#9aa3ad; font-size:12px; font-weight:900; letter-spacing:.02em; }
+    .tile .v { font-weight:1000; letter-spacing:-0.03em; margin-top:6px; line-height:1; transform-origin:50% 65%; will-change:transform,filter,opacity; }
 
-    /* Top row BIG: POS + LAST LAP */
-    .bigRow {
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    .tile.big .v { font-size: 72px; }
+    .bigRow { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .tile.big .v { font-size:72px; }
 
-    /* Bottom row smaller: BEST PILOT + BEST RACE */
-    .smallRow {
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    .tile.small .v { font-size: 46px; }
+    .smallRow { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .tile.small .v { font-size:46px; }
 
-    /* Colors */
-    .green  { color: #26a269; }
-    .purple { color: #bb6bff; }
+    .green { color:#26a269; }
+    .purple { color:#bb6bff; }
 
-    /* Value change animation */
-    @keyframes pop {
-      0%   { transform: scale(1);   filter: brightness(1); opacity: 1; }
-      30%  { transform: scale(1.06);filter: brightness(1.25); opacity: 1; }
-      100% { transform: scale(1);   filter: brightness(1); opacity: 1; }
-    }
+    @keyframes pop { 0%{transform:scale(1);filter:brightness(1);opacity:1;} 30%{transform:scale(1.06);filter:brightness(1.25);opacity:1;} 100%{transform:scale(1);filter:brightness(1);opacity:1;} }
     .pop { animation: pop 240ms ease-out; }
 
-    .btnRow { display:flex; gap:10px; flex-wrap: wrap; }
-    .btnRow button { width:auto; padding: 10px 12px; }
+    .btnRow { display:flex; gap:10px; flex-wrap:wrap; }
+    .btnRow button { width:auto; padding:10px 12px; }
 
     .hidden { display:none !important; }
+
+    .log { margin-top:10px; font-size:12px; color:#cdd3dc; line-height:1.35; white-space:pre-wrap; word-break:break-word; max-height:210px; overflow:auto; background:#0b0e14; border:1px solid #262b35; border-radius:14px; padding:10px; }
   </style>
 </head>
 <body>
 
-  <!-- ===== SETUP ===== -->
   <div id="setupScreen" class="wrap">
     <div class="card">
       <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
         <h1>RaceMann Pilot — RN табло</h1>
         <span class="pill"><span id="dotSetup" class="dot bad"></span><b id="statusSetup">idle</b></span>
       </div>
+
       <div class="muted" style="margin-top:8px">
-        Введи ссылку на заезд и RN, нажми <b>Открыть экран пилота</b>.
+        Введи домен/ссылку MIKS, RN, нажми <b>Открыть экран пилота</b>.
+        <br/>Рабочие варианты:
+        <span class="mono">miks.racemann.com</span>,
+        <span class="mono">https://miks.racemann.com/home/last#race</span>,
+        <span class="mono">https://miks.racemann.com/Race/id/&lt;GUID&gt;#race</span>
       </div>
 
       <div class="row" style="margin-top:12px">
         <div style="flex: 3 1 420px;">
-          <label>Ссылка на заезд RaceMann</label>
-          <input id="raceUrl" placeholder="https://miks.racemann.com/Race/id/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx#race" />
-          <div class="smallnote">Можно вставлять с <span class="mono">#race</span> — мы сами закодируем.</div>
+          <label>Домен / ссылка</label>
+          <input id="raceInput" placeholder="https://miks.racemann.com" />
+          <div class="smallnote">По умолчанию: MIKS Karting</div>
         </div>
 
         <div style="flex: 1 1 180px;">
           <label>RN</label>
-          <input id="rn" inputmode="numeric" placeholder="например 1" />
+          <input id="rn" inputmode="numeric" placeholder="например 11" />
         </div>
 
         <div style="flex: 1 1 260px;">
@@ -165,12 +103,13 @@
       </div>
 
       <div class="smallnote" style="margin-top:12px">
-        Worker “зашит” в коде: <span class="mono">racemann-api.vsmirnoff.workers.dev</span>
+        Worker: <span class="mono" id="workerLabel">—</span>
       </div>
+
+      <div id="setupLog" class="log">log…</div>
     </div>
   </div>
 
-  <!-- ===== PILOT SCREEN ===== -->
   <div id="pilotScreen" class="pilot hidden">
     <div class="pilotTopBar">
       <div class="pilotTitle">
@@ -182,13 +121,13 @@
       </div>
 
       <div class="btnRow">
+        <button id="btnReload" class="secondary" disabled>RELOAD</button>
         <button id="btnBack" class="secondary">Назад</button>
         <button id="btnDisconnect" class="secondary" disabled>Disconnect</button>
       </div>
     </div>
 
     <div class="board">
-      <!-- Top row BIG -->
       <div class="bigRow">
         <div class="tile big">
           <div class="t">Позиция</div>
@@ -201,7 +140,6 @@
         </div>
       </div>
 
-      <!-- Bottom row smaller -->
       <div class="smallRow">
         <div class="tile small">
           <div class="t">Лучший круг пилота</div>
@@ -214,28 +152,46 @@
         </div>
       </div>
     </div>
+
+    <div id="pilotLog" class="log">log…</div>
   </div>
 
 <script>
 (() => {
-  const WORKER_HOST = "racemann-api.vsmirnoff.workers.dev";
+  const qs = new URLSearchParams(location.search);
+  const WORKER_HOST = (qs.get("worker") || "racemann-bridge-test.vsmirnoff.workers.dev").trim();
+  const AUTO_RESOLVE_INTERVAL_MS = 12000;
+
+  const LS_INP = "rm_pilot_input";
+  const LS_RN  = "rm_pilot_rn";
+
   const $ = (id) => document.getElementById(id);
 
-  const LS_RACE = "rm_pilot_raceUrl";
-  const LS_RN = "rm_pilot_rn";
-
   let ws = null;
+  let currentOrigin = null;
+  let currentRaceId = null;
+  let currentRaceUrl = null;
+  let autoTimer = null;
+  let autoResolving = false;
 
   const state = {
     byRn: new Map(),
-    bestRaceMs: null,    // общий лучший круг (минимальный bl)
+    bestRaceMs: null,
     bestRaceRn: null,
     lastFrameAt: null,
     frames: 0,
     compCount: 0,
   };
 
-  // Wake Lock
+  function log(where, ...args) {
+    const el = where === "setup" ? $("setupLog") : $("pilotLog");
+    const s = args.map(a => (typeof a === "string" ? a : JSON.stringify(a, null, 2))).join(" ");
+    const line = `[${new Date().toLocaleTimeString()}] ${s}`;
+    el.textContent = (el.textContent ? el.textContent + "\n" : "") + line;
+    el.scrollTop = el.scrollHeight;
+    console.log(line);
+  }
+
   let wakeLock = null;
   async function enableWakeLock() {
     try {
@@ -294,7 +250,6 @@
 
   function handleComp(cmd) {
     if ((cmd?.Method || "").toLowerCase() !== "comp") return;
-
     const c = cmd.Command;
     if (!c || typeof c !== "object") return;
 
@@ -302,7 +257,6 @@
     if (!rn) return;
 
     const prev = state.byRn.get(rn) || {};
-
     const bestLapMs = Number.isFinite(+c.bl) ? +c.bl : (prev.bestLapMs ?? null);
 
     const next = {
@@ -315,7 +269,6 @@
 
     state.byRn.set(rn, next);
 
-    // update overall best of race
     if (Number.isFinite(+bestLapMs) && +bestLapMs > 0) {
       if (state.bestRaceMs == null || +bestLapMs < state.bestRaceMs) {
         state.bestRaceMs = +bestLapMs;
@@ -331,17 +284,27 @@
     return `wss://${WORKER_HOST}/ws?raceUrl=${encoded}&dropHb=1`;
   }
 
-  // Animate + set text only when changed
+  function toOriginFromInput(s) {
+    const t = (s || "").trim();
+    if (!t) return "";
+    const u = new URL(t.startsWith("http") ? t : "https://" + t);
+    return u.origin;
+  }
+
+  async function resolveRaceUrlFromOrigin(origin) {
+    const url = `https://${WORKER_HOST}/resolve?origin=${encodeURIComponent(origin)}`;
+    const r = await fetch(url, { cache: "no-store" });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) throw new Error(j.error || `resolve failed (${r.status})`);
+    return j;
+  }
+
   function setValue(id, nextText) {
     const el = $(id);
     const prev = el.textContent;
     if (prev === nextText) return;
-
     el.textContent = nextText;
-
-    // restart animation
     el.classList.remove("pop");
-    // force reflow to restart animation reliably
     void el.offsetWidth;
     el.classList.add("pop");
   }
@@ -352,33 +315,24 @@
 
     const p = rn ? state.byRn.get(rn) : null;
 
-    // texts
-    const posText = (p?.position ?? "—") + "";
-    const lastText = p ? msToLap(p.lastLapMs) : "—";
-    const bestPilotText = p ? msToLap(p.bestLapMs) : "—";
-    const bestRaceText = msToLap(state.bestRaceMs);
+    setValue("kPos", String(p?.position ?? "—"));
+    setValue("kLast", p ? msToLap(p.lastLapMs) : "—");
+    setValue("kBestPilot", p ? msToLap(p.bestLapMs) : "—");
+    setValue("kBestRace", msToLap(state.bestRaceMs));
 
-    setValue("kPos", posText);
-    setValue("kLast", lastText);
-    setValue("kBestPilot", bestPilotText);
-    setValue("kBestRace", bestRaceText);
-
-    // Variant 2:
-    // If pilot's best equals overall best of race -> pilot best turns PURPLE (overrides green)
     const bestPilotMs = (p && Number.isFinite(+p.bestLapMs)) ? +p.bestLapMs : null;
     const bestRaceMs = (state.bestRaceMs != null && Number.isFinite(+state.bestRaceMs)) ? +state.bestRaceMs : null;
-
     const isPilotOverallBest = (bestPilotMs != null && bestRaceMs != null && bestPilotMs === bestRaceMs);
 
     const bestPilotEl = $("kBestPilot");
     bestPilotEl.classList.toggle("purple", isPilotOverallBest);
     bestPilotEl.classList.toggle("green", !isPilotOverallBest);
 
-    // Meta (оставил как отладку; если захочешь — уберём)
     const frames = state.frames;
     const comp = state.compCount;
     const last = state.lastFrameAt ? new Date(state.lastFrameAt).toLocaleTimeString() : "—";
-    $("metaLine").textContent = `Frames: ${frames} • comp: ${comp} • last: ${last}`;
+    const rid = currentRaceId ? currentRaceId.slice(0, 8) : "—";
+    $("metaLine").textContent = `Track: ${currentOrigin?.replace("https://","") || "—"} • Race: ${rid} • Frames: ${frames} • comp: ${comp} • last: ${last}`;
   }
 
   function showSetup() {
@@ -387,58 +341,105 @@
     setStatus("setup", "idle", false);
   }
 
-  function showPilotConnecting() {
+  function showPilot() {
     $("setupScreen").classList.add("hidden");
     $("pilotScreen").classList.remove("hidden");
-    setStatus("pilot", "connecting…", false);
   }
 
-  async function connect() {
-    const raceUrl = $("raceUrl").value.trim();
-    const rn = $("rn").value.trim();
-
-    if (!raceUrl) { alert("Вставь ссылку на заезд RaceMann"); return; }
-    if (!rn) { alert("Введи RN"); return; }
-
-    try {
-      localStorage.setItem(LS_RACE, raceUrl);
-      localStorage.setItem(LS_RN, rn);
-    } catch {}
-
-    let wsUrl;
-    try { wsUrl = buildWorkerWsUrl(raceUrl); }
-    catch (e) { alert("Некорректная ссылка: " + e); return; }
-
-    // reset state for new connect
+  function resetRaceState() {
     state.frames = 0;
     state.compCount = 0;
     state.lastFrameAt = null;
     state.bestRaceMs = null;
     state.bestRaceRn = null;
     state.byRn.clear();
+    renderPilot();
+  }
 
-    showPilotConnecting();
-    disconnect(false);
+  function stopAutoSwitch() {
+    if (autoTimer) clearInterval(autoTimer);
+    autoTimer = null;
+    autoResolving = false;
+  }
+
+  function startAutoSwitch() {
+    stopAutoSwitch();
+    if (!currentOrigin) return;
+
+    autoTimer = setInterval(async () => {
+      if (!currentOrigin || !currentRaceId) return;
+      if (autoResolving) return;
+
+      autoResolving = true;
+      try {
+        const j = await resolveRaceUrlFromOrigin(currentOrigin);
+        if (j.raceId && j.raceId !== currentRaceId) {
+          log("pilot", "AUTO: race changed!", { from: currentRaceId, to: j.raceId });
+          await reconnectToNewRace(j.raceUrl, j.raceId);
+        }
+      } catch (e) {
+        log("pilot", "AUTO: resolve failed:", String(e?.message || e));
+      } finally {
+        autoResolving = false;
+      }
+    }, AUTO_RESOLVE_INTERVAL_MS);
+
+    log("pilot", `AUTO: enabled (${Math.round(AUTO_RESOLVE_INTERVAL_MS/1000)}s) for ${currentOrigin}`);
+  }
+
+  async function reconnectToNewRace(newRaceUrl, newRaceId) {
+    currentRaceUrl = newRaceUrl;
+    currentRaceId = newRaceId;
+
+    resetRaceState();
+    await disconnect(false);
+    await connectWsOnly(newRaceUrl);
+    startAutoSwitch();
+  }
+
+  async function connectWsOnly(raceUrl) {
+    $("btnReload").disabled = false;
+
+    let wsUrl;
+    try { wsUrl = buildWorkerWsUrl(raceUrl); }
+    catch (e) {
+      log("pilot", "WS url build error:", String(e));
+      setStatus("pilot", "ws url error", false);
+      return;
+    }
+
+    showPilot();
+    setStatus("pilot", "connecting…", false);
+    log("pilot", "Connecting WS:", wsUrl);
 
     try { ws = new WebSocket(wsUrl); }
-    catch (e) { alert("Не удалось создать WebSocket: " + e); showSetup(); return; }
+    catch (e) {
+      log("pilot", "WebSocket ctor error:", String(e));
+      setStatus("pilot", "ws ctor error", false);
+      return;
+    }
 
     $("btnDisconnect").disabled = false;
 
     ws.addEventListener("open", async () => {
       setStatus("pilot", "connected", true);
+      log("pilot", "WS open");
       await enableWakeLock();
+      renderPilot();
     });
 
     ws.addEventListener("close", async (e) => {
-      setStatus("pilot", `closed (${e.code})`, false);
+      const hint = (e.code === 1006) ? " — жми RELOAD" : "";
+      setStatus("pilot", `closed (${e.code})${hint}`, false);
+      log("pilot", "WS closed:", { code: e.code, reason: e.reason });
       $("btnDisconnect").disabled = true;
       ws = null;
       await disableWakeLock();
     });
 
-    ws.addEventListener("error", () => {
+    ws.addEventListener("error", (e) => {
       setStatus("pilot", "error", false);
+      log("pilot", "WS error:", String(e?.message || e));
     });
 
     ws.addEventListener("message", (evt) => {
@@ -446,7 +447,10 @@
       const msg = safeJsonParse(text);
       if (!msg) return;
 
-      if (msg.type && msg.type !== "frame") return;
+      if (msg.type && msg.type !== "frame") {
+        log("pilot", "Status:", msg);
+        return;
+      }
 
       if (msg.type === "frame") {
         state.frames += 1;
@@ -462,11 +466,58 @@
         renderPilot();
       }
     });
+  }
 
-    renderPilot();
+  async function connect() {
+    const rn = $("rn").value.trim();
+    const input = $("raceInput").value.trim() || "https://miks.racemann.com";
+
+    if (!rn) { alert("Введи RN"); return; }
+
+    $("setupLog").textContent = "";
+    $("pilotLog").textContent = "";
+    log("setup", "WORKER_HOST =", WORKER_HOST);
+    log("setup", "Input =", input);
+
+    try {
+      currentOrigin = toOriginFromInput(input);
+    } catch {
+      alert("Некорректный домен/ссылка");
+      return;
+    }
+
+    setStatus("setup", "resolving…", false);
+
+    let j;
+    try {
+      j = await resolveRaceUrlFromOrigin(currentOrigin);
+    } catch (e) {
+      setStatus("setup", "resolve failed", false);
+      log("setup", "Resolve failed:", String(e?.message || e));
+      alert("Не удалось определить текущий заезд: " + (e?.message || e));
+      return;
+    }
+
+    currentRaceId = j.raceId;
+    currentRaceUrl = j.raceUrl;
+
+    log("setup", "Resolved:", { currentOrigin, currentRaceId, currentRaceUrl, method: j.method });
+    setStatus("setup", "resolved", true);
+
+    try {
+      localStorage.setItem(LS_RN, rn);
+      localStorage.setItem(LS_INP, input);
+    } catch {}
+
+    resetRaceState();
+    await disconnect(false);
+    await connectWsOnly(currentRaceUrl);
+    startAutoSwitch();
   }
 
   async function disconnect(goToSetup = true) {
+    stopAutoSwitch();
+
     if (ws) {
       try { ws.close(1000, "bye"); } catch {}
       ws = null;
@@ -474,21 +525,47 @@
     $("btnDisconnect").disabled = true;
     await disableWakeLock();
     setStatus("pilot", "disconnected", false);
-    if (goToSetup) showSetup();
+
+    if (goToSetup) {
+      currentOrigin = null;
+      currentRaceId = null;
+      currentRaceUrl = null;
+      $("btnReload").disabled = true;
+      showSetup();
+    } else {
+      showPilot();
+    }
+  }
+
+  async function reloadNow() {
+    if (!currentRaceUrl) return;
+    log("pilot", "RELOAD: reconnect to currentRaceUrl");
+    resetRaceState();
+    await disconnect(false);
+    await connectWsOnly(currentRaceUrl);
+    startAutoSwitch();
   }
 
   $("btnOpen").addEventListener("click", connect);
   $("btnDisconnect").addEventListener("click", () => disconnect(true));
   $("btnBack").addEventListener("click", () => disconnect(true));
+  $("btnReload").addEventListener("click", reloadNow);
   $("rn").addEventListener("input", renderPilot);
 
-  try {
-    const savedRace = localStorage.getItem(LS_RACE);
-    const savedRn = localStorage.getItem(LS_RN);
-    if (savedRace) $("raceUrl").value = savedRace;
-    if (savedRn) $("rn").value = savedRn;
-  } catch {}
+  $("workerLabel").textContent = WORKER_HOST;
 
+  try {
+    const savedRn = localStorage.getItem(LS_RN);
+    if (savedRn) $("rn").value = savedRn;
+    const savedInp = localStorage.getItem(LS_INP);
+    if (savedInp) $("raceInput").value = savedInp;
+    else $("raceInput").value = "https://miks.racemann.com";
+  } catch {
+    $("raceInput").value = "https://miks.racemann.com";
+  }
+
+  $("setupLog").textContent = "";
+  log("setup", "Ready. Worker =", WORKER_HOST);
   showSetup();
 
   document.addEventListener("visibilitychange", async () => {

@@ -565,6 +565,29 @@
     const bestRaceMs = (state.bestRaceMs != null && Number.isFinite(+state.bestRaceMs)) ? +state.bestRaceMs : null;
     const isPilotOverallBest = (bestPilotMs != null && bestRaceMs != null && bestPilotMs === bestRaceMs);
 
+// === NEW: логика для Last Lap ===
+const lastLapMs = (p && Number.isFinite(+p.lastLapMs)) ? +p.lastLapMs : null;
+
+const isLastBestPilot =
+  lastLapMs != null &&
+  bestPilotMs != null &&
+  lastLapMs === bestPilotMs;
+
+const isLastBestRace =
+  lastLapMs != null &&
+  bestRaceMs != null &&
+  lastLapMs === bestRaceMs;
+
+// применяем цвет
+const lastEl = $("kLast");
+lastEl.classList.remove("green", "purple");
+
+if (isLastBestRace) {
+  lastEl.classList.add("purple");
+} else if (isLastBestPilot) {
+  lastEl.classList.add("green");
+}
+    
     const bestPilotEl = $("kBestPilot");
     bestPilotEl.classList.toggle("purple", isPilotOverallBest);
     bestPilotEl.classList.toggle("green", !isPilotOverallBest);

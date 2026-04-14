@@ -275,42 +275,45 @@
       font-weight: 900;
     }
 
-    @media (orientation: portrait) {
-      .pilotTopBar {
-        min-height: 32px;
-      }
+@media (orientation: portrait) {
+  .pilotTopBar {
+    min-height: 32px;
+  }
 
-      .board {
-        grid-template-rows: 1fr 1fr;
-      }
+  .board {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
 
-      .bigRow,
-      .smallRow {
-        gap: 8px;
-      }
+  .bigRow,
+  .smallRow {
+    display: contents;
+  }
 
-      .tile.big .v {
-        font-size: clamp(42px, 12vw, 72px);
-      }
+  .tile {
+    padding: 8px;
+    min-height: 0;
+    flex: 1 1 0;
+  }
 
-      .tile.small .v {
-        font-size: clamp(28px, 8vw, 46px);
-      }
+  .tile.big .v,
+  .tile.small .v {
+    font-size: clamp(34px, 10vw, 56px);
+  }
 
-      .tile {
-        padding: 8px;
-      }
+  .tile .t {
+    font-size: 11px;
+  }
 
-      .tile .t {
-        font-size: 11px;
-      }
+  .btnRow button {
+    min-width: 62px;
+    font-size: 11px;
+    padding: 6px 7px;
+  }
+}
 
-      .btnRow button {
-        min-width: 62px;
-        font-size: 11px;
-        padding: 6px 7px;
-      }
-    }
+    
   </style>
 </head>
 <body>

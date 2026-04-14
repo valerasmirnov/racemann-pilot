@@ -240,6 +240,7 @@
 
     .green { color: #26a269; }
     .purple { color: #bb6bff; }
+    .yellow { color: #f5c542; }
 
     @keyframes pop {
       0%   { transform: scale(1);    filter: brightness(1);    opacity: 1; }
@@ -398,7 +399,7 @@
   const AUTO_RESOLVE_INTERVAL_MS = 12000;
 
   const DEFAULT_INPUT = "https://miks.racemann.com";
-  const LS_RN  = "rm_pilot_rn";
+  const LS_RN = "rm_pilot_rn";
 
   const $ = (id) => document.getElementById(id);
 
@@ -436,7 +437,9 @@
       if (!("wakeLock" in navigator)) return false;
       wakeLock = await navigator.wakeLock.request("screen");
       return true;
-    } catch { return false; }
+    } catch {
+      return false;
+    }
   }
 
   async function disableWakeLock() {
@@ -466,16 +469,16 @@
   }
 
   function msToLap(ms) {
-  if (ms == null) return "—";
-  const n = Number(ms);
-  if (!Number.isFinite(n) || n <= 0) return "—";
+    if (ms == null) return "—";
+    const n = Number(ms);
+    if (!Number.isFinite(n) || n <= 0) return "—";
 
-  const totalMs = Math.round(n);
-  const secPart = String(Math.floor(totalMs / 1000)).padStart(2, "0");
-  const msPart = String(totalMs % 1000).padStart(3, "0");
+    const totalMs = Math.round(n);
+    const secPart = String(Math.floor(totalMs / 1000)).padStart(2, "0");
+    const msPart = String(totalMs % 1000).padStart(3, "0");
 
-  return `${secPart}.${msPart}`;
-}
+    return `${secPart}.${msPart}`;
+  }
 
   function extractRaceHubNewCommands(workerFrame) {
     const out = [];
@@ -500,11 +503,13 @@
 
     const prev = state.byRn.get(rn) || {};
     const bestLapMs = Number.isFinite(+c.bl) ? +c.bl : (prev.bestLapMs ?? null);
+    const newLastLapMs = Number.isFinite(+c.ll) ? +c.ll : (prev.lastLapMs ?? null);
 
     const next = {
       rn,
       position: Number.isFinite(+c.pos) ? +c.pos : (prev.position ?? null),
-      lastLapMs: Number.isFinite(+c.ll) ? +c.ll : (prev.lastLapMs ?? null),
+      prevLastLapMs: prev.lastLapMs ?? null,
+      lastLapMs: newLastLapMs,
       bestLapMs,
       updatedAt: Date.now(),
     };
@@ -565,29 +570,35 @@
     const bestRaceMs = (state.bestRaceMs != null && Number.isFinite(+state.bestRaceMs)) ? +state.bestRaceMs : null;
     const isPilotOverallBest = (bestPilotMs != null && bestRaceMs != null && bestPilotMs === bestRaceMs);
 
-// === NEW: логика для Last Lap ===
-const lastLapMs = (p && Number.isFinite(+p.lastLapMs)) ? +p.lastLapMs : null;
+    const lastLapMs = (p && Number.isFinite(+p.lastLapMs)) ? +p.lastLapMs : null;
+    const prevLastLapMs = (p && Number.isFinite(+p.prevLastLapMs)) ? +p.prevLastLapMs : null;
 
-const isLastBestPilot =
-  lastLapMs != null &&
-  bestPilotMs != null &&
-  lastLapMs === bestPilotMs;
+    const isLastBestPilot =
+      lastLapMs != null &&
+      bestPilotMs != null &&
+      lastLapMs === bestPilotMs;
 
-const isLastBestRace =
-  lastLapMs != null &&
-  bestRaceMs != null &&
-  lastLapMs === bestRaceMs;
+    const isLastBestRace =
+      lastLapMs != null &&
+      bestRaceMs != null &&
+      lastLapMs === bestRaceMs;
 
-// применяем цвет
-const lastEl = $("kLast");
-lastEl.classList.remove("green", "purple");
+    const isLastWorseThanPrevious =
+      lastLapMs != null &&
+      prevLastLapMs != null &&
+      lastLapMs > prevLastLapMs;
 
-if (isLastBestRace) {
-  lastEl.classList.add("purple");
-} else if (isLastBestPilot) {
-  lastEl.classList.add("green");
-}
-    
+    const lastEl = $("kLast");
+    lastEl.classList.remove("green", "purple", "yellow");
+
+    if (isLastBestRace) {
+      lastEl.classList.add("purple");
+    } else if (isLastBestPilot) {
+      lastEl.classList.add("green");
+    } else if (isLastWorseThanPrevious) {
+      lastEl.classList.add("yellow");
+    }
+
     const bestPilotEl = $("kBestPilot");
     bestPilotEl.classList.toggle("purple", isPilotOverallBest);
     bestPilotEl.classList.toggle("green", !isPilotOverallBest);
